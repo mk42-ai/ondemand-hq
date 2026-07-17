@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Markdown, dissect } from '../markdown.jsx';
 import BilingualLoader from './BilingualLoader.jsx';
 import AudioPlayer from './AudioPlayer.jsx';
+import { Cog, Check, ChevronRight, AlertTriangle, Paperclip } from 'lucide-react';
 
 /* ---------- tool-call lines (driven ONLY by real step_output SSE events) ---------- */
-/** Slim inline line per plugin call: '⚙ <name> → <query>' with spinner→check,
+/** Slim inline line per plugin call: '[gear] <name> -> <query>' with spinner-to-check,
  *  expandable to the raw args payload parsed from the step_output deltas. */
 /** Extract a website domain from a tool-call query/target string.
  *  Handles 'site:<domain>' prefixes and full http(s) URLs; returns null when none. */
@@ -22,7 +23,7 @@ export function domainFromToolArg(s) {
 /** Favicon of the visited site with graceful gear fallback on load error. */
 function ToolIcon({ domain }) {
   const [failed, setFailed] = useState(false);
-  if (!domain || failed) return <span className="toolline__gear" aria-hidden>⚙</span>;
+  if (!domain || failed) return <span className="toolline__gear" aria-hidden><Cog size={14} strokeWidth={1.9} /></span>;
   return (
     <img
       className="toolline__favicon"
@@ -45,11 +46,11 @@ export function ToolCallLine({ call }) {
       <button className="toolline__head" onClick={() => setOpen(o => !o)} title="Show raw plugin-call payload">
         <ToolIcon domain={domain} />
         <span className="toolline__name">{call.name}</span>
-        {argSummary && <><span className="toolline__arrow">→</span><span className="toolline__arg">{String(argSummary)}</span></>}
+        {argSummary && <><span className="toolline__arrow" aria-hidden><ChevronRight size={12} strokeWidth={2} /></span><span className="toolline__arg">{String(argSummary)}</span></>}
         <span style={{ flex: 1 }} />
         {running
           ? <span className="toolline__spin" aria-label="running" />
-          : <span className="toolline__check" aria-label="done">✓</span>}
+          : <span className="toolline__check" aria-label="done"><Check size={13} strokeWidth={2.6} /></span>}
       </button>
       {open && (
         <pre className="toolline__raw">{JSON.stringify(call.raw || call.args, null, 2)}</pre>
@@ -123,7 +124,7 @@ export function ArtifactCard({ artifact }) {
           <div className="artifact__cites">Citations: {artifact.citations.slice(0, 3).join(' · ')}{artifact.citations.length > 3 ? ` +${artifact.citations.length - 3} more` : ''}</div>
         )}
         {artifact.gaps?.length > 0 && (
-          <div className="artifact__gaps">⚠ Gaps (unverifiable): {artifact.gaps.slice(0, 2).join(' · ')}{artifact.gaps.length > 2 ? '…' : ''}</div>
+          <div className="artifact__gaps"><AlertTriangle size={12} aria-hidden style={{ verticalAlign: '-2px', marginRight: 4 }} /> Gaps (unverifiable): {artifact.gaps.slice(0, 2).join(' · ')}{artifact.gaps.length > 2 ? '…' : ''}</div>
         )}
       </div>
       <div className="artifact__btns">
@@ -189,7 +190,7 @@ export function UserMessage({ msg }) {
     <div className="msg-user">
       <div>
         <div className="bubble" dir="auto">{msg.text}</div>
-        {msg.fileName && <div className="fileref">📎 {msg.fileName}</div>}
+        {msg.fileName && <div className="fileref"><Paperclip size={12} aria-hidden style={{ verticalAlign: '-2px', marginRight: 4 }} /> {msg.fileName}</div>}
       </div>
     </div>
   );

@@ -59,7 +59,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     store.putFile({ id, name: req.file.originalname, mime: req.file.mimetype, size: req.file.size, buffer: req.file.buffer, text });
     res.json({ file: { id, name: req.file.originalname, size: req.file.size, chars: text.length } });
   } catch (e) {
-    console.error('🔴 [upload] failed:', e.message);
+    console.error('[FAIL] [upload] failed:', e.message);
     res.status(500).json({ error: `Upload failed: ${e.message}` });
   }
 });
@@ -222,7 +222,7 @@ app.post('/api/chat', async (req, res) => {
 
     send('done', { messageId: asstMsg.id, fullAnswerPresent: Boolean(fullAnswer), sawAnswer });
   } catch (e) {
-    console.error('🔴 [chat] stream failed:', e.message);
+    console.error('[FAIL] [chat] stream failed:', e.message);
     if (e.partialAnswer) {
       store.addMessage(conv, {
         role: 'assistant', text: e.partialAnswer,
@@ -275,7 +275,7 @@ app.post('/api/export', async (req, res) => {
     store.putExport(exp);
     res.json({ artifact: { id: exp.id, name: exp.name, format, size: exp.buffer.length, citations: exp.citations, gaps: exp.gaps, createdAt: exp.createdAt } });
   } catch (e) {
-    console.error('🔴 [export] failed:', e.message);
+    console.error('[FAIL] [export] failed:', e.message);
     res.status(500).json({ error: `Export failed: ${e.message}` });
   }
 });

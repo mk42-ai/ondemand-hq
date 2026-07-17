@@ -43,7 +43,7 @@ export async function extractText(name, mime, buffer) {
     }
     if (ext === 'txt' || ext === 'md' || ext === 'csv') return clean(buffer.toString('utf8'));
   } catch (e) {
-    console.error(`⚠️ [extract] ${name}: ${e.message}`);
+    console.error(`[WARN] [extract] ${name}: ${e.message}`);
     return `[Extraction failed for ${name}: ${e.message}]`;
   }
   return `[Unsupported file type: ${ext}]`;

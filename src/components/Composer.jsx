@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { uploadFile } from '../api.js';
 import BilingualLoader from './BilingualLoader.jsx';
 import Recorder from './Recorder.jsx';
+import { Paperclip, SendHorizontal, X } from 'lucide-react';
 
 export default function Composer({ onSend, busy, onError, placeholder }) {
   const [text, setText] = useState('');
@@ -46,8 +47,8 @@ export default function Composer({ onSend, busy, onError, placeholder }) {
     <div>
       {attached && (
         <div className="attach-pill">
-          📎 {attached.name} <span style={{ opacity: .6 }}>({Math.round(attached.size / 1024)} kB)</span>
-          <button onClick={() => setAttached(null)} title="Remove">✕</button>
+          <Paperclip size={13} aria-hidden /> {attached.name} <span style={{ opacity: .6 }}>({Math.round(attached.size / 1024)} kB)</span>
+          <button onClick={() => setAttached(null)} title="Remove" aria-label="Remove attachment"><X size={13} aria-hidden /></button>
         </div>
       )}
       <div className="composer">
@@ -63,13 +64,13 @@ export default function Composer({ onSend, busy, onError, placeholder }) {
         />
         <input ref={fileRef} type="file" hidden accept=".pptx,.docx,.pdf,.xlsx,.txt,.md,.csv" onChange={onFile} />
         <button className="iconbtn" onClick={pickFile} disabled={busy || uploading} title="Attach pptx / docx / pdf / xlsx">
-          {uploading ? <BilingualLoader size="sm" className="biloader--tight" /> : '📎'}
+          {uploading ? <BilingualLoader size="sm" className="biloader--tight" /> : <Paperclip size={16} strokeWidth={1.9} aria-hidden />}
         </button>
         {/* Mic — OnDemand speech_to_text ONLY (no Web Speech API). Transcript lands
             in the input, editable before send (EN/AR via dir="auto"). */}
         <Recorder disabled={busy} onError={() => { /* Recorder shows its own quiet note */ }}
           onTranscript={(t2) => { setText(prev => (prev ? prev + ' ' : '') + t2); taRef.current?.focus(); }} />
-        <button className="send" onClick={submit} disabled={busy || uploading || (!text.trim() && !attached)} title="Send">➤</button>
+        <button className="send" onClick={submit} disabled={busy || uploading || (!text.trim() && !attached)} title="Send" aria-label="Send"><SendHorizontal size={16} strokeWidth={2} aria-hidden /></button>
       </div>
     </div>
   );

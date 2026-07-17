@@ -52,7 +52,7 @@ export async function classify(text, { hasFile = false, forcedFeature = null } =
     }
     throw new Error('router returned no JSON');
   } catch (e) {
-    console.error(`🔴 [FALLBACK] LLM router failed (${e.message}) — using deterministic keyword rules. This is a loud fallback, not silent.`);
+    console.error(`[FAIL] [FALLBACK] LLM router failed (${e.message}) — using deterministic keyword rules. This is a loud fallback, not silent.`);
     routerSessionId = null; // force re-create next time
     return { ...heuristic(text, hasFile), source: 'heuristic-fallback' };
   }

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n.js';
+import { Pause, Play, Check, X } from 'lucide-react';
 
 /**
  * STEP 4 — Speech-to-text microphone experience.
@@ -163,10 +164,10 @@ export default function Recorder({ onTranscript, onError, disabled }) {
           <canvas ref={canvasRef} className="rec__wave" width={120} height={26} aria-hidden="true" />
           <span className="rec__time">{mmss}</span>
           <button onClick={pauseResume} aria-label={state === 'recording' ? t('pauseRecording') : t('resumeRecording')}>
-            {state === 'recording' ? '⏸' : '▶'}
+            {state === 'recording' ? <Pause size={13} aria-hidden /> : <Play size={13} aria-hidden />}
           </button>
-          <button className="rec__stop" onClick={stopAndTranscribe} aria-label={t('stopRecording')}>✓</button>
-          <button onClick={cancel} aria-label={t('cancelRecording')}>✕</button>
+          <button className="rec__stop" onClick={stopAndTranscribe} aria-label={t('stopRecording')}><Check size={13} strokeWidth={2.6} aria-hidden /></button>
+          <button onClick={cancel} aria-label={t('cancelRecording')}><X size={13} aria-hidden /></button>
         </div>
       )}
       {state === 'transcribing' && <span className="rec__busy">{t('transcribing')}</span>}

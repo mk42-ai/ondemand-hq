@@ -1,14 +1,19 @@
 import React from 'react';
+import {
+  LayoutGrid, FileText, Scale, BarChart3, Languages, Newspaper, Type, PieChart,
+  Globe, Plus,
+} from 'lucide-react';
+import odaLogoAr from '../assets/oda-logo-ar.svg';
 
 const TOOLS = [
-  { key: 'design',        icon: '▦', label: 'Deck' },
-  { key: 'summary',       icon: '☰', label: 'One-pager' },
-  { key: 'problem-solve', icon: '⚖', label: 'Problem Solve' },
-  { key: 'benchmark',     icon: '≋', label: 'Benchmark' },
-  { key: 'translate',     icon: 'ع', label: 'Translate' },
-  { key: 'media',         icon: '¶', label: 'Media' },
-  { key: 'action-titles', icon: 'T', label: 'Action Titles' },
-  { key: 'country-data',  icon: '◔', label: 'Country Data' },
+  { key: 'design',        Icon: LayoutGrid, label: 'Deck' },
+  { key: 'summary',       Icon: FileText,   label: 'One-pager' },
+  { key: 'problem-solve', Icon: Scale,      label: 'Problem Solve' },
+  { key: 'benchmark',     Icon: BarChart3,  label: 'Benchmark' },
+  { key: 'translate',     Icon: Languages,  label: 'Translate' },
+  { key: 'media',         Icon: Newspaper,  label: 'Media' },
+  { key: 'action-titles', Icon: Type,       label: 'Action Titles' },
+  { key: 'country-data',  Icon: PieChart,   label: 'Country Data' },
 ];
 
 function groupLabel(iso) {
@@ -32,13 +37,13 @@ export default function Sidebar({ conversations, activeId, onSelect, onNew, onTo
   return (
     <aside className={`sidebar${open ? ' open' : ''}`}>
       <div className="sidebar__logo">
-        <img src="/oda-logo.png" alt="Office of Development Affairs — Abu Dhabi" />
+        <img src={odaLogoAr} alt="مكتب شؤون التنمية — Office of Development Affairs" className="sidebar__logo-ar" />
       </div>
       <button className="sidebar__newchat" onClick={() => onNew()}>
-        <span className="plus">＋</span> New chat
+        <Plus size={15} strokeWidth={2.2} aria-hidden /> New chat
       </button>
       <button className={`sidebar__intel${intelActive ? ' active' : ''}`} onClick={() => onIntel?.()}>
-        <span className="ticon">🌍</span> ODA Intelligence
+        <Globe size={15} strokeWidth={2} aria-hidden /> ODA Intelligence
       </button>
       <div className="sidebar__history">
         {groups.length === 0 && <div className="sidebar__empty">No conversations yet — start one on the right.</div>}
@@ -59,7 +64,7 @@ export default function Sidebar({ conversations, activeId, onSelect, onNew, onTo
         <div className="toolgrid">
           {TOOLS.map(t => (
             <button key={t.key} onClick={() => onTool(t.key)}>
-              <span className="ticon">{t.icon}</span>{t.label}
+              <span className="ticon"><t.Icon size={15} strokeWidth={1.9} aria-hidden /></span>{t.label}
             </button>
           ))}
         </div>

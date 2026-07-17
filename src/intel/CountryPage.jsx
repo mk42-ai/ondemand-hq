@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCountry, refreshCountry, refreshStatus } from './api.js';
 import BilingualLoader from '../components/BilingualLoader.jsx';
+import Flag from './Flag.jsx';
+import { ArrowLeft, AlertTriangle, TrendingUp, TrendingDown, ArrowRight, User, Users, BadgeCheck, ExternalLink, RefreshCw } from 'lucide-react';
 
 const spring = { type: 'spring', stiffness: 360, damping: 30 };
 const IMPACT_ORDER = { Critical: 0, High: 1, Medium: 2, Low: 3 };
@@ -22,8 +24,8 @@ function ImpactBadge({ level }) {
 }
 
 function TrendArrow({ trend }) {
-  const glyph = trend === 'Increasing' ? '↗' : trend === 'Improving' ? '↘' : '→';
-  return <span className={`ig-trend ig-trend--${(trend || 'Stable').toLowerCase()}`}>{glyph} {trend}</span>;
+  const Icon = trend === 'Increasing' ? TrendingUp : trend === 'Improving' ? TrendingDown : ArrowRight;
+  return <span className={`ig-trend ig-trend--${(trend || 'Stable').toLowerCase()}`}><Icon size={12} aria-hidden style={{ verticalAlign: '-2px' }} /> {trend}</span>;
 }
 
 /** Editorial intelligence item card — image-first when the source material carries images. */
@@ -96,7 +98,7 @@ export default function CountryPage({ iso, onBack }) {
     catch (e) { setErr(e.message); }
   };
 
-  if (err) return <div className="ig-error">⚠ {err} <button onClick={load}>Retry</button></div>;
+  if (err) return <div className="ig-error"><AlertTriangle size={15} aria-hidden /> {err} <button onClick={load}>Retry</button></div>;
   if (!data) return <div className="ig-loading"><BilingualLoader size="md" label="Loading country intelligence…" /></div>;
 
   const { country, latest, history } = data;
@@ -108,7 +110,7 @@ export default function CountryPage({ iso, onBack }) {
   return (
     <motion.div className="ig-country" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={spring}>
       <div className="ig-country__topbar">
-        <button className="ig-back" onClick={onBack}>← Globe</button>
+        <button className="ig-back" onClick={onBack}><ArrowLeft size={13} aria-hidden style={{ verticalAlign: '-2px' }} /> Globe</button>
         <span style={{ flex: 1 }} />
         <button className="ig-refresh" onClick={onRefresh} disabled={running}>
           {running ? `Collecting… (${job?.stage || data.refresh?.stage || 'starting'})` : 'Refresh intelligence'}
@@ -118,12 +120,12 @@ export default function CountryPage({ iso, onBack }) {
       {/* Hero */}
       <div className="ig-hero">
         <div className="ig-hero__id">
-          <span className="ig-hero__flag">{country.flag}</span>
+          <span className="ig-hero__flag"><Flag iso={country.iso} size="lg" title={country.name} /></span>
           <div>
             <h1>{country.name}</h1>
             <div className="ig-hero__facts">
-              {hero.leadership && <span>👤 {hero.leadership}</span>}
-              {hero.population && <span>👥 {hero.population}</span>}
+              {hero.leadership && <span><User size={12} aria-hidden style={{ verticalAlign: '-2px' }} /> {hero.leadership}</span>}
+              {hero.population && <span><Users size={12} aria-hidden style={{ verticalAlign: '-2px' }} /> {hero.population}</span>}
               {hero.gdp && <span>GDP {hero.gdp}</span>}
               {latest && <span className="ig-hero__ts">updated {new Date(latest.collectedAt).toLocaleString('en-GB')}</span>}
             </div>
@@ -175,7 +177,7 @@ export default function CountryPage({ iso, onBack }) {
                     <motion.div key={i} className="ig-xpost" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.04 }}>
                       <div className="ig-xpost__head">
                         <b>@{p.author}</b>
-                        {p.verified === true && <span className="ig-verified" title="Verified">✔</span>}
+                        {p.verified === true && <span className="ig-verified" title="Verified"><BadgeCheck size={13} aria-hidden /></span>}
                         <span className="ig-xpost__aff">{p.affiliation}</span>
                         <span style={{ flex: 1 }} />
                         {p.sentiment && <span className={`ig-sent ig-sent--${p.sentiment}`}>{p.sentiment}</span>}
@@ -184,7 +186,7 @@ export default function CountryPage({ iso, onBack }) {
                       <p>{p.text}</p>
                       <div className="ig-xpost__foot">
                         {p.engagement && <span>{p.engagement}</span>}
-                        {p.url && <a href={p.url} target="_blank" rel="noreferrer">View on X →</a>}
+                        {p.url && <a href={p.url} target="_blank" rel="noreferrer">View on X <ExternalLink size={11} aria-hidden style={{ verticalAlign: '-1px' }} /></a>}
                       </div>
                     </motion.div>
                   ))}

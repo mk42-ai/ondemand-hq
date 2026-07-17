@@ -70,7 +70,7 @@ export async function fetchWdi(iso3, indicators = WDI_CORE) {
         rows.push({ source: 'World Bank WDI', indicator: label, code, value: latest.value, year: latest.date, unit,
                     cite: `World Bank WDI ${code} (api.worldbank.org)` });
       }
-    } catch (e) { console.error(`⚠️ [data] WDI ${code}/${iso3} failed: ${e.message}`); }
+    } catch (e) { console.error(`[WARN] [data] WDI ${code}/${iso3} failed: ${e.message}`); }
   }));
   return rows;
 }
@@ -93,7 +93,7 @@ export async function fetchGho(iso3, indicators = GHO_CORE) {
         rows.push({ source: 'WHO GHO', indicator: label, code, value: latest.NumericValue, year: String(latest.TimeDim), unit,
                     cite: `WHO Global Health Observatory ${code} (ghoapi.azureedge.net)` });
       }
-    } catch (e) { console.error(`⚠️ [data] GHO ${code}/${iso3} failed: ${e.message}`); }
+    } catch (e) { console.error(`[WARN] [data] GHO ${code}/${iso3} failed: ${e.message}`); }
   }));
   return rows;
 }
@@ -116,7 +116,7 @@ export async function fetchSdg(m49, indicators = SDG_CORE) {
         rows.push({ source: 'UN SDG Database', indicator: label, code, value: parseFloat(latest.value), year: String(parseInt(latest.timePeriodStart) || latest.timePeriodStart), unit,
                     cite: `UN SDG Global Database ${code} (unstats.un.org/sdgapi)` });
       }
-    } catch (e) { console.error(`⚠️ [data] SDG ${code}/${m49} failed: ${e.message}`); }
+    } catch (e) { console.error(`[WARN] [data] SDG ${code}/${m49} failed: ${e.message}`); }
   }));
   return rows;
 }

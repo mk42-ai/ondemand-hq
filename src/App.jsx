@@ -7,6 +7,7 @@ import { jget, jpost, streamChat } from './api.js';
 import DebugDrawer from './components/DebugDrawer.jsx';
 import BilingualLoader from './components/BilingualLoader.jsx';
 import IntelDashboard from './intel/IntelDashboard.jsx';
+import { ArrowDown, X, AlertTriangle } from 'lucide-react';
 import { dissect } from './markdown.jsx';
 
 const CHIPS = [
@@ -35,7 +36,7 @@ export default function App() {
   const [exportBusy, setExportBusy] = useState(false);
   const [atBottom, setAtBottom] = useState(true);
   const [sidebarOpen] = useState(false);
-  const [intelOpen, setIntelOpen] = useState(false); // 🌍 ODA Intelligence module view
+  const [intelOpen, setIntelOpen] = useState(false); // ODA Intelligence module view
 
   const streamRef = useRef(null);
   const draftRef = useRef(null);   // keeps the in-flight user text so an error never loses it
@@ -205,7 +206,7 @@ export default function App() {
       // non-retryable error — a STREAM_DROPPED being retried never lands here)
       const msg = (e && (e.userMessage || e.message)) || 'Unknown error';
       const reconnectNote = attempt > 0 ? ` (gave up after ${attempt} reconnect attempt${attempt > 1 ? 's' : ''})` : '';
-      patchLive({ live: false, text: (liveMsgRef.current.text || '') + (liveMsgRef.current.text ? '\n\n' : '') + `> ⚠ The stream stopped: ${msg}${reconnectNote}` });
+      patchLive({ live: false, text: (liveMsgRef.current.text || '') + (liveMsgRef.current.text ? '\n\n' : '') + `> Warning — the stream stopped: ${msg}${reconnectNote}` });
       const draft = draftRef.current;
       setToast({
         message: /rate|429/i.test(msg) ? 'Rate limited by the model service — your draft is preserved.' : `Something went wrong: ${msg}${reconnectNote}`,
@@ -307,7 +308,7 @@ export default function App() {
                 </div>
                 {!atBottom && (
                   <button className="jump" onClick={() => { streamRef.current.scrollTop = streamRef.current.scrollHeight; setAtBottom(true); }}>
-                    ↓ Jump to bottom
+                    <ArrowDown size={13} aria-hidden style={{ verticalAlign: '-2px' }} /> Jump to bottom
                   </button>
                 )}
                 <div className="composer-wrap">
@@ -334,7 +335,7 @@ export default function App() {
           <span className="dot" />
           <span>{toast.message}</span>
           {toast.retry && <button onClick={() => { const r = toast.retry; setToast(null); r(); }}>Retry</button>}
-          <button className="x" onClick={() => setToast(null)}>✕</button>
+          <button className="x" onClick={() => setToast(null)} aria-label="Dismiss"><X size={13} aria-hidden /></button>
         </div>
       )}
     </div>

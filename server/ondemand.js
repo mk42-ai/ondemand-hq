@@ -64,7 +64,7 @@ export async function createOdSession(externalUserId, pluginIds = []) {
   // range, so any 2xx (200 or 201) is treated as success here.
   if (!r.ok) {
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
-    console.error(`🔴 [HARD-FAIL] OnDemand session create HTTP ${r.status}: ${message}`);
+    console.error(`[FAIL] [HARD-FAIL] OnDemand session create HTTP ${r.status}: ${message}`);
     const err = new Error(`OnDemand session create failed (HTTP ${r.status}): ${message}`);
     err.status = r.status;
     err.errorCode = `UPSTREAM_HTTP_${r.status}`;
@@ -106,7 +106,7 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
   });
   if (!r.ok || !r.body) {
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
-    console.error(`🔴 [HARD-FAIL] OnDemand stream HTTP ${r.status} on ${ENDPOINT_ID}+${REASONING_EFFORT}: ${message} — NO silent model fallback; surfacing to caller.`);
+    console.error(`[FAIL] [HARD-FAIL] OnDemand stream HTTP ${r.status} on ${ENDPOINT_ID}+${REASONING_EFFORT}: ${message} — NO silent model fallback; surfacing to caller.`);
     const err = new Error(`OnDemand query failed (HTTP ${r.status}): ${message}`);
     err.status = r.status;
     err.errorCode = `UPSTREAM_HTTP_${r.status}`;
@@ -243,7 +243,7 @@ export async function syncQuery({ odSessionId, query, systemPrompt, pluginIds = 
   });
   if (!r.ok) {
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
-    console.error(`🔴 [HARD-FAIL] OnDemand sync HTTP ${r.status}: ${message}`);
+    console.error(`[FAIL] [HARD-FAIL] OnDemand sync HTTP ${r.status}: ${message}`);
     const err = new Error(`OnDemand sync query failed (HTTP ${r.status}): ${message}`);
     err.status = r.status;
     err.errorCode = `UPSTREAM_HTTP_${r.status}`;

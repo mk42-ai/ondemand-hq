@@ -5,6 +5,8 @@ import CountryPage from './CountryPage.jsx';
 import { getOverview, nlSearch, generateBrief } from './api.js';
 import BilingualLoader from '../components/BilingualLoader.jsx';
 import ErrorBoundary from '../components/ErrorBoundary.jsx';
+import Flag from './Flag.jsx';
+import { Globe2, AlertTriangle, ArrowLeft, X, Search } from 'lucide-react';
 
 const spring = { type: 'spring', stiffness: 360, damping: 30 };
 
@@ -66,7 +68,7 @@ export default function IntelDashboard({ onExit }) {
     if (!q.trim() || searching) return;
     setSearching(true); setSearchResult(null);
     try { setSearchResult(await nlSearch(q.trim())); }
-    catch (e2) { setSearchResult({ answer: `⚠ ${e2.message}`, matches: [] }); }
+    catch (e2) { setSearchResult({ answer: `Error: ${e2.message}`, matches: [] }); }
     finally { setSearching(false); }
   };
 
@@ -81,7 +83,7 @@ export default function IntelDashboard({ onExit }) {
   if (countryIso) {
     return <ErrorBoundary name="intel-country"><CountryPage iso={countryIso} onBack={() => { setCountryIso(null); load(); }} /></ErrorBoundary>;
   }
-  if (err) return <div className="ig-error">⚠ {err} <button onClick={load}>Retry</button> <button onClick={onExit}>Back to chat</button></div>;
+  if (err) return <div className="ig-error"><AlertTriangle size={15} aria-hidden /> {err} <button onClick={load}>Retry</button> <button onClick={onExit}>Back to chat</button></div>;
   if (!ov) return <div className="ig-loading"><BilingualLoader size="md" label="Loading ODA Intelligence…" /></div>;
 
   const brief = ov.latestBrief?.data;
@@ -89,11 +91,11 @@ export default function IntelDashboard({ onExit }) {
   return (
     <motion.div className="ig-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
       <div className="ig-head">
-        <h1>🌍 ODA Intelligence</h1>
+        <h1><Globe2 size={22} aria-hidden style={{ verticalAlign: '-3px', marginRight: 8, color: 'var(--gold, #b08d3c)' }} />ODA Intelligence</h1>
         <span className="ig-head__sub">{ov.countriesWithData}/{ov.countriesMonitored} countries with live intelligence{ov.workflow?.id ? ` · 12-hour workflow ${ov.workflow.active ? 'active' : 'configured'}` : ''}</span>
         <span style={{ flex: 1 }} />
         <button className="ig-briefbtn" onClick={onBrief} disabled={briefBusy || !ov.countriesWithData}>{briefBusy ? 'Generating…' : 'Generate Executive Brief'}</button>
-        <button className="ig-exit" onClick={onExit}>← Suite</button>
+        <button className="ig-exit" onClick={onExit}><ArrowLeft size={13} aria-hidden style={{ verticalAlign: '-2px' }} /> Suite</button>
       </div>
 
       {/* NL Global Intelligence Search */}
@@ -109,11 +111,11 @@ export default function IntelDashboard({ onExit }) {
               <div className="ig-searchresult__matches">
                 {searchResult.matches.map((m, i) => {
                   const c = ov.perCountry.find(x => x.name === m.country);
-                  return <button key={i} onClick={() => c && setCountryIso(c.iso)}>{c?.flag} {m.country} — {m.why}</button>;
+                  return <button key={i} onClick={() => c && setCountryIso(c.iso)}>{c && <Flag iso={c.iso} size="sm" />} {m.country} — {m.why}</button>;
                 })}
               </div>
             )}
-            <button className="ig-searchresult__close" onClick={() => setSearchResult(null)}>✕</button>
+            <button className="ig-searchresult__close" onClick={() => setSearchResult(null)} aria-label="Close"><X size={13} aria-hidden /></button>
           </motion.div>
         )}
       </AnimatePresence>

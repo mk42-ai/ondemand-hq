@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { streamDebugBus } from '../api.js';
 import ErrorBoundary from './ErrorBoundary.jsx';
+import { ChevronDown } from 'lucide-react';
 
 /**
  * Stream debug drawer — observability for the /api/chat SSE passthrough.
@@ -108,7 +109,7 @@ function DebugDrawerInner() {
           {framesRef.current} frames · TTFT <b data-testid="debug-ttft">{ttftLabel}</b> · <b data-testid="debug-tps">{tpsLabel}</b> tok/s
         </span>
         <span className="debug-drawer__clock" data-testid="debug-clock">{clock}</span>
-        <span className={`debug-drawer__chev${openDrawer ? ' up' : ''}`} aria-hidden>▾</span>
+        <span className={`debug-drawer__chev${openDrawer ? ' up' : ''}`} aria-hidden><ChevronDown size={13} /></span>
       </div>
 
       {openDrawer && (
@@ -126,7 +127,7 @@ function DebugDrawerInner() {
             {rowsRef.current.map(r => (
               <div key={r.seq} className={`dbg-row ${typeClass(r.type)}`}>
                 <span className="dbg-row__ts">{feedTime(r.clientTs)}</span>
-                <span className="dbg-row__tag">{r.kind === 'lifecycle' ? `⟂ ${r.type}` : r.type}</span>
+                <span className="dbg-row__tag">{r.kind === 'lifecycle' ? `[${r.type}]` : r.type}</span>
                 <span className="dbg-row__chars">{r.kind === 'frame' ? `${r.chars}ch` : (r.message || '')}</span>
               </div>
             ))}

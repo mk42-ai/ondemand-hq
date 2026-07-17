@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SanitizedHtml, Markdown } from '../markdown.jsx';
 import BilingualLoader from './BilingualLoader.jsx';
+import { X, Check, Pencil } from 'lucide-react';
 
 const WIZ_STEPS = ['Scope', 'Outline', 'Draft', 'Review', 'Export'];
 
@@ -10,12 +11,12 @@ export function WizardHeader({ step, onClose }) {
     <div className="wizard">
       <div className="wizard__title">
         Guided document creation
-        <button className="wizard__close" onClick={onClose} title="Exit guided mode">✕</button>
+        <button className="wizard__close" onClick={onClose} title="Exit guided mode" aria-label="Exit guided mode"><X size={13} aria-hidden /></button>
       </div>
       <div className="wizard__steps">
         {WIZ_STEPS.map((label, i) => (
           <div key={label} className={`wstep${i < step ? ' done' : i === step ? ' current' : ''}`}>
-            <div className="wstep__dot">{i < step ? '✓' : i + 1}</div>
+            <div className="wstep__dot">{i < step ? <Check size={11} strokeWidth={2.6} aria-hidden /> : i + 1}</div>
             <div className="wstep__label">{label}</div>
             {i < WIZ_STEPS.length - 1 && <div className="wstep__bar" />}
           </div>
@@ -40,7 +41,7 @@ function SlideFrame({ html, index, onEdit }) {
   const heading = (html.match(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/i)?.[1] || `Slide ${index + 1}`).replace(/<[^>]+>/g, '').trim();
   return (
     <div className="oda-slide-frame" ref={frameRef} onClick={() => onEdit(heading)} title={`Click to edit: ${heading}`}>
-      <div className="editcue">✎ Edit this slide</div>
+      <div className="editcue"><Pencil size={11} aria-hidden style={{ verticalAlign: '-1px', marginRight: 4 }} /> Edit this slide</div>
       <div className="oda-slide-scale" style={{ transform: `scale(${scale})` }}>
         <SanitizedHtml html={html} />
       </div>
