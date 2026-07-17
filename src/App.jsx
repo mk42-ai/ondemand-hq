@@ -6,6 +6,7 @@ import { AssistantMessage, UserMessage } from './components/Messages.jsx';
 import { jget, jpost, streamChat } from './api.js';
 import DebugDrawer from './components/DebugDrawer.jsx';
 import BilingualLoader from './components/BilingualLoader.jsx';
+import IntelDashboard from './intel/IntelDashboard.jsx';
 import { dissect } from './markdown.jsx';
 
 const CHIPS = [
@@ -34,6 +35,7 @@ export default function App() {
   const [exportBusy, setExportBusy] = useState(false);
   const [atBottom, setAtBottom] = useState(true);
   const [sidebarOpen] = useState(false);
+  const [intelOpen, setIntelOpen] = useState(false); // 🌍 ODA Intelligence module view
 
   const streamRef = useRef(null);
   const draftRef = useRef(null);   // keeps the in-flight user text so an error never loses it
@@ -256,12 +258,23 @@ export default function App() {
   const activeFeature = pendingTool;
 
   const startTool = (key) => {
+    setIntelOpen(false);
     newChat(key, { wizard: WIZARD_FEATURES.has(key) });
   };
 
   return (
     <div className="app">
-      <Sidebar conversations={convs} activeId={activeId} onSelect={loadConversation} onNew={() => newChat('chat')} onTool={startTool} open={sidebarOpen} />
+      <Sidebar conversations={convs} activeId={activeId}
+        onSelect={(id) => { setIntelOpen(false); loadConversation(id); }}
+        onNew={() => { setIntelOpen(false); newChat('chat'); }}
+        onTool={startTool}
+        onIntel={() => setIntelOpen(true)} intelActive={intelOpen}
+        open={sidebarOpen} />
+      {intelOpen ? (
+        <div className="main main--intel">
+          <IntelDashboard onExit={() => setIntelOpen(false)} />
+        </div>
+      ) : (
       <div className="main">
         {offline && <div className="banner">You appear to be offline — your draft is kept locally and nothing has been lost. Reconnect to continue.</div>}
         <div className="canvas-row">
@@ -312,6 +325,7 @@ export default function App() {
         </div>
         <footer className="app-footer"><span className="app-footer__brand">ODA Productivity Suite</span></footer>
       </div>
+      )}
       <DebugDrawer />
 
       {/* STEP 8 — error toast with retry */}

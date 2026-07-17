@@ -21,7 +21,7 @@ function groupLabel(iso) {
   return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
-export default function Sidebar({ conversations, activeId, onSelect, onNew, onTool, open }) {
+export default function Sidebar({ conversations, activeId, onSelect, onNew, onTool, onIntel, intelActive, open }) {
   const groups = [];
   let last = null;
   for (const c of conversations) {
@@ -36,6 +36,9 @@ export default function Sidebar({ conversations, activeId, onSelect, onNew, onTo
       </div>
       <button className="sidebar__newchat" onClick={() => onNew()}>
         <span className="plus">＋</span> New chat
+      </button>
+      <button className={`sidebar__intel${intelActive ? ' active' : ''}`} onClick={() => onIntel?.()}>
+        <span className="ticon">🌍</span> ODA Intelligence
       </button>
       <div className="sidebar__history">
         {groups.length === 0 && <div className="sidebar__empty">No conversations yet — start one on the right.</div>}

@@ -1,0 +1,215 @@
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Globe from './Globe.jsx';
+import CountryPage from './CountryPage.jsx';
+import { getOverview, nlSearch, generateBrief } from './api.js';
+import BilingualLoader from '../components/BilingualLoader.jsx';
+import ErrorBoundary from '../components/ErrorBoundary.jsx';
+
+const spring = { type: 'spring', stiffness: 360, damping: 30 };
+
+function StatCard({ label, value, tone, delay = 0 }) {
+  return (
+    <motion.div className={`ig-stat${tone ? ` ig-stat--${tone}` : ''}`}
+      initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay }}>
+      <div className="ig-stat__val">{value}</div>
+      <div className="ig-stat__label">{label}</div>
+    </motion.div>
+  );
+}
+
+/** UAE Correlation network — SVG relationship graph from real correlation records. */
+function CorrelationGraph({ correlations }) {
+  if (!correlations?.length) return <div className="ig-empty">No UAE correlations yet — they appear as intelligence is collected.</div>;
+  const entities = [...new Set(correlations.map(c => c.entity))].slice(0, 10);
+  const countries = [...new Set(correlations.map(c => c.country))];
+  const W = 720, H = 40 + Math.max(entities.length, countries.length) * 44;
+  const ey = (i) => 40 + i * 44, cy = (i) => 40 + i * 44;
+  return (
+    <svg className="ig-network" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="UAE correlation network">
+      {correlations.filter(c => entities.includes(c.entity)).map((c, i) => {
+        const ei = entities.indexOf(c.entity), ci = countries.indexOf(c.country);
+        if (ei < 0 || ci < 0) return null;
+        return <motion.path key={i} d={`M 180 ${ey(ei)} C 360 ${ey(ei)}, 360 ${cy(ci)}, 540 ${cy(ci)}`}
+          fill="none" stroke="#b08d3c" strokeOpacity={0.18 + 0.6 * ((c.strength || 50) / 100)} strokeWidth={1 + ((c.strength || 50) / 40)}
+          initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, delay: i * 0.03 }} />;
+      })}
+      {entities.map((e, i) => (
+        <g key={e}><circle cx={180} cy={ey(i)} r={5} fill="#0f6b5c" />
+          <text x={168} y={ey(i) + 4} textAnchor="end" className="ig-network__label">{e}</text></g>
+      ))}
+      {countries.map((c, i) => (
+        <g key={c}><circle cx={540} cy={cy(i)} r={5} fill="#b08d3c" />
+          <text x={552} y={cy(i) + 4} className="ig-network__label">{c}</text></g>
+      ))}
+    </svg>
+  );
+}
+
+export default function IntelDashboard({ onExit }) {
+  const [ov, setOv] = useState(null);
+  const [err, setErr] = useState(null);
+  const [countryIso, setCountryIso] = useState(null);
+  const [q, setQ] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchResult, setSearchResult] = useState(null);
+  const [briefBusy, setBriefBusy] = useState(false);
+
+  const load = async () => {
+    try { setErr(null); setOv(await getOverview()); }
+    catch (e) { setErr(e.message); }
+  };
+  useEffect(() => { load(); const id = setInterval(load, 60000); return () => clearInterval(id); }, []);
+
+  const onSearch = async (e) => {
+    e.preventDefault();
+    if (!q.trim() || searching) return;
+    setSearching(true); setSearchResult(null);
+    try { setSearchResult(await nlSearch(q.trim())); }
+    catch (e2) { setSearchResult({ answer: `⚠ ${e2.message}`, matches: [] }); }
+    finally { setSearching(false); }
+  };
+
+  const onBrief = async () => {
+    if (briefBusy) return;
+    setBriefBusy(true);
+    try { await generateBrief(); await load(); }
+    catch (e2) { setErr(e2.message); }
+    finally { setBriefBusy(false); }
+  };
+
+  if (countryIso) {
+    return <ErrorBoundary name="intel-country"><CountryPage iso={countryIso} onBack={() => { setCountryIso(null); load(); }} /></ErrorBoundary>;
+  }
+  if (err) return <div className="ig-error">⚠ {err} <button onClick={load}>Retry</button> <button onClick={onExit}>Back to chat</button></div>;
+  if (!ov) return <div className="ig-loading"><BilingualLoader size="md" label="Loading ODA Intelligence…" /></div>;
+
+  const brief = ov.latestBrief?.data;
+
+  return (
+    <motion.div className="ig-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+      <div className="ig-head">
+        <h1>🌍 ODA Intelligence</h1>
+        <span className="ig-head__sub">{ov.countriesWithData}/{ov.countriesMonitored} countries with live intelligence{ov.workflow?.id ? ` · 12-hour workflow ${ov.workflow.active ? 'active' : 'configured'}` : ''}</span>
+        <span style={{ flex: 1 }} />
+        <button className="ig-briefbtn" onClick={onBrief} disabled={briefBusy || !ov.countriesWithData}>{briefBusy ? 'Generating…' : 'Generate Executive Brief'}</button>
+        <button className="ig-exit" onClick={onExit}>← Suite</button>
+      </div>
+
+      {/* NL Global Intelligence Search */}
+      <form className="ig-search" onSubmit={onSearch}>
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Ask the intelligence base — e.g. 'Show UAE agreements with Kenya' or 'Countries requiring AI infrastructure'" aria-label="Global intelligence search" />
+        <button type="submit" disabled={searching || !q.trim()}>{searching ? <BilingualLoader size="sm" className="biloader--tight" /> : 'Search'}</button>
+      </form>
+      <AnimatePresence>
+        {searchResult && (
+          <motion.div className="ig-searchresult" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+            <p>{searchResult.answer}</p>
+            {searchResult.matches?.length > 0 && (
+              <div className="ig-searchresult__matches">
+                {searchResult.matches.map((m, i) => {
+                  const c = ov.perCountry.find(x => x.name === m.country);
+                  return <button key={i} onClick={() => c && setCountryIso(c.iso)}>{c?.flag} {m.country} — {m.why}</button>;
+                })}
+              </div>
+            )}
+            <button className="ig-searchresult__close" onClick={() => setSearchResult(null)}>✕</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Executive stat cards */}
+      <div className="ig-stats">
+        <StatCard label="Countries monitored" value={ov.countriesMonitored} delay={0} />
+        <StatCard label="Critical events (latest cycle)" value={ov.criticalToday} tone={ov.criticalToday ? 'crit' : ''} delay={0.05} />
+        <StatCard label="Humanitarian alerts" value={ov.humanitarianAlerts} tone={ov.humanitarianAlerts ? 'warn' : ''} delay={0.1} />
+        <StatCard label="Strategic opportunities" value={ov.strategicOpportunities} tone="opp" delay={0.15} />
+        <StatCard label="Tracked risks" value={ov.risks.length} delay={0.2} />
+        <StatCard label="UAE agreements tracked" value={ov.latestAgreements.length} delay={0.25} />
+      </div>
+
+      {/* Globe landing */}
+      <ErrorBoundary name="intel-globe">
+        <Globe countries={ov.perCountry} onOpenCountry={setCountryIso} />
+      </ErrorBoundary>
+
+      {/* Trending intelligence + risks/opportunities strips */}
+      {ov.trendingItems.length > 0 && (
+        <section className="ig-section">
+          <h2>Trending intelligence</h2>
+          <div className="ig-trendrow">
+            {ov.trendingItems.map((t, i) => (
+              <motion.button key={i} className="ig-trendcard" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.05 }}
+                onClick={() => { const c = ov.perCountry.find(x => x.iso === t.iso); if (c) setCountryIso(c.iso); }}>
+                <span className={`ig-impact ig-impact--${(t.uaeImpact?.level || 'low').toLowerCase()}`}>{t.uaeImpact?.level}</span>
+                <b>{t.headline}</b>
+                <span className="ig-trendcard__c">{t.country}</span>
+              </motion.button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {(ov.risks.length > 0 || ov.opportunities.length > 0) && (
+        <section className="ig-section ig-twocol">
+          <div>
+            <h2>Risk Engine</h2>
+            {ov.risks.map((r, i) => (
+              <div key={i} className="ig-minirow ig-minirow--risk">
+                <span className={`ig-impact ig-impact--${(r.severity || 'low').toLowerCase()}`}>{r.severity}</span>
+                <span className="ig-minirow__t">{r.title}</span>
+                <span className="ig-minirow__c">{r.country}</span>
+              </div>
+            ))}
+          </div>
+          <div>
+            <h2>Opportunity Engine</h2>
+            {ov.opportunities.map((o, i) => (
+              <div key={i} className="ig-minirow ig-minirow--opp">
+                <span className="ig-conf">{o.confidence}</span>
+                <span className="ig-minirow__t">{o.title}</span>
+                <span className="ig-minirow__c">{o.country}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* UAE correlation network */}
+      <section className="ig-section">
+        <h2>UAE Correlation Engine</h2>
+        <CorrelationGraph correlations={ov.correlations} />
+      </section>
+
+      {/* Latest Executive Brief */}
+      {brief && (
+        <section className="ig-section ig-brief">
+          <h2>12-hour Executive Brief <span className="ig-date">{new Date(ov.latestBrief.createdAt).toLocaleString('en-GB')}</span></h2>
+          {brief.executiveSummary && <p className="ig-brief__sum">{brief.executiveSummary}</p>}
+          <div className="ig-twocol">
+            <div>
+              <h3>Top developments</h3>
+              <ol>{(brief.top10Developments || []).map((d, i) => <li key={i}><b>{d.country}:</b> {d.headline} <em>({d.uaeImpact})</em></li>)}</ol>
+            </div>
+            <div>
+              <h3>Recommended UAE actions</h3>
+              <ul>{(brief.recommendedUaeActions || []).map((x, i) => <li key={i}>{x}</li>)}</ul>
+              <div className="ig-brief__exports">
+                <span>Export:</span>
+                {['pdf', 'docx', 'pptx'].map(f => (
+                  <a key={f} href={`/api/intel/brief/export/${f}`} target="_blank" rel="noreferrer">{f.toUpperCase()}</a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {!ov.countriesWithData && (
+        <div className="ig-empty ig-empty--big">
+          No intelligence collected yet. Open a country from the globe list and run its first collection, or wait for the scheduled 12-hour workflow cycle.
+        </div>
+      )}
+    </motion.div>
+  );
+}

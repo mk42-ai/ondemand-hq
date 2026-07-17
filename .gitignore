@@ -4,3 +4,4 @@ node_modules
 dist
 .env
 server/data/state.json
+server/data/intel/

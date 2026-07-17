@@ -17,6 +17,7 @@ import { fetchCountryPack, renderDataBlock, resolveCountry } from './countryData
 import { buildExport } from './exports.js';
 import { extractText } from './extract.js';
 import { registerSpeechRoutes } from './speech.js';
+import { registerIntelRoutes } from './intel.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -26,6 +27,9 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 
 
 // Voice routes — OnDemand Cloud Services (speech_to_text / text_to_speech) ONLY.
 registerSpeechRoutes(app, upload);
+
+// ODA Intelligence Dashboard routes (Perplexity + X Search + AI analysis pipeline).
+registerIntelRoutes(app);
 
 // ---------- health ----------
 app.get('/api/health', (req, res) => res.json({
