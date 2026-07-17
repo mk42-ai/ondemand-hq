@@ -80,7 +80,13 @@ app.post('/api/chat', async (req, res) => {
     'X-Accel-Buffering': 'no',
   });
   res.flushHeaders?.();
+  // WS1 audit fix (2026-07-17): abort the UPSTREAM OnDemand fetch the moment the browser
+  // disconnects, and never write to the response after close. Previously the upstream stream
+  // kept running to completion and frames were written to a dead socket.
+  let clientClosed = false;
+  const upstreamAbort = new AbortController();
   const send = (type, payload) => {
+    if (clientClosed) return; // guard: no frames after client disconnect
     // Every browser-bound frame carries a server UTC timestamp (frontend debug drawer displays it).
     const ts = new Date().toISOString();
     res.write(`data:${JSON.stringify({ type, ts, ...payload })}\n\n`);
@@ -90,12 +96,25 @@ app.post('/api/chat', async (req, res) => {
   };
   // Standard SSE comment frame every 10s — keeps intermediary proxies/serverless runtimes from idling the connection out.
   const hb = setInterval(() => {
+    if (clientClosed) return;
     res.write(': keepalive\n\n');
     res.flush?.();
   }, 10000);
-  const stopHeartbeat = () => clearInterval(hb);
-  req.on('close', stopHeartbeat);
-  res.on('close', stopHeartbeat);
+  const onClientClose = () => {
+    if (clientClosed) return;
+    // res 'close' also fires after a NORMAL res.end() — only treat it as a client
+    // disconnect when the response was NOT finished by us (writableEnded false).
+    if (res.writableEnded) return;
+    clientClosed = true;
+    clearInterval(hb);
+    upstreamAbort.abort(); // stop the OnDemand stream — no orphaned upstream reads
+    if (STREAM_DEBUG) console.log(`[stream-debug] ts=${new Date().toISOString()} dir=browser type=client-disconnect conv=${conversationId}`);
+  };
+  // NOTE (WS1 bug found live): in Node 18+ `req.on('close')` fires as soon as the request
+  // BODY stream is fully consumed — i.e. milliseconds into every POST — NOT on client
+  // disconnect. Wiring the abort to req 'close' killed every upstream stream ~30ms in.
+  // The reliable disconnect signal is the RESPONSE 'close' with writableEnded === false.
+  res.on('close', onClientClose);
 
   try {
     const file = fileId ? store.getFile(fileId) : null;
@@ -166,6 +185,7 @@ app.post('/api/chat', async (req, res) => {
       query: queryParts.join('\n\n'),
       pluginIds,
       systemPrompt,
+      signal: upstreamAbort.signal, // WS1: cancel upstream when the browser disconnects
       onEvent: (type, payload) => {
         if (type === 'thinking') send('thinking', { delta: payload });
         else if (type === 'answer') { sawAnswer = true; send('answer', { delta: payload }); }
@@ -201,7 +221,7 @@ app.post('/api/chat', async (req, res) => {
     send('done', { aborted: true });
   } finally {
     clearInterval(hb);
-    res.end();
+    if (!clientClosed) res.end();
   }
 });
 
