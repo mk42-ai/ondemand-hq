@@ -1,0 +1,462 @@
+# RAW SSE capture — OnDemand POST /chat/v1/sessions/6a5a5bb8fe085fa6b0b185fa/query
+# endpointId=predefined-gpt-5.6-sol reasoningEffort=medium responseMode=stream pluginIds=[plugin-1713924030]
+# capture started (UTC): 2026-07-17T16:43:48.553097+00:00
+# HTTP 200 Content-Type: text/event-stream; charset=utf-8
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":1,"eventType":"planning_output","status":"processing","output":{"delta":"{\n  \"objective\": \"Find the current"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":2,"eventType":"planning_output","status":"processing","output":{"delta":" weather in Abu Dhabi and provide"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":3,"eventType":"planning_output","status":"processing","output":{"delta":" a citation to the source.\",\n "}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":4,"eventType":"planning_output","status":"processing","output":{"delta":" \"steps\": [\n    {\n      \"user_query"}}
+
+event:heartbeat
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","time":"2026-07-17T16:43:51Z"}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":5,"eventType":"planning_output","status":"processing","output":{"delta":"\": \"Retrieve Abu Dhabi's current"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":6,"eventType":"planning_output","status":"processing","output":{"delta":" weather conditions, including"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":7,"eventType":"planning_output","status":"processing","output":{"delta":" the latest available observation"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":8,"eventType":"planning_output","status":"processing","output":{"delta":" time, temperature, conditions"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":9,"eventType":"planning_output","status":"processing","output":{"delta":", and source citation with URL"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":10,"eventType":"planning_output","status":"processing","output":{"delta":".\",\n      \"assistant_query\": \"\",\n"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":11,"eventType":"planning_output","status":"processing","output":{"delta":"      \"depends\": [],\n      \"plugins"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":12,"eventType":"planning_output","status":"processing","output":{"delta":"\": [\n        \"fetchInternetData"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":13,"eventType":"planning_output","status":"processing","output":{"delta":"\"\n      ]\n    }\n  ]\n}"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":14,"eventType":"planning_thinking","status":"processing","thinking":{"delta":""}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":15,"eventType":"planning_output","status":"processing","output":{"delta":""}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":16,"eventType":"step_output","status":"processing","output":{"delta":"{\"plugins\":[{\"pluginId\":\"plugin"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":17,"eventType":"step_output","status":"processing","output":{"delta":"-1713924030\",\"name\":\"fetchInternet"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":18,"eventType":"step_output","status":"processing","output":{"delta":"Data\",\"description\":\"Searches the"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":19,"eventType":"step_output","status":"processing","output":{"delta":" web for up-to-date weather observations"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":20,"eventType":"step_output","status":"processing","output":{"delta":" and source details.\",\"api_request"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":21,"eventType":"step_output","status":"processing","output":{"delta":"_parameters\":{\"query\":\"Abu Dhabi"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":22,"eventType":"step_output","status":"processing","output":{"delta":" current weather latest observation"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":23,"eventType":"step_output","status":"processing","output":{"delta":" time temperature conditions\"}"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":24,"eventType":"step_output","status":"processing","output":{"delta":",\"all_parameters_hydrated\":true"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":25,"eventType":"step_output","status":"processing","output":{"delta":",\"dependencies\":[],\"identifier"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":26,"eventType":"step_output","status":"processing","output":{"delta":"\":\"rest_api\"}]}"}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":27,"eventType":"step_thinking","status":"processing","thinking":{"delta":""}}
+
+event:thinking
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":28,"eventType":"step_output","status":"processing","output":{"delta":""}}
+
+event:heartbeat
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","time":"2026-07-17T16:43:54Z"}
+
+event:heartbeat
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","time":"2026-07-17T16:43:57Z"}
+
+event:message
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":1,"eventType":"statusLog","status":"processing","currentStatusLog":{"statusType":"fulfilling","statusMessage":"Fulfilling the prompt...","time":"2026-07-17T16:43:59Z"}}
+
+event:heartbeat
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","time":"2026-07-17T16:44:00Z"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "As", "status": "processing", "eventIndex":2, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " of", "status": "processing", "eventIndex":3, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " **", "status": "processing", "eventIndex":4, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "8", "status": "processing", "eventIndex":5, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ":", "status": "processing", "eventIndex":6, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "30", "status": "processing", "eventIndex":7, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " PM", "status": "processing", "eventIndex":8, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " local", "status": "processing", "eventIndex":9, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " time", "status": "processing", "eventIndex":10, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " on", "status": "processing", "eventIndex":11, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " July", "status": "processing", "eventIndex":12, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " ", "status": "processing", "eventIndex":13, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "17", "status": "processing", "eventIndex":14, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ",", "status": "processing", "eventIndex":15, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " ", "status": "processing", "eventIndex":16, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "202", "status": "processing", "eventIndex":17, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "6", "status": "processing", "eventIndex":18, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "**,", "status": "processing", "eventIndex":19, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " Abu", "status": "processing", "eventIndex":20, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " Dhabi", "status": "processing", "eventIndex":21, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "\u2019s", "status": "processing", "eventIndex":22, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " weather", "status": "processing", "eventIndex":23, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " is", "status": "processing", "eventIndex":24, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " **", "status": "processing", "eventIndex":25, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "clear", "status": "processing", "eventIndex":26, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " at", "status": "processing", "eventIndex":27, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " ", "status": "processing", "eventIndex":28, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "36", "status": "processing", "eventIndex":29, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "\u00b0C", "status": "processing", "eventIndex":30, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " (", "status": "processing", "eventIndex":31, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "97", "status": "processing", "eventIndex":32, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "\u00b0F", "status": "processing", "eventIndex":33, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ")**", "status": "processing", "eventIndex":34, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ".", "status": "processing", "eventIndex":35, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " Hum", "status": "processing", "eventIndex":36, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "idity", "status": "processing", "eventIndex":37, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " is", "status": "processing", "eventIndex":38, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " **", "status": "processing", "eventIndex":39, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "57", "status": "processing", "eventIndex":40, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "%", "status": "processing", "eventIndex":41, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "**,", "status": "processing", "eventIndex":42, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " with", "status": "processing", "eventIndex":43, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " **", "status": "processing", "eventIndex":44, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "N", "status": "processing", "eventIndex":45, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "NE", "status": "processing", "eventIndex":46, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " winds", "status": "processing", "eventIndex":47, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " around", "status": "processing", "eventIndex":48, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " ", "status": "processing", "eventIndex":49, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "24", "status": "processing", "eventIndex":50, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " km", "status": "processing", "eventIndex":51, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "/h", "status": "processing", "eventIndex":52, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "**", "status": "processing", "eventIndex":53, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " and", "status": "processing", "eventIndex":54, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " visibility", "status": "processing", "eventIndex":55, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " of", "status": "processing", "eventIndex":56, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " **", "status": "processing", "eventIndex":57, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "10", "status": "processing", "eventIndex":58, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " km", "status": "processing", "eventIndex":59, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "**", "status": "processing", "eventIndex":60, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ".", "status": "processing", "eventIndex":61, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " The", "status": "processing", "eventIndex":62, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " reported", "status": "processing", "eventIndex":63, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " \u201c", "status": "processing", "eventIndex":64, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "fe", "status": "processing", "eventIndex":65, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "els", "status": "processing", "eventIndex":66, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " like", "status": "processing", "eventIndex":67, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "\u201d", "status": "processing", "eventIndex":68, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " temperature", "status": "processing", "eventIndex":69, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " is", "status": "processing", "eventIndex":70, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " **", "status": "processing", "eventIndex":71, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "50", "status": "processing", "eventIndex":72, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "\u00b0C", "status": "processing", "eventIndex":73, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " (", "status": "processing", "eventIndex":74, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "122", "status": "processing", "eventIndex":75, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "\u00b0F", "status": "processing", "eventIndex":76, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ")**", "status": "processing", "eventIndex":77, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ".\n\n", "status": "processing", "eventIndex":78, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "Source", "status": "processing", "eventIndex":79, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ":", "status": "processing", "eventIndex":80, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " [", "status": "processing", "eventIndex":81, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "AQ", "status": "processing", "eventIndex":82, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "I", "status": "processing", "eventIndex":83, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ".in", "status": "processing", "eventIndex":84, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " \u2013", "status": "processing", "eventIndex":85, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " Abu", "status": "processing", "eventIndex":86, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " Dhabi", "status": "processing", "eventIndex":87, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " Weather", "status": "processing", "eventIndex":88, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": " Conditions", "status": "processing", "eventIndex":89, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "](", "status": "processing", "eventIndex":90, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "https", "status": "processing", "eventIndex":91, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "://", "status": "processing", "eventIndex":92, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "www", "status": "processing", "eventIndex":93, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ".a", "status": "processing", "eventIndex":94, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "qi", "status": "processing", "eventIndex":95, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ".in", "status": "processing", "eventIndex":96, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "/weather", "status": "processing", "eventIndex":97, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "/us", "status": "processing", "eventIndex":98, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "/un", "status": "processing", "eventIndex":99, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "ited", "status": "processing", "eventIndex":100, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "-ar", "status": "processing", "eventIndex":101, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "ab", "status": "processing", "eventIndex":102, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "-em", "status": "processing", "eventIndex":103, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "ir", "status": "processing", "eventIndex":104, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "ates", "status": "processing", "eventIndex":105, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "/", "status": "processing", "eventIndex":106, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "abu", "status": "processing", "eventIndex":107, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "-d", "status": "processing", "eventIndex":108, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "h", "status": "processing", "eventIndex":109, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "abi", "status": "processing", "eventIndex":110, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "/", "status": "processing", "eventIndex":111, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "abu", "status": "processing", "eventIndex":112, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "-d", "status": "processing", "eventIndex":113, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "h", "status": "processing", "eventIndex":114, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": "abi", "status": "processing", "eventIndex":115, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5bc4854da757be741e26", "answer": ")", "status": "processing", "eventIndex":116, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":117,"eventType":"statusLog","status":"processing","currentStatusLog":{"statusType":"fulfillment_completed","statusMessage":"Fulfillment completed","answer":"As of **8:30 PM local time on July 17, 2026**, Abu Dhabi’s weather is **clear at 36°C (97°F)**. Humidity is **57%**, with **NNE winds around 24 km/h** and visibility of **10 km**. The reported “feels like” temperature is **50°C (122°F)**.\n\nSource: [AQI.in – Abu Dhabi Weather Conditions](https://www.aqi.in/weather/us/united-arab-emirates/abu-dhabi/abu-dhabi)","time":"2026-07-17T16:44:02Z"}}
+
+event:message
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","eventIndex":118,"eventType":"metricsLog","status":"processing","publicMetrics":{"inputTokens":3771,"outputTokens":192,"totalTokens":3963,"ragTimeSec":9.85,"fulfillmentTimeSec":3.36,"totalTimeSec":13.21}}
+
+event:heartbeat
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5bc4854da757be741e26","time":"2026-07-17T16:44:03Z"}
+
+event:message
+data:[DONE]
+
+
+# capture ended (UTC): 2026-07-17T16:44:04.427622+00:00
