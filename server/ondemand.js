@@ -76,9 +76,12 @@ export async function createOdSession(externalUserId, pluginIds = []) {
 }
 
 /**
- * Stream a query. Emits normalized events via onEvent(type, payload):
- *   ('thinking', text) — reasoning token delta
- *   ('answer', text)   — answer token delta
+ * Stream a query. Emits events via onEvent(type, payload, meta?) — EVERY upstream SSE event
+ * type is forwarded (no filtering/re-synthesis):
+ *   ('thinking', text, {channel})  — reasoning delta: fulfillment_thinking | planning_thinking | step_thinking
+ *   ('planning', text, {channel})  — planning_output delta (planner's plan JSON)
+ *   ('tool_call', text, {channel}) — step_output delta (plugin invocation JSON w/ hydrated args)
+ *   ('answer', text)   — fulfillment answer token delta
  *   ('status', {statusType,statusMessage})
  *   ('metrics', {...})
  *   ('done', {fullAnswer})
@@ -162,9 +165,18 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
     if (et === 'fulfillment' && typeof evt.answer === 'string') {
       fullAnswer += evt.answer;
       onEvent('answer', evt.answer);
-    } else if (et === 'fulfillment_thinking') {
+    } else if (et === 'fulfillment_thinking' || et === 'planning_thinking' || et === 'step_thinking') {
+      // ALL live thinking channels forwarded (2026-07-17 capture: planning_thinking/step_thinking
+      // arrive on event:thinking frames; fulfillment_thinking retained from the Phase-1 contract).
       const delta = evt?.thinking?.delta;
-      if (typeof delta === 'string' && delta.length) onEvent('thinking', delta);
+      if (typeof delta === 'string' && delta.length) onEvent('thinking', delta, { channel: et });
+    } else if (et === 'planning_output' || et === 'step_output') {
+      // Planner/tool-call channels (live-captured 2026-07-17): planning_output streams the plan
+      // JSON; step_output streams the ACTUAL plugin invocation JSON (pluginId, name,
+      // api_request_parameters). Forwarded untouched as deltas — the frontend assembles and
+      // renders inline tool-call lines from step_output.
+      const delta = evt?.output?.delta;
+      if (typeof delta === 'string' && delta.length) onEvent(et === 'step_output' ? 'tool_call' : 'planning', delta, { channel: et, eventIndex: evt.eventIndex });
     } else if (et === 'statusLog' && evt.currentStatusLog) {
       onEvent('status', {
         statusType: evt.currentStatusLog.statusType,

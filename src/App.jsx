@@ -126,6 +126,11 @@ export default function App() {
       else if (type === 'plugin_status') patchLive({ pluginStatus: `${evt.message}` });
       else if (type === 'status') { if (!liveMsgRef.current.answerStarted) patchLive({ pluginStatus: evt.message }); }
       else if (type === 'thinking') patchLive(prev => ({ thinking: (prev.thinking || '') + evt.delta }));
+      // tool_call: real step_output plugin-invocation deltas (JSON assembled incrementally).
+      // The buffer is parsed by ToolCallLines when it becomes valid JSON; answer arrival marks it done.
+      else if (type === 'tool_call') patchLive(prev => ({ toolCallRaw: (prev.toolCallRaw || '') + evt.delta }));
+      // planning: planner's plan JSON deltas — kept for the debug drawer only (not a chat layer).
+      else if (type === 'planning') patchLive(prev => ({ planningRaw: (prev.planningRaw || '') + evt.delta }));
       // Appends to the existing text — never resets it, so a reconnect keeps prior output.
       else if (type === 'answer') patchLive(prev => ({ text: (prev.text || '') + evt.delta, answerStarted: true, pluginStatus: null }));
       else if (type === 'error') throw new Error(evt.message); // explicit server error — never retried

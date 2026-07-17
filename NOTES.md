@@ -381,3 +381,62 @@ English, TTS Arabic, STT with the docs' own sample mp3) returned **HTTP 400
 subscribed to Cloud Services, so STT/TTS is **unavailable on this account**; the
 requested 200-rule tests cannot pass with this key. No transcripts or audio were
 produced, and none are claimed. Full request/latency log in `PLUGIN_TESTS.md`.
+
+---
+
+## 2026-07-17 — Voice (Services API) + real-stream wiring + UI cleanup (evening pass)
+
+### Services API docs (read LIVE 2026-07-17 ~17:12 UTC via /config/v1/public/docs)
+- STT: `POST https://api.on-demand.io/services/v1/public/service/execute/speech_to_text`,
+  `apikey` header, body `{audioUrl}` (required). 200 → `{message, data}`.
+- TTS: `POST .../execute/text_to_speech`, `apikey` header, body `{model: tts-1|tts-1-hd,
+  input, voice: alloy|echo|fable|onyx|nova|shimmer}` (all required). 200 → `{message, data}`.
+- Doc coverage: NO streaming mode documented for either service (fetch-then-play used);
+  NO language parameter documented (EN/AR coverage unspecified by the docs — Arabic is sent
+  through `input` as-is); accepted audio formats not enumerated in the spec.
+
+### Live STT/TTS tests (2026-07-17T17:14Z) — see PLUGIN_TESTS.md for full log
+- STT (real WAV url): HTTP 400 in 123 ms — `"Please subscribe to the service to use it"`.
+- TTS EN: HTTP 400 in 230 ms — same subscription gate. TTS AR: HTTP 400 in 169 ms — same.
+- **Statement: speech services are NOT enabled (not subscribed) on this workspace — a 200
+  test is impossible with this key. No mock/simulated audio was added; UI degrades to a
+  quiet localized "speech unavailable" state.** Routes + UI are fully wired for the day the
+  subscription is enabled.
+
+### Real-stream wiring changes (this pass)
+- DELETED the synthetic `/api/debug/stream-demo` route and the DebugDrawer "Demo thinking"
+  runner/preview — no simulated stream content remains in runtime paths.
+- `server/ondemand.js` now forwards EVERY captured upstream channel:
+  `fulfillment_thinking` / `planning_thinking` / `step_thinking` → `thinking` frames (with
+  `channel`), `planning_output` → `planning` deltas, `step_output` → `tool_call` deltas
+  (untouched JSON delta text), plus the existing `answer`/`status`/`metrics`/`done`.
+- Frontend: `ToolCallLines` (Messages.jsx) renders REAL `step_output` plugin invocations —
+  slim `⚙ name → query` lines, spinner→✓ on first answer token, expandable hydrated args.
+  Assistant turn = exactly three layers (thinking line, tool lines, streamed answer) +
+  one slim muted trace line.
+- Debug drawer + footer now hard-gated behind `?debug=1` (or `#debug`); `STREAM_DEBUG`
+  server logging default OFF.
+- Styling: OnDemand white/green tokens `#159a7a` / `#1dac89` applied (accent remap);
+  numeric/Year table columns fixed with `word-break: keep-all` + `tabular-nums`
+  (no more `202 / 5` mid-word wraps).
+- Orphan components deleted: SwirlStatus.jsx, ToolActivity.jsx.
+
+### End-to-end wire proof (2026-07-17T17:21:42–17:22:01Z) — UI feed matches upstream events
+
+Dump: `debug/sse-samples/e2e-browser-feed-plugin-call.sse.log` (18,686 bytes, 213 data
+frames) — the browser-bound `/api/chat` feed for a live plugin-triggering query (Dubai
+weather, Internet Search plugin), captured against the real OnDemand upstream.
+
+Frame counts: `status`=4 · `routing`=1 · `plugin_status`=1 · `thinking`=15 ·
+`planning`=12 · `tool_call`=13 · `answer`=165 · `metrics`=1 · `done`=1.
+
+**Evidence update — REAL thinking text captured this run:** the `planning_thinking`
+channel carried NON-EMPTY reasoning deltas (e.g. `"**Planning JSON Retrieval**\n\nI"`,
+`" need to produce a plan for retrieving"`, `" JSON. This involves fetching data"`),
+proxied verbatim to the browser as `{type:"thinking", delta, channel:"planning_thinking"}`
+frames and rendered live in the Thinking accordion. So: the PLANNER emits real thinking
+tokens on plugin runs; what remains unobserved is `fulfillment_thinking` (model-level
+reasoning during the answer phase) — still zero occurrences across all 2026-07-17
+captures. The `tool_call` frames reassemble to the full plugin invocation JSON
+(`pluginId: plugin-1713924030`, `name: fetchInternetData`, hydrated
+`api_request_parameters`) — rendered as the inline ⚙ tool-call line.

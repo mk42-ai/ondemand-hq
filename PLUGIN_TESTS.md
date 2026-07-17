@@ -54,3 +54,57 @@ negative result, confirming stability of the finding:
 
 No fake audio, no synthetic transcript, and no Web Speech API fallback exists
 anywhere in the codebase (verified by the 2026-07-17 final-cleanup grep pass — see NOTES.md).
+
+---
+
+## 2026-07-17 — OnDemand Services API: speech_to_text / text_to_speech (live tests)
+
+Docs read LIVE first (2026-07-17 ~17:12 UTC) via the public docs API
+(`GET /config/v1/public/docs/categories` → Services API →
+`GET /config/v1/public/docs/reference/api/convertaudiototext` and
+`.../converttexttoaudio`). Documented contracts:
+
+| Service | Endpoint (from spec `servers[].url` + path) | Auth | Required body | Success |
+|---|---|---|---|---|
+| STT | `POST https://api.on-demand.io/services/v1/public/service/execute/speech_to_text` | `apikey` header | `{ audioUrl: string }` | 200 `{message, data}` |
+| TTS | `POST https://api.on-demand.io/services/v1/public/service/execute/text_to_speech` | `apikey` header | `{ model: "tts-1"\|"tts-1-hd", input: string, voice: "alloy"\|"echo"\|"fable"\|"onyx"\|"nova"\|"shimmer" }` | 200 `{message, data}` |
+
+Doc-coverage notes (from the fetched OpenAPI specs — not memory):
+- **No streaming support is documented** for either service (single JSON request/response; no
+  SSE/chunked mode in the spec) → the app uses fetch-then-play for TTS.
+- **No language parameter is documented** for either service. STT has only `audioUrl`; TTS has
+  only `model`/`input`/`voice`. EN+AR coverage is therefore not doc-specified; Arabic input to
+  TTS is passed through `input` as-is (the underlying `tts-1` voices are multilingual per the
+  model family, but the OnDemand spec itself is silent on languages).
+- Documented formats: the spec does not enumerate accepted audio formats for `audioUrl` (only
+  "The URL of the audio file").
+
+### Live test results (all on 2026-07-17T17:14Z, apikey of this workspace)
+
+| # | Test | Request | HTTP | Latency | Response body (verbatim) |
+|---|---|---|---|---|---|
+| 1 | STT — recorded WAV sample | `{audioUrl:"https://www2.cs.uic.edu/~i101/SoundFiles/taunt.wav"}` | **400** | 123 ms | `{"message":"Please subscribe to the service to use it","errorCode":"invalid_request"}` |
+| 2 | TTS — English sentence | `{model:"tts-1",input:"Welcome to the ODA Productivity Suite.",voice:"alloy"}` | **400** | 230 ms | `{"message":"Please subscribe to the service to use it","errorCode":"invalid_request"}` |
+| 3 | TTS — Arabic sentence | `{model:"tts-1",input:"مرحباً بكم في جناح الإنتاجية لمكتب شؤون التنمية.",voice:"alloy"}` | **400** | 169 ms | `{"message":"Please subscribe to the service to use it","errorCode":"invalid_request"}` |
+
+### Verdict (honest, evidence-backed)
+
+**A 200-test could NOT be achieved for either service on this workspace: both
+`speech_to_text` and `text_to_speech` return HTTP 400
+`"Please subscribe to the service to use it"` on every request.** This is a
+subscription/entitlement gate on the OnDemand workspace tied to this API key — not a
+malformed request (the bodies match the documented schemas exactly) and not a code bug.
+This matches the identical probe result recorded at 2026-07-17 03:28 UTC during Phase 1.
+
+Graceful failure implemented per spec:
+- Backend `server/speech.js` classifies the 400 as `SERVICE_NOT_SUBSCRIBED` and returns a
+  structured error; routes registered in `server/index.js` (`/api/speech/transcribe`,
+  `/api/speech/tts`, `/api/audio/:id`).
+- Frontend: the mic (Recorder in the Composer) and per-message speaker (AudioPlayer) are
+  wired to the real endpoints; on `SERVICE_NOT_SUBSCRIBED` the mic surfaces the localized
+  "speech unavailable" note and the player renders a quiet unavailable state — no Web Speech
+  API, no third-party fallback, no mocked audio anywhere.
+
+Re-test procedure once the workspace subscribes to the services: re-run the three requests
+above; expected 200 `{message, data}` with audio/transcript payloads — the app needs no code
+change to light up.

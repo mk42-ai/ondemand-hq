@@ -16,6 +16,7 @@ import { createOdSession, streamQuery, syncQuery } from './ondemand.js';
 import { fetchCountryPack, renderDataBlock, resolveCountry } from './countryData.js';
 import { buildExport } from './exports.js';
 import { extractText } from './extract.js';
+import { registerSpeechRoutes } from './speech.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -186,8 +187,10 @@ app.post('/api/chat', async (req, res) => {
       pluginIds,
       systemPrompt,
       signal: upstreamAbort.signal, // WS1: cancel upstream when the browser disconnects
-      onEvent: (type, payload) => {
-        if (type === 'thinking') send('thinking', { delta: payload });
+      onEvent: (type, payload, meta) => {
+        if (type === 'thinking') send('thinking', { delta: payload, channel: meta?.channel });
+        else if (type === 'planning') send('planning', { delta: payload, channel: meta?.channel });
+        else if (type === 'tool_call') send('tool_call', { delta: payload, channel: meta?.channel });
         else if (type === 'answer') { sawAnswer = true; send('answer', { delta: payload }); }
         else if (type === 'status') send('status', { message: payload.statusMessage, statusType: payload.statusType });
         else if (type === 'metrics') send('metrics', payload);
@@ -271,6 +274,9 @@ app.get('/api/export/:id/download', (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="${exp.name}"`);
   res.send(exp.buffer);
 });
+
+// ---------- speech (OnDemand Services API: speech_to_text / text_to_speech) ----------
+registerSpeechRoutes(app, upload);
 
 // ---------- static frontend (built SPA) ----------
 const DIST = path.join(__dirname, '..', 'dist');

@@ -4,11 +4,21 @@ import ErrorBoundary from './ErrorBoundary.jsx';
 
 /**
  * Stream debug drawer — observability for the /api/chat SSE pipeline.
- * Subscribes to streamDebugBus (tapped inside api.js streamChat BEFORE onEvent)
- * so it never alters the app's stream semantics. Shows a live frame feed,
- * TTFT / tokens-per-second metrics for the current run, per-type counters,
- * and a UTC clock.
+ * DEV-GATED: renders ONLY when the URL carries ?debug=1 (or #debug) — regular
+ * users never see frame logs, TTFT, or event counters. Subscribes to
+ * streamDebugBus (tapped inside api.js streamChat BEFORE onEvent) so it never
+ * alters the app's stream semantics. Every row is a REAL frame from the live
+ * /api/chat stream — no synthetic feed exists.
  */
+
+/** Dev gate: ?debug=1 in the query string (or #debug hash). */
+export function isDebugUiEnabled() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const qs = new URLSearchParams(window.location.search);
+    return qs.get('debug') === '1' || window.location.hash === '#debug';
+  } catch { return false; }
+}
 
 /* ---------- shared enabled state (drawer header toggle + footer toggle) ---------- */
 const enabledListeners = new Set();
@@ -29,6 +39,8 @@ export function useStreamDebugEnabled() {
 /* ---------- helpers ---------- */
 const TYPE_CLASS = {
   thinking: 'dbg-t-thinking',
+  planning: 'dbg-t-thinking',
+  tool_call: 'dbg-t-status',
   answer: 'dbg-t-answer',
   status: 'dbg-t-status',
   plugin_status: 'dbg-t-status',
@@ -43,35 +55,18 @@ const TYPE_CLASS = {
 const typeClass = (t) => TYPE_CLASS[t] || 'dbg-t-quiet';
 const feedTime = (iso) => (iso ? `${String(iso).slice(11, 23)}` : '—');
 
-/* ---------- debug-UI gate: visible ONLY with ?debug=1 (or VITE_DEBUG_UI=1 build flag) ---------- */
-export const DEBUG_UI_ENABLED = (() => {
-  try {
-    if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('debug') === '1') return true;
-    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DEBUG_UI === '1') return true;
-  } catch { /* SSR / no location */ }
-  return false;
-})();
-
-/* ---------- footer (mounted at the bottom of the main column) ---------- */
+/* ---------- footer (dev-gated with the drawer) ---------- */
 export function DebugFooter() {
   const [enabled, setEnabled] = useStreamDebugEnabled();
-  if (!DEBUG_UI_ENABLED) {
-    return (
-      <footer className="app-footer">
-        <span className="app-footer__brand">ODA Productivity Suite</span>
-      </footer>
-    );
-  }
+  if (!isDebugUiEnabled()) return null;
   return (
-    <footer className="app-footer">
-      <span className="app-footer__brand">ODA Productivity Suite</span>
+    <footer className="debug-footer">
       <label className="dbg-switch-label">
         <span>Stream debug</span>
         <button
           type="button"
           role="switch"
           aria-checked={enabled}
-          data-testid="footer-debug-toggle"
           className={`dbg-switch${enabled ? ' on' : ''}`}
           onClick={() => setEnabled(!enabled)}
         >
@@ -186,7 +181,7 @@ function DebugDrawerInner() {
           </div>
 
           <div className="debug-drawer__feed" data-testid="debug-feed" ref={feedRef}>
-            {rowsRef.current.length === 0 && <div className="dbg-row dbg-t-quiet">— no stream events yet; send a message —</div>}
+            {rowsRef.current.length === 0 && <div className="dbg-row dbg-t-quiet">— no stream events yet; send a message to see live frames —</div>}
             {rowsRef.current.map(r => (
               <div key={r.seq} className={`dbg-row ${typeClass(r.type)}`}>
                 <span className="dbg-row__ts">{feedTime(r.clientTs)}</span>
@@ -195,7 +190,6 @@ function DebugDrawerInner() {
               </div>
             ))}
           </div>
-
         </div>
       )}
     </aside>
@@ -203,7 +197,7 @@ function DebugDrawerInner() {
 }
 
 export default function DebugDrawer() {
-  if (!DEBUG_UI_ENABLED) return null;            // hard gate: never rendered for regular users
+  if (!isDebugUiEnabled()) return null;          // hard dev gate: ?debug=1 only
   return (
     <ErrorBoundary name="debug-drawer">
       <DebugDrawerInner />

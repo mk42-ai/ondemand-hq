@@ -8,8 +8,12 @@
   --ink-55: rgba(29, 37, 44, 0.55);
   --ink-35: rgba(29, 37, 44, 0.35);
   --ink-12: rgba(29, 37, 44, 0.12);
-  --gold: #AD833B;
-  --gold-soft: #F1E7D6;   /* cream */
+  /* OnDemand white/green branding tokens */
+  --od-green: #159a7a;
+  --od-green-bright: #1dac89;
+  --od-green-soft: #E3F4EF;
+  --gold: #159a7a;         /* accent remapped to OnDemand green (legacy var name kept for low-risk restyle) */
+  --gold-soft: #E3F4EF;    /* soft green wash */
   --mist: #CBDCE6;
   --mist-soft: #E5EDF2;
   --steel: #678CA5;
@@ -186,6 +190,10 @@ textarea, input { font-family: inherit; }
 .md table { border-collapse: collapse; margin: .8em 0; width: 100%; font-size: 13.5px; }
 .md th { background: var(--bg-subtle); font-weight: 600; text-align: left; }
 .md th, .md td { border: 1px solid var(--border); padding: 7px 10px; }
+/* Numeric/Year column fix: never break a number mid-word ("202 / 5"). Numbers, years and
+   short numeric cells keep their glyphs on one line; columns get a sane minimum width. */
+.md th, .md td { min-width: 52px; overflow-wrap: normal; word-break: keep-all; }
+.md td { font-variant-numeric: tabular-nums; }
 .md blockquote { border-inline-start: 3px solid var(--gold); margin: .8em 0; padding: 2px 14px; color: var(--ink-70); }
 .md a { color: var(--teal); }
 .md [dir="auto"] { unicode-bidi: plaintext; }
@@ -214,22 +222,29 @@ textarea, input { font-family: inherit; }
   font-style: italic; line-height: 1.55;
 }
 
-/* ============ STEP 5 — Routing trace ============ */
-.trace {
-  border: 1px solid var(--border); border-radius: 10px;
-  margin-top: 12px; overflow: hidden; background: #fff;
+/* ============ STEP 5 — Routing trace: ONE slim muted line under the answer ============ */
+.trace-line {
+  margin-top: 10px; font-size: 11px; color: var(--ink-35);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.trace__head {
-  width: 100%; display: flex; align-items: center; gap: 8px;
-  padding: 6px 12px; border: none; background: none;
-  font-size: 11.5px; color: var(--ink-35); text-align: left;
+
+/* ============ Inline tool-call lines (real step_output plugin frames) ============ */
+.toollines { margin: 0 0 10px; }
+.toolline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 3px 0; font-size: 12.5px; color: var(--ink-55); }
+.toolline__spin {
+  width: 12px; height: 12px; border: 2px solid var(--ink-12); border-top-color: var(--od-green);
+  border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0;
 }
-.trace__head:hover { color: var(--ink-55); }
-.trace__head .mode { font-weight: 700; color: var(--steel); }
-.trace__head .arrow { color: var(--ink-35); }
-.trace__body { padding: 4px 14px 10px; font-size: 12px; color: var(--ink-55); border-top: 1px dashed var(--border); }
-.trace__body div { margin: 3px 0; }
-.trace__plug { display: inline-block; background: var(--mist-soft); color: var(--teal); border-radius: 6px; padding: 1px 8px; margin: 2px 4px 2px 0; font-size: 11px; }
+.toolline__check { color: var(--od-green); font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.toolline__btn { border: none; background: none; padding: 0; font-size: 12.5px; color: var(--ink-55); text-align: left; }
+.toolline__btn:hover { color: var(--ink); }
+.toolline__name { font-weight: 600; }
+.toolline__target { color: var(--ink-35); }
+.toolline__args {
+  flex-basis: 100%; margin: 4px 0 2px 20px; padding: 8px 10px;
+  background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 8px;
+  font-size: 11.5px; color: var(--ink-55); white-space: pre-wrap; word-break: break-word; max-height: 160px; overflow-y: auto;
+}
 
 /* ============ STEP 6 — Wizard + live preview ============ */
 .preview-col {

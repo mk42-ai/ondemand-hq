@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Markdown, dissect } from '../markdown.jsx';
 import BilingualLoader from './BilingualLoader.jsx';
+import AudioPlayer from './AudioPlayer.jsx';
 
 /* ---------- STEP 4: thinking accordion ---------- */
 export function ThinkingAccordion({ thinking, live, forceOpenWhileLive }) {
@@ -29,32 +30,48 @@ export function ThinkingAccordion({ thinking, live, forceOpenWhileLive }) {
   );
 }
 
-/* ---------- STEP 5: routing trace card ---------- */
-export function TraceCard({ routing, traceText }) {
-  const [open, setOpen] = useState(false);
+/* ---------- STEP 5: routing trace — ONE slim muted line under the answer ---------- */
+export function TraceCard({ routing }) {
   if (!routing) return null;
   return (
-    <div className="trace">
-      <button className="trace__head" onClick={() => setOpen(!open)}>
-        <span className="mode">Mode: {routing.mode}</span>
-        <span className="arrow">→</span>
-        <span>{routing.feature}</span>
-        <span className="arrow">→</span>
-        <span>{routing.plugins?.length ? `${routing.plugins.length} plugin${routing.plugins.length > 1 ? 's' : ''}` : 'LLM-direct'}</span>
-        <span style={{ flex: 1 }} />
-        <span className={`chev${open ? ' open' : ''}`}>▶</span>
-      </button>
-      {open && (
-        <div className="trace__body">
-          <div><b>Worker:</b> {routing.feature} · <b>Mode:</b> {routing.mode} ({routing.reason})</div>
-          <div><b>Model:</b> {routing.model} · <b>Router:</b> {routing.source}</div>
-          <div><b>Plugins attached:</b> {routing.plugins?.length
-            ? routing.plugins.map(p => <span className="trace__plug" key={p}>{p}</span>)
-            : <span className="trace__plug">none — LLM-direct</span>}</div>
-          {routing.analysisFirst && <div style={{ color: 'var(--warn)' }}>analysis-first bright line applied</div>}
-          {traceText && <div style={{ whiteSpace: 'pre-wrap', marginTop: 6, fontFamily: 'inherit' }}>{traceText}</div>}
-        </div>
-      )}
+    <div className="trace-line" title={routing.reason || ''}>
+      {routing.feature} · {routing.mode} · {routing.plugins?.length
+        ? routing.plugins.join(', ')
+        : 'LLM-direct'} · {routing.model}
+    </div>
+  );
+}
+
+/* ---------- Inline tool-call lines — driven by REAL step_output plugin frames ----------
+ * The upstream step_output channel streams the plugin invocation JSON as deltas
+ * (live-captured 2026-07-17: {"plugins":[{pluginId,name,api_request_parameters,…}]}).
+ * While the JSON is still partial → spinner state; once parseable → each plugin gets a
+ * slim line "⚙ name → query" with spinner→✓ (done = answer started), expandable args. */
+export function ToolCallLines({ raw, done }) {
+  const [openIdx, setOpenIdx] = useState(null);
+  if (!raw) return null;
+  let plugins = null;
+  try { plugins = JSON.parse(raw)?.plugins || null; } catch { /* still streaming */ }
+  if (!plugins) {
+    return <div className="toolline"><span className="toolline__spin" aria-hidden="true" /> <span className="toolline__name">Preparing tool call…</span></div>;
+  }
+  return (
+    <div className="toollines">
+      {plugins.map((p, i) => {
+        const target = p.api_request_parameters?.query || p.api_request_parameters?.url
+          || Object.values(p.api_request_parameters || {})[0] || '';
+        return (
+          <div key={i} className="toolline">
+            {done ? <span className="toolline__check" aria-hidden="true">✓</span> : <span className="toolline__spin" aria-hidden="true" />}
+            <button className="toolline__btn" onClick={() => setOpenIdx(openIdx === i ? null : i)}>
+              ⚙ {p.name || p.pluginId} {target ? <span className="toolline__target">→ {String(target).slice(0, 80)}</span> : null}
+            </button>
+            {openIdx === i && (
+              <pre className="toolline__args">{JSON.stringify(p.api_request_parameters || {}, null, 2)}</pre>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -97,13 +114,17 @@ export function PluginSkeleton({ label }) {
 
 /* ---------- assistant message ---------- */
 export function AssistantMessage({ msg, live, onOption, onExport, exportBusy, artifacts }) {
-  const { body, options, trace } = dissect(msg.text || '');
+  const { body, options } = dissect(msg.text || '');
   const showExports = !live && (msg.text || '').length > 120;
   return (
     <div className="msg-asst">
+      {/* Layer 1 — thinking line (real thinking deltas only; auto-collapses on first answer token) */}
       <ThinkingAccordion thinking={msg.thinking} live={Boolean(live && !msg.answerStarted)} forceOpenWhileLive={true} />
-      {/* Loader vanishes on the FIRST token: fulfillment (answerStarted) OR fulfillment_thinking (msg.thinking non-empty). */}
+      {/* Layer 2 — inline tool-call lines from REAL step_output plugin frames */}
+      <ToolCallLines raw={msg.toolCallRaw} done={Boolean(msg.answerStarted || !live)} />
+      {/* Loader vanishes on the FIRST token: fulfillment (answerStarted) OR any thinking delta. */}
       {live && !msg.answerStarted && !msg.thinking && <PluginSkeleton label={msg.pluginStatus || 'Routing your request…'} />}
+      {/* Layer 3 — streamed answer */}
       <Markdown text={body} />
       {live && <span className="cursor-blink" />}
       {!live && options.length > 0 && (
@@ -112,6 +133,8 @@ export function AssistantMessage({ msg, live, onOption, onExport, exportBusy, ar
         </div>
       )}
       {(msg.artifactIds || []).map(id => artifacts[id] && <ArtifactCard key={id} artifact={artifacts[id]} />)}
+      {/* Per-assistant-message speaker: OnDemand TTS playback (fetch-then-play; Arabic voice offered via voice select). */}
+      {!live && (msg.text || '').length > 40 && <AudioPlayer text={body} />}
       {showExports && (
         <div className="exportbar">
           <span>Export:</span>
@@ -121,7 +144,7 @@ export function AssistantMessage({ msg, live, onOption, onExport, exportBusy, ar
           {exportBusy && <BilingualLoader size="sm" label="Generating document…" />}
         </div>
       )}
-      <TraceCard routing={msg.routing} traceText={trace} />
+      <TraceCard routing={msg.routing} />
     </div>
   );
 }

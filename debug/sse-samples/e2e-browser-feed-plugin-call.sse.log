@@ -1,0 +1,434 @@
+# End-to-end browser-bound SSE dump — /api/chat proxied feed (server run local, port 8090)
+# Query: 'What is the current weather in Dubai right now? Search the web and cite your source.'
+# Upstream: predefined-gpt-5.6-sol + reasoningEffort=medium + responseMode=stream + Internet Search plugin
+# Captured: 2026-07-17T17:21:42.805Z -> 2026-07-17T17:22:01.574Z (18,073 bytes, 213 data frames)
+# Frame types: status=4 routing=1 plugin_status=1 thinking=15 planning=12 tool_call=13 answer=165 metrics=1 done=1
+# NOTE: THIS RUN CAPTURED NON-EMPTY THINKING DELTAS (channel=planning_thinking) — real reasoning text.
+data:{"type":"status","ts":"2026-07-17T17:21:42.814Z","message":"Routing your request…"}
+
+data:{"type":"routing","ts":"2026-07-17T17:21:46.237Z","feature":"chat","mode":"FAST","reason":"Current weather lookup is a simple conversational information request","source":"llm-router","analysisFirst":false,"outOfScope":false,"plugins":["Internet Search"],"model":"gpt-5.6-sol-medium"}
+
+data:{"type":"status","ts":"2026-07-17T17:21:46.237Z","message":"Opening a verified session…"}
+
+data:{"type":"plugin_status","ts":"2026-07-17T17:21:46.378Z","plugin":"Internet Search","message":"Working with Internet Search…"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:49.701Z","delta":"**Planning JSON Retrieval**\n\nI","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:49.791Z","delta":" need to produce a plan for retrieving","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:49.881Z","delta":" JSON. This involves fetching data","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:49.936Z","delta":" from the internet, and it's a","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.032Z","delta":" one-step process. However, I need","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.113Z","delta":" to consider the current timestamp","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.190Z","delta":" as proof, but the schema seems","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.253Z","delta":" to disallow outputs with timestamps","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.330Z","delta":". I could mention that the query","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.374Z","delta":" explicitly asks for retrieval","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.434Z","delta":" along with observation time and","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.494Z","delta":" source URL to maintain object","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.596Z","delta":"ivity. I want to ensure that my","channel":"planning_thinking"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:50.710Z","delta":" JSON is valid and meets the necessary","channel":"planning_thinking"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.786Z","delta":"{\n  \"objective\": \"Find Dubai's","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.800Z","delta":" current weather from the web and","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.810Z","delta":" provide a cited source.\",\n  \"","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.826Z","delta":"steps\": [\n    {\n      \"user_query","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.845Z","delta":"\": \"Search the web for Dubai's","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.858Z","delta":" current weather, including temperature","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.864Z","delta":", conditions, observation time","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.881Z","delta":", and a source citation with URL","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.893Z","delta":".\",\n      \"assistant_query\": \"\",\n","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.916Z","delta":"      \"depends\": [],\n      \"plugins","channel":"planning_output"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:50.926Z","delta":"\": [\n        \"fetchInternetData","channel":"planning_output"}
+
+data:{"type":"thinking","ts":"2026-07-17T17:21:51.101Z","delta":" requirements!","channel":"planning_thinking"}
+
+data:{"type":"planning","ts":"2026-07-17T17:21:51.101Z","delta":"\"\n      ]\n    }\n  ]\n}","channel":"planning_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.184Z","delta":"{\"plugins\":[{\"pluginId\":\"plugin","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.248Z","delta":"-1713924030\",\"name\":\"fetchInternet","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.312Z","delta":"Data\",\"description\":\"Searches the","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.419Z","delta":" web for Dubai’s current observed","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.427Z","delta":" weather, including temperature","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.522Z","delta":", conditions, observation time","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.601Z","delta":" and a citable source URL.\",\"api","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.649Z","delta":"_request_parameters\":{\"query\":\"","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.694Z","delta":"Dubai current weather temperature","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.713Z","delta":" conditions observation time source","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.770Z","delta":" URL\"},\"all_parameters_hydrated","channel":"step_output"}
+
+: keepalive
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.821Z","delta":"\":true,\"dependencies\":[],\"identifier","channel":"step_output"}
+
+data:{"type":"tool_call","ts":"2026-07-17T17:21:52.988Z","delta":"\":\"rest_api\"}]}","channel":"step_output"}
+
+data:{"type":"status","ts":"2026-07-17T17:21:54.560Z","message":"Fulfilling the prompt...","statusType":"fulfilling"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.849Z","delta":"Dubai"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.850Z","delta":" is"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.853Z","delta":" currently"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.853Z","delta":" **"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.856Z","delta":"clear"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.856Z","delta":" and"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.905Z","delta":" very"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.905Z","delta":" hot"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.910Z","delta":" at"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.911Z","delta":" "}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.970Z","delta":"99"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.971Z","delta":"°F"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.972Z","delta":"**,"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:57.972Z","delta":" with"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.024Z","delta":" a"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.024Z","delta":" Real"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.025Z","delta":"Feel"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.026Z","delta":"®"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.029Z","delta":" of"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.029Z","delta":" **"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.033Z","delta":"101"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.034Z","delta":"°F"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.076Z","delta":"**"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.077Z","delta":" ["}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.086Z","delta":"from"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.086Z","delta":"-web"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.092Z","delta":":"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.093Z","delta":" Acc"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.182Z","delta":"u"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.183Z","delta":"Weather"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.186Z","delta":"]."}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.187Z","delta":" Hum"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.188Z","delta":"idity"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.189Z","delta":" is"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.192Z","delta":" **"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.193Z","delta":"41"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.230Z","delta":"%"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.230Z","delta":"**,"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.242Z","delta":" with"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.242Z","delta":" eas"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.287Z","delta":"ter"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.287Z","delta":"ly"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.296Z","delta":" winds"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.296Z","delta":" at"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.299Z","delta":" **"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.299Z","delta":"12"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.344Z","delta":" mph"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.344Z","delta":"**"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.350Z","delta":" and"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.350Z","delta":" **"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.357Z","delta":"0"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.357Z","delta":"%"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.357Z","delta":" cloud"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.360Z","delta":" cover"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.398Z","delta":"**"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.399Z","delta":" ["}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.408Z","delta":"from"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.409Z","delta":"-web"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.410Z","delta":":"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.410Z","delta":" Acc"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.411Z","delta":"u"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.453Z","delta":"Weather"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.454Z","delta":"]."}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.464Z","delta":" The"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.465Z","delta":" observation"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.472Z","delta":" was"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.472Z","delta":" recorded"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.474Z","delta":" at"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.475Z","delta":" **"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.502Z","delta":"9"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.503Z","delta":":"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.517Z","delta":"21"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.517Z","delta":" pm"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.559Z","delta":" local"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.559Z","delta":" time"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.561Z","delta":" on"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.561Z","delta":" "}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.564Z","delta":"17"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.564Z","delta":" July"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.565Z","delta":" "}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.566Z","delta":"202"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.610Z","delta":"6"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.610Z","delta":"**"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.612Z","delta":" ["}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.613Z","delta":"from"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.623Z","delta":"-web"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.624Z","delta":":"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.627Z","delta":" Acc"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.627Z","delta":"u"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.668Z","delta":"Weather"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.668Z","delta":"].\n\n"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.675Z","delta":"Source"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.675Z","delta":":"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.683Z","delta":" ["}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.683Z","delta":"Acc"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.748Z","delta":"u"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.749Z","delta":"Weather"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.753Z","delta":" —"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.753Z","delta":" Dubai"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.757Z","delta":" current"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.758Z","delta":" weather"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.767Z","delta":"]("}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.767Z","delta":"https"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.787Z","delta":"://"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.787Z","delta":"www"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.923Z","delta":".acc"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.924Z","delta":"uwe"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.932Z","delta":"ather"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.933Z","delta":".com"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.936Z","delta":"/en"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.937Z","delta":"/"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.946Z","delta":"ae"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.946Z","delta":"/d"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.946Z","delta":"ub"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.946Z","delta":"ai"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.946Z","delta":"/"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.946Z","delta":"323"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.946Z","delta":"091"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.947Z","delta":"/current"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.949Z","delta":"-weather"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.950Z","delta":"/"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.955Z","delta":"323"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.955Z","delta":"091"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.955Z","delta":")\n\n"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.956Z","delta":"```"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.957Z","delta":"trace"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.958Z","delta":"\n"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.961Z","delta":"Mode"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:58.962Z","delta":":"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.002Z","delta":" FAST"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.002Z","delta":" —"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.005Z","delta":" Direct"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.005Z","delta":" live"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.101Z","delta":"-weather"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.102Z","delta":" lookup"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.104Z","delta":" from"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.105Z","delta":" a"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.109Z","delta":" cited"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.109Z","delta":" web"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.111Z","delta":" source"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.112Z","delta":"\n"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.163Z","delta":"Worker"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.165Z","delta":":"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.165Z","delta":" Country"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.165Z","delta":" data"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.205Z","delta":"\n"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.206Z","delta":"QA"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.265Z","delta":":"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.265Z","delta":" Checked"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.333Z","delta":" source"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.334Z","delta":" attribution"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.345Z","delta":","}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.346Z","delta":" quantitative"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.432Z","delta":" tags"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.432Z","delta":","}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.437Z","delta":" location"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.438Z","delta":" and"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.443Z","delta":" observation"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.443Z","delta":" time"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.444Z","delta":"\n"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.445Z","delta":"Flags"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.447Z","delta":":"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.447Z","delta":" none"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.513Z","delta":"\n"}
+
+data:{"type":"answer","ts":"2026-07-17T17:21:59.513Z","delta":"```"}
+
+data:{"type":"status","ts":"2026-07-17T17:21:59.560Z","message":"Fulfillment completed","statusType":"fulfillment_completed"}
+
+data:{"type":"metrics","ts":"2026-07-17T17:21:59.561Z","inputTokens":3014,"outputTokens":310,"totalTokens":3324,"ragTimeSec":7.75,"fulfillmentTimeSec":5,"totalTimeSec":12.75}
+
+data:{"type":"done","ts":"2026-07-17T17:22:01.570Z","messageId":"b6e4e363-7503-4bd7-8503-5b1827f7dad6","fullAnswerPresent":true,"sawAnswer":true}
+

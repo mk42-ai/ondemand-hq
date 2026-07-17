@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { uploadFile } from '../api.js';
+import Recorder from './Recorder.jsx';
 import BilingualLoader from './BilingualLoader.jsx';
 
 export default function Composer({ onSend, busy, onError, placeholder }) {
@@ -64,6 +65,9 @@ export default function Composer({ onSend, busy, onError, placeholder }) {
         <button className="iconbtn" onClick={pickFile} disabled={busy || uploading} title="Attach pptx / docx / pdf / xlsx">
           {uploading ? <BilingualLoader size="sm" className="biloader--tight" /> : '📎'}
         </button>
+        <Recorder disabled={busy || uploading}
+          onTranscript={(txt) => { if (txt?.trim()) { setText(prev => (prev ? `${prev} ${txt}` : txt)); } taRef.current?.focus(); }}
+          onError={(msg) => onError?.(msg)} />
         <button className="send" onClick={submit} disabled={busy || uploading || (!text.trim() && !attached)} title="Send">➤</button>
       </div>
     </div>
