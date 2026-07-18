@@ -696,3 +696,81 @@ MEDIUM 4.84, LOW 7.24, xpost name 18.51, handle 6.12, source-org 6.41.
 :focus-visible outlines on all interactive elements; prefers-reduced-motion collapse for
 row/pill/card animations; alt text on every rendered image (avatars, media, logos);
 375px responsive fixes (engagement row, name truncation, globe list height).
+
+
+---
+
+## 2026-07-18 (05:28–05:40 UTC) — X-data workflow (fable-medium) + feed refresh
+
+### (A) Workflow created + activated
+- Name: **X Intelligence Fetch — fable-medium** · ID **6a5b0f8221d41c1c020736a3** · isActive: true
+- Model verified LIVE from GET /config/v1/public/endpoints: the only 'fable' endpoint is
+  **predefined-claude-fable-5**; every LLM node uses it with reasoningEffort "medium".
+- Graph: X Search (plugin-1751872652) → Perplexity news enrichment (plugin-1722260873)
+  → digest merge → o_analyzer → email delivery. Webhook trigger (on-demand execution).
+
+### (C) Link validation sweep — 43 URLs, 40 genuine HTTP 200 (only 200s wired in)
+| URL | HTTP | Timestamp |
+|---|---|---|
+| https://x.com/WorldBankGroup/status/2078238427338936613 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/WorldBankGroup/status/2077785696971247781 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/WorldBankGroup/status/2077151261506633776 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/WorldBankGroup/status/2077876010704642259 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/DrTedros/status/2078135154741064075 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/WHO/status/2077800557356396723 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/WHO/status/2077225810977788372 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/UN/status/2078329161475858903 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/WFP/status/2078094459586146450 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/antonioguterres/status/2077962313957564540 | 200 | 2026-07-18T05:35:17Z |
+| https://x.com/UN/status/2077725182018404533 | 200 | 2026-07-18T05:35:18Z |
+| https://x.com/UNDP/status/2078198576081961319 | 200 | 2026-07-18T05:35:18Z |
+| https://x.com/KGeorgieva/status/2078289225217421599 | 200 | 2026-07-18T05:35:18Z |
+| https://x.com/IMFNews/status/2078109996185985465 | 200 | 2026-07-18T05:35:18Z |
+| https://x.com/IMFNews/status/2077743398136820114 | 200 | 2026-07-18T05:35:18Z |
+| https://x.com/UNICEF/status/2077664714599854497 | 200 | 2026-07-18T05:35:18Z |
+| https://x.com/UNICEF/status/2077817597051982222 | 200 | 2026-07-18T05:35:18Z |
+| https://x.com/unicefchief/status/2078216958651121725 | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNdivmgbEAA8Qnu.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNXGxnua4AAGqEG.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNOF-aSacAAR8p4.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNYZJomaYAA5Qxr.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNXUmIZWQAASPBL.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNPJh46aEAA_XLs.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNc4IbjXAAAzRda.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNbf5chW8AI06hI.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNSyjGJWgAAYkRX.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNc9swYXIAAkuUp.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNbuAoAbcAAYSBs.png | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/media/HNXkF-gXgAA0oGB.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/profile_images/2052035330556006409/fntYSi3H_normal.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/profile_images/1886494919449034752/xGe4gs5k_normal.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/profile_images/1323749922005524485/LjJsuyU4_normal.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/profile_images/1697459578928263168/UN5_VFb5_normal.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/profile_images/1365422981103689728/Un-ESw2K_normal.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://pbs.twimg.com/profile_images/808330362417979392/AdiQ86lk_normal.jpg | 200 | 2026-07-18T05:35:18Z |
+| https://unavatar.io/twitter/DrTedros | 403 | 2026-07-18T05:35:19Z |
+| https://unavatar.io/twitter/WFP | 200 | 2026-07-18T05:35:18Z |
+| https://unavatar.io/twitter/antonioguterres | 200 | 2026-07-18T05:35:19Z |
+| https://unavatar.io/twitter/KGeorgieva | 200 | 2026-07-18T05:35:18Z |
+| https://unavatar.io/twitter/unicefchief | 200 | 2026-07-18T05:35:18Z |
+| https://www.imf.org/en/publications/weo/issues/2026/07/08/world-economic-outlook-update-july-2026 | 403 | 2026-07-18T05:35:18Z |
+| https://www.imf.org/en/blogs/articles/2026/07/15/the-oil-market-absorbed-the-war-shock-but-buffers-are-running-low | 403 | 2026-07-18T05:35:18Z |
+- DROPPED (non-200): unavatar.io/twitter/DrTedros (403 → letter-avatar fallback renders),
+  both imf.org article links (403 to non-browser clients; the two IMFNews x.com posts
+  covering the same content ARE included and validated 200).
+- tweets.js reseeded with the 18 verified posts (live engagement figures from the dataset,
+  12 media images with alt text, snowflake-exact timestamps). Whole-card render remains a
+  single native <a target="_blank" rel="noopener noreferrer"> with no nested links/buttons
+  (engagement icons are plain spans) and no preventDefault on the click path.
+
+### (D) Stray input-bar gap
+Root cause this pass: the unstyled .rec wrapper div added an empty flex box between the
+textarea and mic. Fixed with display:contents (recording states keep their flex layout).
+The earlier shimmer-bar artifact (.skel__bar) was already removed on 2026-07-18 03:15Z.
+
+### (B) Workflow stress-test results (2026-07-18 05:32–05:38 UTC)
+3/3 executions of workflow 6a5b0f8221d41c1c020736a3 succeeded:
+run1 6a5b10070a9d7b5ce14550eb (05:32:55.817Z→05:38:16.641Z, 320.8s, success);
+run2 6a5b10230a9d7b5ce14550ef (05:33:23.879Z→05:38:18.119Z, 294.2s, success);
+run3 6a5b103c21d41c1c020736ad (05:33:48.457Z→05:38:38.460Z, 290.0s, success).
+Full table in PLUGIN_TESTS.md.

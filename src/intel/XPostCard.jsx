@@ -29,7 +29,7 @@ export default function XPostCard({ tweet }) {
     <a className="xpost" href={tweet.url} target="_blank" rel="noopener noreferrer"
       aria-label={`Post by ${tweet.name} on X — opens in a new tab`} title="Open on X">
       <div className="xpost__avatarcol">
-        {avatarFailed
+        {(avatarFailed || !tweet.avatar)
           ? <span className="xpost__avatar xpost__avatar--fallback" aria-hidden>{tweet.name.slice(0, 1)}</span>
           : <img className="xpost__avatar" src={tweet.avatar} alt={`${tweet.name} profile photo`} width="40" height="40"
               loading="lazy" onError={() => setAvatarFailed(true)} />}

@@ -183,3 +183,17 @@ in an OBJECT — `{message, data: {audioUrl: "<signed blob URL>"}}` — while
 
 Audio verified playable by download: EN **53,760-byte MP3**, AR **56,640-byte MP3**
 (both with valid MPEG frame header `fff3e4`). No mocked audio; OnDemand cloud TTS only.
+
+## 2026-07-18 — Workflow stress-test: 'X Intelligence Fetch — fable-medium' (ID 6a5b0f8221d41c1c020736a3)
+
+Model: predefined-claude-fable-5 + reasoningEffort medium on all 3 LLM nodes (verified live
+from GET /config/v1/public/endpoints — only 'fable' endpoint in the catalogue). Executions
+via POST /automation/api/workflow/{id}/execute (trigger.type "api").
+
+| Run | Execution ID | Started (UTC) | Ended (UTC) | Latency | HTTP (execute) | Outcome |
+|---|---|---|---|---|---|---|
+| 1 | 6a5b10070a9d7b5ce14550eb | 2026-07-18T05:32:55.817Z | 2026-07-18T05:38:16.641Z | 320,824 ms | 200 (executionID returned) | **success** |
+| 2 | 6a5b10230a9d7b5ce14550ef | 2026-07-18T05:33:23.879Z | 2026-07-18T05:38:18.119Z | 294,240 ms | 200 (executionID returned) | **success** |
+| 3 | 6a5b103c21d41c1c020736ad | 2026-07-18T05:33:48.457Z | 2026-07-18T05:38:38.460Z | 290,003 ms | 200 (executionID returned) | **success** |
+
+3/3 runs completed status=success — repeated execution proven (runs overlapped, all completed).

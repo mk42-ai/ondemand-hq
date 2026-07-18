@@ -965,3 +965,10 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
   .xpost__engage { padding-right: 0; max-width: none; gap: 24px; justify-content: flex-start; }
   .ig-globe__list { max-height: 300px; }
 }
+
+/* (D) 2026-07-18: stray gap fix — the unstyled .rec wrapper div added an extra
+   flex box between the textarea and the mic, creating an awkward space in the
+   input bar. display:contents removes it from layout so the mic button sits
+   directly in the composer flex row. */
+.rec { display: contents; }
+.rec--recording, .rec--paused, .rec--transcribing { display: flex; align-items: center; gap: 6px; }
