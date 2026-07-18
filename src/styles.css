@@ -920,3 +920,48 @@ textarea, input { font-family: inherit; }
   .xpost__handle, .xpost__time, .xpost__dot, .xpost__stat { color: #71767b; }
   .xpost__avatar--fallback { background: #333639; color: #71767b; }
 }
+
+/* ===== 2026-07-18 audit pass: anchor xpost cards, media, sources, a11y polish ===== */
+/* xpost is now a real <a>: reset link styling, keep card look */
+a.xpost { text-decoration: none; color: #0f1419; display: flex; }
+.xpost__media { position: relative; margin: 4px 0 10px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border, #e5e5e8); background: #f7f9f9; }
+.xpost__media img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+.xpost__playbtn {
+  position: absolute; inset: 0; margin: auto; width: 46px; height: 46px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(15,20,25,.72); color: #fff; border-radius: 9999px;
+  pointer-events: none;
+}
+/* Verified reporting source chips */
+.ig-srcblock { margin-top: 18px; }
+.ig-srcblock h3 { font-size: 13.5px; margin: 0 0 10px; }
+.ig-srclinks { display: flex; flex-direction: column; gap: 8px; }
+.ig-srclink {
+  display: flex; align-items: baseline; gap: 10px; text-decoration: none;
+  background: #fff; border: 1px solid var(--border, #e5e5e8); border-radius: 12px;
+  padding: 10px 14px; transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.ig-srclink:hover { border-color: var(--gold, #b08d3c); box-shadow: 0 2px 8px rgba(29,37,44,.06); }
+.ig-srclink__org { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--teal, #0f6b5c); flex: none; }
+.ig-srclink__title { font-size: 13px; color: var(--ink, #1d252c); line-height: 1.4; }
+
+/* A11y: visible focus states on all interactive elements (WCAG 2.4.7) */
+a:focus-visible, button:focus-visible, [role="switch"]:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--gold, #b08d3c); outline-offset: 2px; border-radius: 6px;
+}
+a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border-radius: 0; }
+.composer textarea:focus-visible { outline: none; } /* composer container shows focus via border */
+
+/* Motion preference: collapse transitions/animations for prefers-reduced-motion (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  .toolline--animate { animation: none; opacity: 1; }
+  .ig-impact, .ig-srclink, .xpost, .toolline__spin { transition: none; animation-duration: 0.01ms; }
+}
+
+/* Responsive: xpost header wraps gracefully on narrow screens */
+@media (max-width: 640px) {
+  .xpost { padding: 12px 12px 8px; }
+  .xpost__name { max-width: 38%; }
+  .xpost__engage { padding-right: 0; max-width: none; gap: 24px; justify-content: flex-start; }
+  .ig-globe__list { max-height: 300px; }
+}

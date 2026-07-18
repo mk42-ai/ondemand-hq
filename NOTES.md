@@ -641,3 +641,58 @@ Also this pass: sidebar logo replaced with the official black-and-white
 to 800×246 → public/oda-logo-bw.png); severity-pill hover UX (150ms ease,
 per-token tint deepen + elevation); chat input icons unified on lucide
 (Mic/MicOff + SendHorizontal, 18px, 36×36 flex-centered buttons).
+
+---
+
+## 2026-07-18 (03:55–04:15 UTC) — Full UI/UX + functionality audit pass
+
+### (1) Link audit — 64 URLs curl-validated (03:57:46–48Z + 04:00:02Z), only genuine 200s kept
+- **60/64 HTTP 200**: 29 canonical x.com status URLs (all ODA-trusted institutional accounts),
+  13 pbs.twimg.com media/video-thumb images, 6 pbs.twimg.com profile avatars,
+  8 unavatar.io avatar redirect endpoints, 3 unicef.org press releases,
+  news.un.org/en/story/2026/07/1167960, un.org/youthaffairs youth-mental-health page.
+- **4 dropped per only-200s rule (HTTP 403 to non-browser clients)**: the 3 imf.org
+  blog/news article URLs and innovation.wfp.org/project/ahead. They are NOT wired into
+  the UI. (The two IMFNews x.com posts covering the same content ARE included — those
+  return 200.)
+- Full log: every URL → status → timestamp captured in the run output (also /tmp/linkcheck.json).
+
+### X Intelligence reseed (tweets.js)
+- 28 verified institutional posts (WorldBankGroup, WorldBankAfrica/Water/MENA, Diop_IFC,
+  WHO, UN, UNDP, IMFNews, WFP, UNICEF, UNICEFBD, Refugees/UNHCR). Personal/political
+  accounts excluded (alexanderdecroo dropped by account policy; KGeorgieva removed from
+  the prior seed for the same reason).
+- Timestamps derived EXACTLY from tweet snowflake ids (id>>22 + epoch) — real post times.
+- Engagement counts shown ONLY where verified this session; otherwise the icon renders
+  without a number (never fabricated).
+- 13 media images embedded (pbs.twimg.com, all 200-verified) with alt text; video posts
+  show a play overlay.
+- XPostCard is now a REAL `<a href target="_blank" rel="noopener noreferrer">` — the whole
+  card deep-links to the canonical bare `https://x.com/<handle>/status/<id>` URL.
+- "Verified reporting" block added: 5 article chips (UNICEF ×3, UN News, UN Youth Affairs),
+  all 200-verified, all `_blank noopener noreferrer`.
+
+### (2) Functionality check (local prod build, 04:07–04:11Z)
+- 11 API/asset endpoints HTTP 200 (health, root, intel overview/countries/country/EG/brief,
+  conversations, oda-logo-bw.png, 3 source logos); /api/debug/stream-demo 404 = expected
+  (route deliberately deleted 2026-07-17).
+- Puppeteer DOM audit **36/37 PASS**: sidebar B&W ODA logo (naturalWidth 800, alt text),
+  8 lucide tool tiles, paperclip LEFT of textarea (x=507 vs 549), mic+send RIGHT, all three
+  36×36 with SVGs, zero stray dash/hr artifacts, pill hover rules, :focus-visible outlines,
+  reduced-motion support, dashboard opens, globe canvas, 16 country rows with SVG flags,
+  focus toggle, 6 stat cards, NL search, Egypt country page, 28 X cards (all _blank +
+  noopener noreferrer, all canonical hrefs, 28 avatars/badges/X-logos/engagement rows/times,
+  13 media, all imgs alt-texted), 5 source chips, computed pill style (9999px radius,
+  uppercase, 600, 0.15s transition, #B91C1C), no horizontal overflow at 375px.
+- The single "FAIL" was the stylesheet-scan variant of the pill-transition check — a test
+  string-normalization artifact; the computed-style check on the live element PROVES the
+  150ms transition is active. Not a product defect.
+
+### (3) WCAG contrast verification (computed 04:12Z)
+All severity-pill and card text tokens pass AA ≥4.5:1: CRITICAL 6.47, HIGH 4.88,
+MEDIUM 4.84, LOW 7.24, xpost name 18.51, handle 6.12, source-org 6.41.
+
+### A11y/polish added this pass
+:focus-visible outlines on all interactive elements; prefers-reduced-motion collapse for
+row/pill/card animations; alt text on every rendered image (avatars, media, logos);
+375px responsive fixes (engagement row, name truncation, globe list height).

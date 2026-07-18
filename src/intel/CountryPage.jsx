@@ -4,7 +4,7 @@ import { getCountry, refreshCountry, refreshStatus } from './api.js';
 import BilingualLoader from '../components/BilingualLoader.jsx';
 import Flag from './Flag.jsx';
 import XPostCard from './XPostCard.jsx';
-import { VERIFIED_TWEETS } from './tweets.js';
+import { VERIFIED_TWEETS, VERIFIED_SOURCES } from './tweets.js';
 import { ArrowLeft, AlertTriangle, TrendingUp, TrendingDown, ArrowRight, User, Users, BadgeCheck, ExternalLink, RefreshCw } from 'lucide-react';
 
 const spring = { type: 'spring', stiffness: 360, damping: 30 };
@@ -182,6 +182,18 @@ export default function CountryPage({ iso, onBack }) {
                         <XPostCard tweet={t2} />
                       </motion.div>
                     ))}
+                  </div>
+                  {/* Canonical article sources — every URL curl-verified HTTP 200 (2026-07-18 sweep) */}
+                  <div className="ig-srcblock">
+                    <h3>Verified reporting</h3>
+                    <div className="ig-srclinks">
+                      {VERIFIED_SOURCES.map(src => (
+                        <a key={src.url} className="ig-srclink" href={src.url} target="_blank" rel="noopener noreferrer">
+                          <span className="ig-srclink__org">{src.org}</span>
+                          <span className="ig-srclink__title">{src.title}</span>
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}

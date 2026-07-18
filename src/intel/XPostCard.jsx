@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageCircle, Repeat2, Heart, BadgeCheck } from 'lucide-react';
+import { MessageCircle, Repeat2, Heart, BadgeCheck, Play } from 'lucide-react';
 import { xRelTime } from './tweets.js';
 
 /** Official X logo mark (inline SVG, currentColor). */
@@ -18,37 +18,45 @@ function fmtCount(n) {
 }
 
 /** X-native post card: avatar · bold name · blue verified badge · gray @handle ·
- *  relative time · tweet text · reply/repost/like row · X logo corner.
- *  The whole card deep-links (new tab) to the canonical tweet URL. */
+ *  relative time · tweet text · optional media (photo/video thumb) · engagement
+ *  row (counts shown only when verified) · X logo corner.
+ *  The whole card is a REAL anchor deep-linking to the canonical tweet URL in a
+ *  new tab with rel="noopener noreferrer". */
 export default function XPostCard({ tweet }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
-  const open = () => window.open(tweet.url, '_blank', 'noopener,noreferrer');
-  const onKey = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
+  const [mediaFailed, setMediaFailed] = useState(false);
   return (
-    <article className="xpost" role="link" tabIndex={0} onClick={open} onKeyDown={onKey}
-      aria-label={`Post by ${tweet.name} — open on X`} title="Open on X">
+    <a className="xpost" href={tweet.url} target="_blank" rel="noopener noreferrer"
+      aria-label={`Post by ${tweet.name} on X — opens in a new tab`} title="Open on X">
       <div className="xpost__avatarcol">
         {avatarFailed
-          ? <span className="xpost__avatar xpost__avatar--fallback">{tweet.name.slice(0, 1)}</span>
-          : <img className="xpost__avatar" src={tweet.avatar} alt="" width="40" height="40"
+          ? <span className="xpost__avatar xpost__avatar--fallback" aria-hidden>{tweet.name.slice(0, 1)}</span>
+          : <img className="xpost__avatar" src={tweet.avatar} alt={`${tweet.name} profile photo`} width="40" height="40"
               loading="lazy" onError={() => setAvatarFailed(true)} />}
       </div>
       <div className="xpost__main">
         <div className="xpost__head">
           <span className="xpost__name">{tweet.name}</span>
-          {tweet.verified && <BadgeCheck size={15} className="xpost__badge" aria-label="Verified" />}
+          {tweet.verified && <BadgeCheck size={15} className="xpost__badge" aria-label="Verified account" />}
           <span className="xpost__handle">@{tweet.handle}</span>
           <span className="xpost__dot" aria-hidden>·</span>
           <time className="xpost__time" dateTime={tweet.ts} title={new Date(tweet.ts).toUTCString()}>{xRelTime(tweet.ts)}</time>
           <span className="xpost__xlogo"><XLogo /></span>
         </div>
         <p className="xpost__text">{tweet.text}</p>
+        {tweet.media && !mediaFailed && (
+          <div className="xpost__media">
+            <img src={tweet.media} alt={tweet.mediaAlt || `Media from @${tweet.handle} post`}
+              loading="lazy" onError={() => setMediaFailed(true)} />
+            {tweet.isVideo && <span className="xpost__playbtn" aria-hidden><Play size={20} strokeWidth={2.4} fill="currentColor" /></span>}
+          </div>
+        )}
         <div className="xpost__engage" aria-label="Engagement">
           <span className="xpost__stat xpost__stat--reply"><MessageCircle size={15} aria-hidden /> {fmtCount(tweet.replies)}</span>
           <span className="xpost__stat xpost__stat--repost"><Repeat2 size={16} aria-hidden /> {fmtCount(tweet.reposts)}</span>
           <span className="xpost__stat xpost__stat--like"><Heart size={15} aria-hidden /> {fmtCount(tweet.likes)}</span>
         </div>
       </div>
-    </article>
+    </a>
   );
 }
