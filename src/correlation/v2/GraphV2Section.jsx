@@ -4,6 +4,7 @@ import { Maximize2, Flame, Globe2, Boxes } from 'lucide-react';
 import GraphCanvasV2 from './GraphCanvasV2.jsx';
 import IntelligenceTimeline from './IntelligenceTimeline.jsx';
 import { EntityInspector, RelationshipInspector, HoverPreview, LightboxV2 } from './Inspectors.jsx';
+import { DeepSearchSelector, PredictionsPanel, StoryDrawer } from './IntelPanelsV2.jsx';
 import { collapseGraph, windowGraph, heatAnnotate, timelineDomain } from './cluster.js';
 import { GEO_CATEGORY_STYLE } from './geo.js';
 import { REL_TYPES, REL_TYPE_COLORS, EDGE_CLASS_STYLE, edgeToMiniArtifact, nodeToMiniArtifact } from '../adapter.js';
@@ -15,8 +16,11 @@ import { REL_TYPES, REL_TYPE_COLORS, EDGE_CLASS_STYLE, edgeToMiniArtifact, nodeT
  * F8 hover preview · F9 lightbox v2 · F10 intelligence timeline ·
  * F11 heat mode · F12 geographic overlay.
  */
-export default function GraphV2Section({ run, graph, size, showLabels, physics, searchNodeId, pulseKeys, onQuickQuery }) {
+export default function GraphV2Section({ run, graph, size, showLabels, physics, searchNodeId, pulseKeys, onQuickQuery, iso }) {
   const [fullscreen, setFullscreen] = useState(false);
+  const [dsWindow, setDsWindow] = useState(null);            // (a) deep-search window
+  const [showPreds, setShowPreds] = useState(false);         // (e) predictions panel
+  const [showStory, setShowStory] = useState(false);         // (g) story mode drawer
   const [savedZoom, setSavedZoom] = useState(null);          // F1 zoom memory
   const [collapsed, setCollapsed] = useState(new Set());     // F4
   const [cutoff, setCutoff] = useState(null);                // F10
@@ -146,6 +150,7 @@ export default function GraphV2Section({ run, graph, size, showLabels, physics, 
 
   const toolbar = (
     <div className="ce-v2toolbar" role="group" aria-label="Graph V2 modes">
+      <DeepSearchSelector value={dsWindow} onChange={setDsWindow} />
       <button className={`ce-btn${collapsed.size ? ' ce-btn--on' : ''}`} onClick={collapseAll} title="Cluster collapse (Louvain communities)">
         <Boxes size={12} /> {collapsed.size ? 'Expand clusters' : 'Collapse clusters'}
       </button>
@@ -154,6 +159,12 @@ export default function GraphV2Section({ run, graph, size, showLabels, physics, 
       </button>
       <button className={`ce-btn${geoMode ? ' ce-btn--on' : ''}`} onClick={() => setGeoMode(g => !g)} title="Geographic Overlay — nodes on world map">
         <Globe2 size={12} /> Geo
+      </button>
+      <button className={`ce-btn${showPreds ? ' ce-btn--on' : ''}`} onClick={() => { setShowPreds(p => !p); setInspect(null); }} title="Predictive intelligence — probability-scored forecasts">
+        ◮ Predictions{run.predictions?.length ? ` (${run.predictions.length})` : ''}
+      </button>
+      <button className={`ce-btn${showStory ? ' ce-btn--on' : ''}`} onClick={() => setShowStory(s => !s)} title="Story Mode — one-click streamed executive briefing">
+        ▤ Explain this graph
       </button>
       {!fullscreen && (
         <button className="ce-btn ce-btn--expand" onClick={openFullscreen} title="Expand Intelligence View (fullscreen)">
@@ -196,6 +207,12 @@ export default function GraphV2Section({ run, graph, size, showLabels, physics, 
       <AnimatePresence>
         {lightbox && <LightboxV2 data={lightbox} run={run} onClose={() => setLightbox(null)}
           onQuickQuery={(ev) => { setLightbox(null); onQuickQuery({ kind: 'evidence', runId: run.runId, country: run.country, evidence: [ev] }); }} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showPreds && <PredictionsPanel run={run} onClose={() => setShowPreds(false)} onQuickQuery={onQuickQuery} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showStory && <StoryDrawer iso={iso || run.iso} run={run} onClose={() => setShowStory(false)} />}
       </AnimatePresence>
     </>
   );

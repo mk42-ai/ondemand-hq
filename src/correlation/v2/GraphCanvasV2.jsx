@@ -327,27 +327,48 @@ export default function GraphCanvasV2({
     // Possible short-dash / Predicted dotted (+ alpha taper by certainty)
     const clsStyle = l.edgeClass ? EDGE_CLASS_STYLE[l.edgeClass] : null;
     ctx.save();
-    ctx.globalAlpha = (dimmed ? 0.12 : 1) * (l.opacity ?? 1) * (clsStyle?.alphaMul ?? 1);
-    ctx.strokeStyle = geoStyle ? geoStyle.color : l.color;
+    // CRISP RENDERING (2026-07-19 visual fix): rounded caps/joins for anti-aliased
+    // ends, a hard minimum stroke width so no edge collapses below visibility,
+    // and NO shadow blur outside heat/pulse modes — lines stay sharp on white.
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalAlpha = (dimmed ? 0.15 : 1) * (l.opacity ?? 1) * (clsStyle?.alphaMul ?? 1);
     // F11 heat: interaction count → width; importance → glow
-    const baseW = heatMode ? (l.heatWidth ?? l.width) : l.width;
-    ctx.lineWidth = hovered ? baseW + 1.6 : baseW;
+    const baseW = Math.max(1.1, heatMode ? (l.heatWidth ?? l.width) : l.width);
+    const coreW = hovered ? baseW + 1.6 : baseW;
     if (heatMode) { ctx.shadowColor = l.color; ctx.shadowBlur = l.heatGlow ?? 6; }
     if (isPulse) { ctx.shadowColor = l.color; ctx.shadowBlur = 14; }
+    // shared path builder: straight line, parallel-edge curvature offset, or geo arc
+    const tracePath = () => {
+      ctx.beginPath();
+      if (geoMode) {
+        const mx = (s.x + t.x) / 2, my = (s.y + t.y) / 2 - Math.hypot(t.x - s.x, t.y - s.y) * 0.18;
+        ctx.moveTo(s.x, s.y); ctx.quadraticCurveTo(mx, my, t.x, t.y);
+      } else if (l.curvature) {
+        const mx = (s.x + t.x) / 2, my = (s.y + t.y) / 2;
+        const dx = t.x - s.x, dy = t.y - s.y;
+        const nx = -dy, ny = dx, len = Math.hypot(nx, ny) || 1;
+        ctx.moveTo(s.x, s.y); ctx.quadraticCurveTo(mx + (nx / len) * l.curvature * 60, my + (ny / len) * l.curvature * 60, t.x, t.y);
+      } else { ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y); }
+    };
+    // LAYER 1 — class-certainty underlay (d): a wider high-contrast stroke in the
+    // class accent (Verified green / Likely blue / Possible amber / Predicted violet)
+    // so classification reads instantly, while the core keeps color=type (QA gate).
+    if (clsStyle && !geoMode) {
+      ctx.setLineDash(clsStyle.dash?.length ? clsStyle.dash : []);
+      ctx.strokeStyle = clsStyle.accent;
+      ctx.lineWidth = coreW + 2.4;
+      ctx.globalAlpha *= 0.4;
+      tracePath(); ctx.stroke();
+      ctx.globalAlpha /= 0.4;
+    }
+    // LAYER 2 — core stroke: color = relationship type (or geo category), class dash
+    ctx.strokeStyle = geoStyle ? geoStyle.color : l.color;
+    ctx.lineWidth = coreW;
     if (geoStyle?.dash?.length) ctx.setLineDash(geoStyle.dash);
     else if (clsStyle?.dash?.length) ctx.setLineDash(clsStyle.dash);
-    ctx.beginPath();
-    if (geoMode) {
-      // great-circle-ish arc on the map
-      const mx = (s.x + t.x) / 2, my = (s.y + t.y) / 2 - Math.hypot(t.x - s.x, t.y - s.y) * 0.18;
-      ctx.moveTo(s.x, s.y); ctx.quadraticCurveTo(mx, my, t.x, t.y);
-    } else if (l.curvature) {
-      const mx = (s.x + t.x) / 2, my = (s.y + t.y) / 2;
-      const dx = t.x - s.x, dy = t.y - s.y;
-      const nx = -dy, ny = dx, len = Math.hypot(nx, ny) || 1;
-      ctx.moveTo(s.x, s.y); ctx.quadraticCurveTo(mx + (nx / len) * l.curvature * 60, my + (ny / len) * l.curvature * 60, t.x, t.y);
-    } else { ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y); }
-    ctx.stroke();
+    else ctx.setLineDash([]);
+    tracePath(); ctx.stroke();
     ctx.setLineDash([]);
     ctx.shadowBlur = 0;
     if (!geoMode && l.direction !== 'both') {

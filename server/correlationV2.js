@@ -12,9 +12,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createOdSession, streamQuery } from './ondemand.js';
-import { log } from './log.js';
+import * as log from './log.js';
 import { ENDPOINT_ID, REASONING_EFFORT } from './env.js';
 import { PLUGINS, RELATIONSHIP_TYPES, UAE_REGISTRY, getRun, extractJson } from './correlation.js';
+import { CURATED_EVIDENCE, mergeEvidence } from './curatedEvidence.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const V2_ROOT = path.join(__dirname, 'data', 'correlation', 'v2');
@@ -27,10 +28,12 @@ export const RESEARCH_WINDOWS = {
   '6m': { label: 'Last 6 months', days: 183 },
   year: { label: 'Last year', days: 365 },
   '2y': { label: 'Last 2 years', days: 730 },
+  '3y': { label: 'Last 3 years', days: 1096 },
   all: { label: 'Entire history', days: null },
 };
-export const DEFAULT_WINDOW = '2y'; // default: Last 2 Years, higher weighting on Last 30 Days
-export const DEFAULT_WINDOW_POLICY = { window: '2y', recencyBoostDays: 30, recencyBoostFactor: 1.5 };
+// 2026-07-19 updated requirement: default = Last 3 Years + higher weighting for Last 30 Days
+export const DEFAULT_WINDOW = '3y';
+export const DEFAULT_WINDOW_POLICY = { window: '3y', recencyBoostDays: 30, recencyBoostFactor: 1.5 };
 
 export function windowSpec(key = DEFAULT_WINDOW) {
   const w = RESEARCH_WINDOWS[key] || RESEARCH_WINDOWS[DEFAULT_WINDOW];
@@ -46,7 +49,7 @@ export const WEIGHT_SPEC = {
   multipliers: { uaeRelevance: 2, governmentSource: 2, officialStatement: 3, corroboration: 2 },
 };
 const UAE_RX = /\buae\b|emirat|abu dhabi|dubai|\boda\b|mofa|adq|mubadala|g42|core42|adnoc|ad ports|presight|adfd|masdar|etihad|dp world|\bedge\b/i;
-const GOV_RX = /wam|mofa|ministr|government|embassy|\.gov|presiden|royal court|cabinet|adfd|state news|official/i;
+const GOV_RX = /wam|mofa|ministr|government|embassy|\.gov|presiden|royal court|cabinet|adfd|state news|official|national media authority|media office/i;
 const STMT_RX = /announc|stated|said|declared|signed|decree|statement|confirm|launch/i;
 
 const tokens = (s) => new Set(String(s || '').toLowerCase().split(/\W+/).filter(t => t.length > 3));
@@ -181,13 +184,25 @@ DEDUPE: one entity per real-world organisation/person (merge all alias forms); o
 HARD RULE: every figure EXACTLY as stated in the material; never invent names/numbers/quotes; edges need ≥1 evidence_article_ids.`,
       });
       if (!merged || !Array.isArray(merged.articles)) throw new Error('Merge stage returned no valid unified graph JSON');
-      const articles = (merged.articles || []).map((a, i) => ({
+      let articles = (merged.articles || []).map((a, i) => ({
         ...a, id: a.id || `A${i + 1}`,
         publish_date: /^\d{4}-\d{2}-\d{2}/.test(a.publish_date || '') ? a.publish_date.slice(0, 10) : null,
         url: typeof a.url === 'string' && a.url.startsWith('http') ? a.url : null,
         confidence: Math.max(0, Math.min(1, Number(a.confidence) || 0.5)),
         platform: 'perplexity', media: [],
       }));
+      // stage (c): merge the CURATED real evidence dataset (18 normalized records) +
+      // any prior legacy-run evidence for this country — dedupe by URL, curated wins.
+      const priorEv = [];
+      try {
+        const legacyRuns = (await import('./correlation.js')).listRuns(iso);
+        if (legacyRuns.length) {
+          const lastLegacy = getRun(iso, legacyRuns[legacyRuns.length - 1].runId);
+          for (const ev of lastLegacy?.evidence || []) priorEv.push(ev);
+        }
+      } catch { /* legacy evidence optional */ }
+      articles = mergeEvidence(CURATED_EVIDENCE, articles, priorEv)
+        .map((a, i) => ({ ...a, id: a.id?.startsWith('C') ? a.id : `A${i + 1}` }));
       const artById = new Map(articles.map(a => [a.id, a]));
       const entities = (merged.entities || []).map(e => ({ ...e, id: slug(e.id || e.label) }));
       job.stage = 'weighting';
@@ -376,6 +391,12 @@ export function registerV2Routes(app, { countries }) {
     weighting: WEIGHT_SPEC, edgeClasses: EDGE_CLASSES,
     model: `${ENDPOINT_ID}+${REASONING_EFFORT}`, streaming: true, thinkingTokens: true,
   }));
+
+  // Stage (c): the curated REAL evidence dataset (18 normalized records), weighted live
+  app.get('/api/correlation/v2/evidence', (_req, res) => {
+    const weighting = CURATED_EVIDENCE.map(ev => contextWeight(ev, CURATED_EVIDENCE));
+    res.json({ count: CURATED_EVIDENCE.length, evidence: CURATED_EVIDENCE, weighting, spec: WEIGHT_SPEC });
+  });
 
   // Stage 2 on demand: apply context weighting to any stored run's evidence
   app.get('/api/correlation/v2/weighting/:iso/:runId', (req, res) => {

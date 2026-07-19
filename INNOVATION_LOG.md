@@ -107,3 +107,31 @@ dashes from the server-computed `edge.contradiction` flag.
   AND counter evidence id arrays, and `speculative` is force-set server-side
   whenever supporting evidence is empty — the evidence-backed/speculative
   split is enforced by code, not by prompt goodwill.
+
+## 2026-07-19 — CE-V2 intelligence layer (features 14–21) inventions
+
+- **Two-layer certainty stroke** (NEW rendering technique): every classified edge
+  is drawn twice — a wide soft underlay in the CLASS accent (Verified green /
+  Likely blue / Possible amber / Predicted violet, 40% alpha, +2.4px) beneath a
+  crisp core stroke in the RELATIONSHIP-TYPE color with the class dash pattern
+  (solid / long-dash / short-dash / dotted). Certainty and type read as two
+  independent visual channels on the same line with zero blur: round caps/joins,
+  hard 1.1px minimum width, shadowBlur banned outside Heat/pulse modes.
+- **Symmetric parallel-edge fan** (crisp-lines fix): edges sharing a node pair
+  now fan on alternating sides (0, +0.22, −0.22, +0.44…) instead of stacking
+  one-sided — no parallel edges ever overlap, so multi-type pairs stay legible.
+- **Deep-Search window chip with boost badge**: toolbar selector fetches
+  /v2/config live and renders the default (Last 3 years ★) plus a "+30d boost"
+  pill — the recency-boost policy is visible in the UI, not hidden in config.
+- **Probability bar with counter-evidence ledger** (Predictions panel): each
+  forecast renders kind, EVIDENCE-BACKED/SPECULATIVE badge (server-enforced),
+  a gradient probability bar, and BOTH supporting and counter evidence id lists
+  — the speculation firewall is now visible per-card.
+- **14-dimension impact chip-grid** (Entity Inspector): UAE strategic impact
+  renders as an overall scorecard (Very High→None color scale) plus one chip
+  per non-None dimension (trade…foreign policy), each color-dotted by level,
+  with the model's cited reasoning underneath.
+- **Thinking-strip Story Mode**: the streamed executive briefing shows model
+  reasoning tokens in a separate violet italic strip above the answer text
+  (thinking ≠ answer per the UI contract), with a live caret and seven titled
+  sections, every claim cited to evidence ids.

@@ -1451,3 +1451,43 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
 .rel-class--possible  { background: #fef3c7; color: #92400e; }
 .rel-class--predicted { background: #f3e8ff; color: #6b21a8; }
 .rel-clsreason { font-size: 10px; color: #6b7280; font-style: italic; margin: 2px 0 4px; }
+
+/* ══════════ CE-V2 intelligence layer (2026-07-19, features 14–21) ══════════ */
+/* (a) deep-search window selector */
+.ce-dswin { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: #4b5563; border: 1px solid #e5e7eb; border-radius: 8px; padding: 3px 8px; background: #fff; }
+.ce-dswin select { border: none; background: none; font-size: 10.5px; color: #111827; outline: none; cursor: pointer; }
+.ce-dswin__boost { font-size: 8.5px; font-weight: 700; color: #6d4aff; background: #f5f3ff; border-radius: 999px; padding: 1px 6px; }
+
+/* (e) predictions panel */
+.ce-preds { position: absolute; top: 0; right: 0; width: 340px; max-height: 100%; z-index: 8; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: -6px 8px 28px rgba(17,24,39,0.10); display: flex; flex-direction: column; overflow: hidden; font-size: 12px; }
+.pred { border: 1px solid #eef1f6; border-radius: 10px; padding: 9px 11px; margin-bottom: 8px; background: #fcfcfd; }
+.pred--spec { background: #fdfaf4; border-color: #f3e8d0; }
+.pred__top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+.pred__kind { font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #6d4aff; }
+.pred__badge { font-size: 8px; font-weight: 800; letter-spacing: 0.06em; padding: 1px 7px; border-radius: 999px; }
+.pred__badge.is-ev { background: #d1fae5; color: #065f46; }
+.pred__badge.is-spec { background: #fef3c7; color: #92400e; }
+.pred__stmt { margin: 2px 0 6px; font-size: 12px; line-height: 1.4; }
+.pred__bar { position: relative; height: 10px; background: #eef1f6; border-radius: 6px; overflow: hidden; }
+.pred__bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg,#a78bfa,#6d4aff); border-radius: 6px; }
+.pred__bar b { position: absolute; right: 5px; top: -1px; font-size: 8.5px; color: #4b5563; }
+.pred__meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 9px; color: #6b7280; margin-top: 5px; }
+.pred__counter { color: #b45309; }
+.pred__counterTxt { font-size: 10px; color: #92400e; background: #fffbeb; border-radius: 6px; padding: 4px 7px; margin: 5px 0 0; }
+.pred__why { font-size: 10px; color: #6b7280; font-style: italic; margin: 4px 0 0; }
+
+/* (f) impact scorecard in entity inspector */
+.imp-score { display: inline-flex; align-items: baseline; gap: 6px; border: 1.5px solid; border-radius: 8px; padding: 4px 10px; margin-bottom: 5px; }
+.imp-score b { font-size: 13px; }
+.imp-score span { font-size: 9px; color: #9ca3af; }
+.imp-why { font-size: 10.5px; color: #57534e; margin: 3px 0 6px; }
+.imp-dims { display: flex; flex-wrap: wrap; gap: 4px; }
+.imp-dim { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; color: #4b5563; border: 1px solid; border-radius: 999px; padding: 1px 7px; }
+.imp-dim i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+/* (g) story mode drawer */
+.ce-story { position: absolute; left: 12px; right: 360px; bottom: 12px; max-height: 62%; z-index: 9; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 12px 34px rgba(17,24,39,0.14); display: flex; flex-direction: column; overflow: hidden; }
+.ce-story__thinking { display: flex; gap: 6px; align-items: flex-start; font-size: 9.5px; color: #7c3aed; background: #faf8ff; border-bottom: 1px solid #f0ebff; padding: 5px 14px; font-style: italic; }
+.ce-story__thinking span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ce-story__body { padding: 12px 16px; overflow-y: auto; font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; }
+.ce-story__body strong { color: #4c1d95; }

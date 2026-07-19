@@ -1110,3 +1110,52 @@ Stages → endpoints:
 HARD RULES enforced: figures copied exactly-as-stated w/ evidence ids or
 flagged in run.gaps; confidence on every article/edge/prediction/impact;
 `extractJson` now exported from correlation.js (shared).
+
+## 2026-07-19 08:48 UTC — Redeploy (fresh sandbox, V2 build)
+
+- Preview URL: https://sb-1p1q5e0wyltp.vercel.run
+- Sandbox ID: sbx_6S1GY1Gsrz2odqWBAe1kv6HYq8YD (node22, port 8080, 90m)
+- Git checkpoint commit: 9557f82221f01de6e484fcd672890469a7fe2e9b
+  ("checkpoint: Correlation Engine V2 core features (2026-07-19)") — local
+  commit only; push to origin blocked (no GitHub credentials in session).
+- Liveness proof: GET / → 200 @ 2026-07-19T08:47:58.721Z ·
+  GET /api/health → 200 @ 2026-07-19T08:47:58.798Z
+- Fix during deploy: correlationV2.js log import (`import * as log`), synced.
+
+## 2026-07-19 09:30 UTC — CE-V2 intelligence layer (14–21) build + deploy + QA
+
+Implemented in place (no regeneration): (a) Deep Search windows now include
+'3y' and DEFAULT = Last 3 Years + 30-day recency boost (policy in /v2/config);
+(b) context weighting verified exact — base 0.2/0.6/1.0, ×2 UAE, ×2 gov, ×3
+official statement, ×2 corroboration (GOV_RX extended for National Media
+Authority/media office; C9 now weights 7.2); (c) server/curatedEvidence.js —
+18 REAL normalized evidence records (MoFA aid/foreign-policy/annual-reports/
+Burkina-Faso/IFRC, UAE Embassy Gaza figures, OECD ODA $3.4bn 0.61% GNI, UAE
+Aid Agency decree No.27/2024, NFSS 2051, WEF $30.5bn, UN food-systems pathway,
+4 X posts snowflake-dated 2025-02-12→2026-07-18, ADB $1.5m May 2026, climate-
+smart crops Apr 2026) merged into every V2 run (dedupe by URL, curated wins)
++ GET /api/correlation/v2/evidence with live weighting; (d) crisp edges —
+two-layer certainty stroke, round caps, min-width 1.1, symmetric parallel fan
+(adapter.js), no shadow outside heat/pulse; (e) PredictionsPanel w/ probability
+bars + supporting/counter evidence; (f) ImpactSection scorecard (overall +
+14 dims) in EntityInspector; (g) StoryDrawer — /v2/story SSE with thinking
+tokens streamed separately. New file src/correlation/v2/IntelPanelsV2.jsx;
+edits: GraphV2Section, Inspectors, adapter, GraphCanvasV2, correlationV2.js,
+styles.css.
+
+Build: vite ✓ 7.41s → index-zeJBwY8n.js (no errors).
+Deploy: reused live sandbox sbx_6S1GY1Gsrz2odqWBAe1kv6HYq8YD (tarball → extract
+→ server restart; first restart raced, second start verified "listening").
+Liveness (real HTTP): GET / → 200 @ 2026-07-19T09:21:04.442Z · GET /api/health
+→ 200 @ 2026-07-19T09:21:04.619Z ({"ok":true,...,"time":"09:21:04.667Z"}).
+Served bundle = index-zeJBwY8n.js (matches build). /v2/config live: default 3y,
+windows 24h…all, exact weights. /v2/evidence live: 18 records, C9=7.2
+(uae×2·gov×2·official×3), C13 tier=breaking. Zero-mock check: /runs/KE serves
+2 real stored runs (latest KE-20260719025015).
+Visual QA Gate: headless-Chromium CDP walk (Suite → ODA Intelligence → Kenya →
+Open → Correlation Engine tab) — .ce-v2 canvas ✓, legend ✓, minimap ✓, toolbar
+shows window selector + Collapse/Heat/Geo/Predictions/Story/Expand ✓. PNG proof
+saved to session workspace: ce-v2-visual-qa-gate.png (3200×1900 @2x; mean
+luminance 247.8 = white canvas; 6.4% content pixels; 5.5k colored samples =
+edges/legend rendering). QA gate contract intact (watermark ≤4%, dim 15%,
+size=weight, width=strength, halos, legend).

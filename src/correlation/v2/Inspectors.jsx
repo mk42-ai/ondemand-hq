@@ -117,9 +117,38 @@ export function EntityInspector({ run, node, onClose, onLightbox, onQuickQuery }
           <div className="ins-stat"><b><TrajIcon size={12} /> {d.trajectory}</b><span>predicted trajectory</span></div>
         </div>
         <div className="ins-sec"><h4>Sentiment</h4><SentimentBar v={d.sentiment} /></div>
+        <ImpactSection run={run} nodeId={node.id} />
       </div>
       <button className="ce-pop__qq ins-qq" onClick={onQuickQuery}><Zap size={11} /> Quick Query this entity</button>
     </motion.aside>
+  );
+}
+
+/* ---------- (f) UAE Strategic Impact Engine — per-entity scorecard ---------- */
+const IMPACT_COLORS = { 'Very High': '#7c2d12', High: '#b45309', Medium: '#2563eb', Low: '#6b7280', None: '#d1d5db' };
+function ImpactSection({ run, nodeId }) {
+  const imp = (run.impact || []).find(x => x.entityId === nodeId);
+  if (!imp) return null;
+  const dims = Object.entries(imp.dimensions || {}).filter(([, v]) => v && v !== 'None');
+  return (
+    <div className="ins-sec ins-impact">
+      <h4>UAE strategic impact</h4>
+      <div className="imp-score" style={{ borderColor: IMPACT_COLORS[imp.score] }}>
+        <b style={{ color: IMPACT_COLORS[imp.score] }}>{imp.score}</b>
+        <span>overall</span>
+      </div>
+      {imp.reasoning && <p className="imp-why">{imp.reasoning}</p>}
+      {dims.length > 0 && (
+        <div className="imp-dims">
+          {dims.slice(0, 14).map(([k, v]) => (
+            <span key={k} className="imp-dim" style={{ borderColor: IMPACT_COLORS[v] || '#e5e7eb' }}
+              title={`${k}: ${v}`}>
+              {k.replace(/([A-Z])/g, ' $1').toLowerCase()} <i style={{ background: IMPACT_COLORS[v] }} />
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

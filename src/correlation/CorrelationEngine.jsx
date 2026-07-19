@@ -398,7 +398,7 @@ export default function CorrelationEngine({ iso, countryName }) {
           <div className="ce-main">
             <div className="ce-graphwrap" ref={graphWrapRef}>
               <GraphV2Section
-                run={run} graph={graph} size={size}
+                run={run} graph={graph} size={size} iso={iso}
                 showLabels={showLabels} physics={physics}
                 searchNodeId={searchNodeId?.split(':')[0]}
                 pulseKeys={pulseKeys}

@@ -99,12 +99,20 @@ export function runToGraph(run, filters = {}) {
     curvature: 0,
   }));
 
-  // self-pair curvature so multi-type links between the same pair don't overlap
-  const pairCount = {};
+  // parallel-edge curvature (2026-07-19 crisp-lines fix): edges sharing the same
+  // node pair fan out SYMMETRICALLY on alternating sides (0, +0.22, −0.22, +0.44, −0.44…)
+  // so no two parallel edges ever overlap or blur into each other.
+  const pairGroups = {};
   for (const l of links) {
     const k = [l.source, l.target].sort().join('~');
-    pairCount[k] = (pairCount[k] || 0) + 1;
-    l.curvature = pairCount[k] > 1 ? 0.18 * (pairCount[k] - 1) : 0;
+    (pairGroups[k] = pairGroups[k] || []).push(l);
+  }
+  for (const group of Object.values(pairGroups)) {
+    group.forEach((l, i) => {
+      if (group.length === 1) { l.curvature = 0; return; }
+      const step = Math.ceil(i / 2) * 0.22;          // 0,1,1,2,2 → magnitudes
+      l.curvature = i === 0 ? 0 : (i % 2 === 1 ? step : -step);
+    });
   }
 
   const used = new Set(links.flatMap(l => [l.source, l.target]));
