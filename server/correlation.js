@@ -566,7 +566,7 @@ export async function quickQuery({ context, question }, res) {
 // daily snapshot alongside round-1 runs — same run-store, same diff mechanics,
 // so the UI date scrubber and daily-diff (new-edge pulse) work unchanged.
 // EMPTY-UPSTREAM RESILIENT: an empty evidence set still yields a valid snapshot.
-export async function runDeepJob(iso, countryName, { window: windowId, offline = false, seedEvidence = null } = {}) {
+export async function runDeepJob(iso, countryName, { window: windowId, offline = false, seedEvidence = null, seedStatedEdges = null } = {}) {
   if (jobs.get(iso)?.status === 'running') return jobs.get(iso);
   const job = { status: 'running', stage: 'deep:init', runId: null, startedAt: new Date().toISOString(), error: null, pipeline: 'deep-v2', window: windowId || DEFAULT_WINDOW };
   jobs.set(iso, job);
@@ -575,7 +575,7 @@ export async function runDeepJob(iso, countryName, { window: windowId, offline =
       const run = await runDeepPipeline({
         iso, countryName, window: windowId,
         plugins: PLUGINS, registry: UAE_REGISTRY, relationshipTypes: RELATIONSHIP_TYPES,
-        offline, seedEvidence,
+        offline, seedEvidence, seedStatedEdges,
         onStage: (name) => { job.stage = name; },
       });
       job.runId = run.runId;
@@ -620,6 +620,7 @@ export function registerCorrelationRoutes(app, { countries }) {
         window: windowId,
         offline: !!req.body?.offline,
         seedEvidence: Array.isArray(req.body?.seedEvidence) ? req.body.seedEvidence : null,
+        seedStatedEdges: Array.isArray(req.body?.seedStatedEdges) ? req.body.seedStatedEdges : null,
       });
       res.json({ job: { status: job.status, stage: job.stage, runId: job.runId, pipeline: job.pipeline, window: job.window } });
     } catch (e) { res.status(400).json({ error: e.message }); }
