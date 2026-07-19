@@ -82,10 +82,10 @@ const CorrelationGraph = React.forwardRef(function CorrelationGraph({ graph, wid
     const fg = fgRef.current;
     if (!fg) return;
     fg.d3Force('collide', d3f.forceCollide()
-      .radius(n => (n.size / 2) + 14)
-      .strength(0.9).iterations(2));
-    fg.d3Force('charge')?.strength(-160);
-    fg.d3Force('link')?.distance(l => 60 + (1 - (l.weight || 0.3)) * 60);
+      .radius(n => (n.size / 2) + 20)
+      .strength(0.95).iterations(3));
+    fg.d3Force('charge')?.strength(-220);
+    fg.d3Force('link')?.distance(l => (l.isContext ? 75 : 90) + (1 - (l.weight || 0.3)) * 70);
     fg.d3ReheatSimulation?.();
   }, [graph]);
 
@@ -265,10 +265,61 @@ const CorrelationGraph = React.forwardRef(function CorrelationGraph({ graph, wid
 
   // screen-space label de-clutter: one label per 78×22px cell, priority = node size
   const labelGrid = useRef(new Map());
+  const captionGrid = useRef(new Map()); // edge-caption cells (QA gate: no overlapping captions)
   const framePrep = useCallback((globalScale) => {
     labelGrid.current = new Map();
+    captionGrid.current = new Map();
     return globalScale;
   }, []);
+
+  // in-canvas legend (bottom-left, screen space) — categories present + tier dashes.
+  // Drawn INSIDE the canvas so every screenshot of the graph carries its legend.
+  const legendPaint = useCallback((ctx) => {
+    const cats = [...new Set(graph.links.filter(l => !l.isContext && !l.inferred).map(l => l.type))];
+    const tiers = [...new Set(graph.links.filter(l => l.inferred).map(l => l.tier))];
+    if (!cats.length && !tiers.length) return;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // screen space
+    const rowH = 13, pad = 8, colW = 118;
+    const col2 = tiers.length ? [`— tiers —`, ...tiers] : [];
+    const nodeKey = 'node: size=importance · halo=community · # badge=evidence';
+    const rows = Math.max(cats.length, col2.length);
+    const w = Math.max(pad * 2 + colW + (col2.length ? 96 : 0), 248);
+    const h = pad * 2 + rows * rowH + 14; // + node-encoding key line
+    const x0 = 10, y0 = height - h - 10;
+    ctx.fillStyle = 'rgba(255,255,255,0.94)';
+    ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x0, y0, w, h, 9) : ctx.rect(x0, y0, w, h);
+    ctx.fill(); ctx.stroke();
+    ctx.font = '600 9.5px Montserrat, sans-serif';
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    cats.forEach((c, i) => {
+      const y = y0 + pad + i * rowH + rowH / 2;
+      ctx.strokeStyle = graph.links.find(l => l.type === c && !l.isContext && !l.inferred)?.color || '#64748b';
+      ctx.lineWidth = 2.6; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(x0 + pad, y); ctx.lineTo(x0 + pad + 18, y); ctx.stroke();
+      ctx.fillStyle = '#374151';
+      ctx.fillText(c, x0 + pad + 23, y);
+    });
+    col2.forEach((t, i) => {
+      const y = y0 + pad + i * rowH + rowH / 2;
+      const tx = x0 + pad + colW;
+      if (i === 0) { ctx.fillStyle = '#9ca3af'; ctx.fillText('inferred tiers', tx, y); return; }
+      const st = TIER_STYLES[t] || {};
+      ctx.strokeStyle = st.color || '#94a3b8'; ctx.lineWidth = 2.2;
+      ctx.setLineDash(st.dash || []);
+      ctx.beginPath(); ctx.moveTo(tx, y); ctx.lineTo(tx + 18, y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#374151';
+      ctx.fillText(t, tx + 23, y);
+    });
+    // node-encoding key (QA gate: legend explains node colors/sizes too)
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '500 8.5px Montserrat, sans-serif';
+    ctx.fillText(nodeKey, x0 + pad, y0 + h - pad + 1);
+    ctx.restore();
+  }, [graph.links, height]);
 
   const nodeCanvasObject = useCallback((n, ctx, globalScale) => {
     const dim = isDimNode(n);
@@ -470,40 +521,60 @@ const CorrelationGraph = React.forwardRef(function CorrelationGraph({ graph, wid
         }
       }
 
-      // on-edge caption: category · weight · evidence (+tier when inferred, +🔥 heat)
+      // on-edge caption: SHORT type-only pill at low zoom, full details when
+      // zoomed in or hovered; screen-space grid dedupe so captions NEVER overlap
+      // (Visual QA Gate). Hidden entirely when the caption cell is taken.
       const mid = curvePoint(s, t, c, 0.5);
+      const zoomedIn = globalScale > 1.6;
       const capBits = [`${l.type}`];
       if (l.tier && l.tier !== 'Verified') capBits.push(l.tier);
-      capBits.push(`w${(l.weight ?? 0).toFixed(2)}`, `${l.evidenceIds?.length || 0}ev`);
-      if (heatMode) capBits.push(`${l.interactions || 0}×`);
+      if (zoomedIn || hovered) {
+        capBits.push(`w${(l.weight ?? 0).toFixed(2)}`, `${l.evidenceIds?.length || 0}ev`);
+        if (heatMode) capBits.push(`${l.interactions || 0}×`);
+      }
       const caption = capBits.join(' · ');
       const fs = Math.max(4, 11 / globalScale);
       ctx.font = `700 ${fs}px Montserrat, sans-serif`;
       const tw = ctx.measureText(caption).width;
-      ctx.globalAlpha = dim ? 0.12 : 0.95;
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      const padX = 3, padY = 1.5;
-      ctx.fillRect(mid.x - tw / 2 - padX, mid.y - fs / 2 - padY, tw + padX * 2, fs + padY * 2);
-      ctx.strokeStyle = l.color; ctx.lineWidth = 0.6;
-      if (l.dash) ctx.setLineDash(l.dash);
-      ctx.strokeRect(mid.x - tw / 2 - padX, mid.y - fs / 2 - padY, tw + padX * 2, fs + padY * 2);
-      ctx.setLineDash([]);
-      ctx.fillStyle = l.color;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(caption, mid.x, mid.y);
+      // caption collision grid (screen space, ~90×18px cells)
+      let showCaption = true;
+      const sc = fgRef.current?.graph2ScreenCoords?.(mid.x, mid.y);
+      if (sc) {
+        const cell = `${Math.round(sc.x / 90)}:${Math.round(sc.y / 18)}`;
+        if (captionGrid.current.has(cell) && captionGrid.current.get(cell) !== l.id && !hovered) showCaption = false;
+        else captionGrid.current.set(cell, l.id);
+      }
+      if (showCaption) {
+        ctx.globalAlpha = dim ? 0.12 : 0.95;
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        const padX = 3, padY = 1.5;
+        ctx.fillRect(mid.x - tw / 2 - padX, mid.y - fs / 2 - padY, tw + padX * 2, fs + padY * 2);
+        ctx.strokeStyle = l.color; ctx.lineWidth = 0.6;
+        if (l.dash) ctx.setLineDash(l.dash);
+        ctx.strokeRect(mid.x - tw / 2 - padX, mid.y - fs / 2 - padY, tw + padX * 2, fs + padY * 2);
+        ctx.setLineDash([]);
+        ctx.fillStyle = l.color;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(caption, mid.x, mid.y);
+      }
 
       ctx.globalAlpha = dim ? 0.12 : 1;
-      (l.platforms || []).slice(0, 4).forEach((p, i) => {
-        ctx.beginPath();
-        ctx.arc(mid.x + (i - ((Math.min(l.platforms.length, 4) - 1) / 2)) * 9, mid.y + fs + 5, 3.4, 0, 7);
-        ctx.fillStyle = PLATFORM_COLORS[p] || '#9ca3af';
-        ctx.fill();
-      });
-      if (l.contradiction) {
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#b45309';
-        ctx.fillText('⚠', mid.x, mid.y + fs + 14);
+      // platform badges + ⚠ ride WITH the caption (zoomed/hover only) so nothing
+      // floats orphaned at low zoom — Visual QA Gate: no stray glyph clutter.
+      if (showCaption && (zoomedIn || hovered)) {
+        ctx.globalAlpha = dim ? 0.12 : 1;
+        (l.platforms || []).slice(0, 4).forEach((p, i) => {
+          ctx.beginPath();
+          ctx.arc(mid.x + (i - ((Math.min(l.platforms.length, 4) - 1) / 2)) * 9, mid.y + fs + 5, 3.4, 0, 7);
+          ctx.fillStyle = PLATFORM_COLORS[p] || '#9ca3af';
+          ctx.fill();
+        });
+        if (l.contradiction) {
+          ctx.font = '11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#b45309';
+          ctx.fillText('⚠', mid.x, mid.y + fs + 14);
+        }
       }
     }
     ctx.restore();
@@ -535,6 +606,7 @@ const CorrelationGraph = React.forwardRef(function CorrelationGraph({ graph, wid
         graphData={graph}
         width={width} height={height}
         onRenderFramePre={(ctx, globalScale) => framePrep(globalScale)}
+        onRenderFramePost={(ctx) => legendPaint(ctx)}
         nodeCanvasObject={nodeCanvasObject}
         nodePointerAreaPaint={(n, color, ctx) => {
           ctx.fillStyle = color;

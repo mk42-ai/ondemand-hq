@@ -246,3 +246,56 @@ Model logged per run (`run.model`) and per call in PLUGIN_TESTS.md.
 - `QuickQuery.jsx` — ⚡ floating card: EN/AR context chips, micro prompt, streaming
   answer, latency+TTFT stamps, 'Continue in chat →' handoff.
 - Mounted in `src/intel/CountryPage.jsx` as the `Correlation Engine` tab.
+
+## 11 Correlation Engine V2 (2026-07-19)
+
+**Backend (`server/correlation.js`, run schema 2).**
+- **Deep-search windows** (`SEARCH_WINDOWS`, default 730d): `POST /api/correlation/regenerate/:iso?windowDays=N`
+  threads the window into every research prompt date-range; `GET /api/correlation/config`
+  is the single source of truth for windows/weighting/tiers consumed by the UI.
+- **Research fan-out (intelligence density over speed):** ~10 Perplexity specialist
+  sub-prompts (developments, organisations, funding, officials, strategic implications,
+  12-month expectations, contradictions, missing relationships, historical analogues,
+  confidence audit) + X Search + Reddit, bounded 3-way concurrency (`pLimit`), each
+  steering toward official sites, government releases, corporate filings, academic/
+  think-tank output, PDFs, speeches, datasets. The normalize stage is the orchestration
+  layer: all streams merge into ONE evidence pool → one unified graph.
+- **Context weighting engine:** `applyContextWeighting()` — base 0.2/0.6/1.0 by age,
+  ×2 UAE relevance, ×2 gov source, ×3 official statement, ×2 corroboration, cap 3.0;
+  audit trail on-record (`weightClass`, `weightFactors`, `contextWeightNorm`); edge
+  weight = 0.6·legacy + 0.4·avg(contextWeightNorm).
+- **Stage 4b — AI correlation layer:** second reasoning pass emits `inferredEdges`
+  (tiers Likely/Possible/Predicted) gated on `basis_evidence_ids` ⊆ evidence pool;
+  each carries probability/supporting/counter/reasoning. Stored SEPARATELY from
+  verified `edges` — the evidence-gated core stays pure.
+- **Stage 4c — per-article intel + UAE Strategic Impact Engine:** one batched analysis
+  call returns `articleIntel` (50/100-word summaries, key points, named entities, risk,
+  importance, UAE relation per evidence id) and `impactScores` (Very High→None with
+  explicit reasoning + dimension subset of the 14 strategic axes per entity).
+- **Story Mode:** `GET /api/correlation/story/:iso/:runId/stream` — SSE executive
+  briefing in six fixed sections (beginning/actors/developments/current/risks/outlook),
+  every sentence evidence-cited, outlook separates evidence-backed vs tiered inference.
+- Model policy unchanged: plugins on `CE_PLUGIN_ENDPOINT_ID` (gpt-5.6-sol), analysis/
+  narrative/story on `CE_ANALYSIS_ENDPOINT_ID` (claude-fable-5 + medium, production
+  default), Quick Query GLM 4.7 Cerebras only. Streaming everywhere.
+
+**Frontend (`src/correlation/`).**
+- `adapter.js` — tier grammar (`TIER_STYLES`), inferred-edge ingestion, Louvain
+  cluster collapse (aggregate nodes + edge rerouting + chips metadata), timeline
+  `replayCutoff` filtering, `entityTimeline`/`relationshipChain` (BFS), mini-artifact
+  builders for ⚡ Quick Query on every new surface.
+- `CorrelationGraph.jsx` — collide force (radius+label clearance) + screen-space label
+  de-clutter grid (Visual QA Gate: no overlaps); nav grammar (Space pan, dbl-click
+  center, Shift+drag multi-select, CTRL+click lock w/ 🔒 ring, ALT+scroll scrub);
+  heat painter (width=interactions, glow=weight, pulse=breaking); tier dashes;
+  zoom state get/set for the fullscreen modal.
+- `V2Surfaces.jsx` — MiniMap (click-jump/wheel-zoom, live viewport rect),
+  EntityInspector, RelationshipInspector (chain view), HoverPreview, LightboxV2
+  (carousel/zoom/fullscreen/AI summary), TimelineReplay (play/drag), GeoOverlay
+  (d3-geo equirectangular + world-atlas land, animated dashed category flows),
+  PredictionPanel, StoryMode (SSE), ClusterChips, DeepSearchSelect, TierLegend.
+- `EChartsPanels.jsx` — donut: title above ring, legend-only labels
+  (avoidLabelOverlap; no leader-line truncation); volume axis flat MM-DD labels.
+- `CorrelationEngine.jsx` — Expand Intelligence View FAB → fullscreen modal (ESC,
+  zoom preserved), mode toggles (Heat/Geo), window selector, inspectors wiring,
+  ⚡ Quick Query artifacts for inspectors/predictions/story.

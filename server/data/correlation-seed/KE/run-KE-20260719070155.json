@@ -1,0 +1,2521 @@
+{
+ "runId": "KE-20260719070155",
+ "iso": "KE",
+ "country": "Kenya",
+ "generated_at": "2026-07-19T07:01:55.979Z",
+ "schema": 2,
+ "windowDays": 730,
+ "weighting": {
+  "base": {
+   "historical": 0.2,
+   "recent": 0.6,
+   "breaking": 1
+  },
+  "recentDays": 30,
+  "breakingHours": 48,
+  "multipliers": {
+   "uaeRelevance": 2,
+   "governmentSource": 2,
+   "officialStatement": 3,
+   "multiSource": 2
+  },
+  "cap": 3,
+  "blend": {
+   "legacy": 0.6,
+   "context": 0.4
+  }
+ },
+ "model": {
+  "analysis": "predefined-claude-fable-5+medium",
+  "plugins": "predefined-gpt-5.6-sol+medium",
+  "narrative": "streamed"
+ },
+ "pluginsCalled": [
+  {
+   "plugin": "perplexity:developments",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 2915
+  },
+  {
+   "plugin": "perplexity:funding",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 2694
+  },
+  {
+   "plugin": "perplexity:officials",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 5739
+  },
+  {
+   "plugin": "perplexity:predictions12mo",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 7444
+  },
+  {
+   "plugin": "perplexity:strategic",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 17227
+  },
+  {
+   "plugin": "perplexity:contradictions",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 7282
+  },
+  {
+   "plugin": "perplexity:missing",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 9135
+  },
+  {
+   "plugin": "perplexity:analogues",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 4935
+  },
+  {
+   "plugin": "xsearch",
+   "pluginId": "plugin-1751872652",
+   "status": 200,
+   "chars": 1158
+  },
+  {
+   "plugin": "perplexity:organisations",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 12793
+  },
+  {
+   "plugin": "perplexity:confidenceAudit",
+   "pluginId": "plugin-1722260873",
+   "status": 200,
+   "chars": 9407
+  },
+  {
+   "plugin": "reddit",
+   "pluginId": "plugin-1748003575",
+   "status": 200,
+   "chars": 2229
+  },
+  {
+   "plugin": "igUserInfo",
+   "pluginId": "plugin-1716164040",
+   "status": 200,
+   "chars": 194,
+   "handle": "wamnews"
+  },
+  {
+   "plugin": "igUserInfo",
+   "pluginId": "plugin-1716164040",
+   "status": 200,
+   "chars": 390,
+   "handle": "mofauae"
+  },
+  {
+   "plugin": "igDownload",
+   "pluginId": "plugin-1762980461",
+   "status": 200,
+   "chars": 686
+  }
+ ],
+ "evidence": [
+  {
+   "id": "E1",
+   "claim": "Kenya and the UAE signed a Comprehensive Economic Partnership Agreement on 14 January 2025 to deepen bilateral trade and investment.",
+   "platform": "perplexity",
+   "source": "Kenya Ministry of Industrialization",
+   "url": "https://industrialization.go.ke/kenya-and-uae-sign-landmark-comprehensive-economic-partnership-agreement",
+   "publish_date": "2025-01-14",
+   "snippet": "Kenya and the UAE signed a Comprehensive Economic Partnership Agreement intended to deepen bilateral trade and investment.",
+   "media": [],
+   "confidence": 0.97,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E2",
+   "claim": "The UAE–Kenya CEPA was described as the UAE's first such agreement with a mainland African country, positioning Kenya as a gateway to East and Southern Africa.",
+   "platform": "perplexity",
+   "source": "Kenya Ministry of Industrialization / Africanews",
+   "url": "https://www.africanews.com/2025/01/16/enhancing-trade-relations-uae-and-kenya-sign-economic-pact/",
+   "publish_date": "2025-01-16",
+   "snippet": "The CEPA was the UAE's first such agreement with a mainland African country, positioning Kenya as a gateway to East and Southern Africa.",
+   "media": [],
+   "confidence": 0.95,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E3",
+   "claim": "UAE–Kenya non-oil trade reached US$3.1 billion in the first nine months of 2024, a 29.1% year-over-year increase.",
+   "platform": "perplexity",
+   "source": "Africanews",
+   "url": "https://www.africanews.com/2025/01/16/enhancing-trade-relations-uae-and-kenya-sign-economic-pact/",
+   "publish_date": "2025-01-16",
+   "snippet": "Non-oil trade between the UAE and Kenya soared to $3.1 billion, reflecting a remarkable 29.1% increase compared to the same timeframe in 2023.",
+   "media": [],
+   "confidence": 0.9,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E4",
+   "claim": "Kenya's Ministry of Foreign Affairs stated the UAE is Kenya's top trading partner in the Gulf with bilateral trade of USD 3.4 billion in 2023 and Kenya's third-largest trading partner globally.",
+   "platform": "perplexity",
+   "source": "Kenya Ministry of Foreign and Diaspora Affairs",
+   "url": "https://mfa.go.ke/appreciating-kenya-uae-relations",
+   "publish_date": "2025-05-08",
+   "snippet": "The UAE is Kenya's top trading partner in the Gulf region with a bilateral trade volume worth USD 3.4 billion in 2023 and is Kenya's 3rd largest trading partner globally.",
+   "media": [],
+   "confidence": 0.92,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E5",
+   "claim": "Kenya and the UAE signed seven agreements and MoUs on 8 May 2025 covering defence, customs, border control, renewable energy, transport, and business cooperation.",
+   "platform": "perplexity",
+   "source": "The Star (Kenya)",
+   "url": "https://www.the-star.co.ke/news/2025-05-09-details-of-seven-agreements-signed-by-kenya-uae",
+   "publish_date": "2025-05-09",
+   "snippet": "Seven subsequent memoranda institutionalised the relationship, covering defence, customs, border control, energy, transport and business cooperation.",
+   "media": [],
+   "confidence": 0.88,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E6",
+   "claim": "Kenya Railways Corporation and Etihad Rail signed a partnership covering railway cooperation, knowledge sharing, and feasibility-study work.",
+   "platform": "perplexity",
+   "source": "The Star (Kenya)",
+   "url": "https://www.the-star.co.ke/news/2025-05-09-details-of-seven-agreements-signed-by-kenya-uae",
+   "publish_date": "2025-05-09",
+   "snippet": "The agreements established a Joint Business Council and linked Kenya Railways with Etihad Rail for knowledge sharing, feasibility work and railway-sector cooperation.",
+   "media": [],
+   "confidence": 0.88,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E7",
+   "claim": "During Sheikh Abdullah bin Zayed Al Nahyan's African visit in May 2025, Etihad Rail and Kenya Railways signed an MoU covering railway-infrastructure cooperation, expertise transfer and knowledge exchange.",
+   "platform": "perplexity",
+   "source": "RailwayPRO",
+   "url": "https://www.railwaypro.com/wp/etihad-rail-signs-mous-with-african-countries/",
+   "publish_date": null,
+   "snippet": "During Sheikh Abdullah bin Zayed Al Nahyan's African visit, Etihad Rail and Kenya Railways signed an MoU covering railway-infrastructure cooperation, expertise transfer and knowledge exchange.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "official-stmt×3"
+   ],
+   "contextWeight": 1.2,
+   "contextWeightNorm": 0.4
+  },
+  {
+   "id": "E8",
+   "claim": "Dubai-based ARISE Integrated Industrial Platforms announced plans on 26 March 2026 to help mobilize more than US$3 billion over five years for Kenyan industrial projects including two coastal export zones, a Naivasha park, and Rivatex.",
+   "platform": "perplexity",
+   "source": "Yahoo Finance",
+   "url": "https://finance.yahoo.com/economy/policy/articles/dubai-ariseiip-plans-3bn-investment-124452896.html",
+   "publish_date": "2026-03-26",
+   "snippet": "ARISE IIP announced plans to help mobilize over US$3 billion during five years for Kenyan industrial projects; the article clarified ARISE would not itself supply the entire amount.",
+   "media": [],
+   "confidence": 0.9,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "official-stmt×3"
+   ],
+   "contextWeight": 0.6,
+   "contextWeightNorm": 0.2
+  },
+  {
+   "id": "E9",
+   "claim": "ARISE IIP said it would collaborate with KCB Group and Afreximbank to establish an US$800 million facility supporting future investors in the new Kenyan industrial/export zones.",
+   "platform": "perplexity",
+   "source": "Yahoo Finance",
+   "url": "https://finance.yahoo.com/economy/policy/articles/dubai-ariseiip-plans-3bn-investment-124452896.html",
+   "publish_date": "2026-03-26",
+   "snippet": "ARISE IIP would collaborate with KCB Group and Afreximbank to establish an US$800 million facility supporting future investors in the zones.",
+   "media": [],
+   "confidence": 0.88,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical"
+   ],
+   "contextWeight": 0.2,
+   "contextWeightNorm": 0.067
+  },
+  {
+   "id": "E10",
+   "claim": "Musalia Mudavadi, Kenya's Prime Cabinet Secretary and Foreign Affairs Cabinet Secretary, departed for Abu Dhabi on 12 January 2025 for bilateral meetings and the CEPA signing scheduled for 12–17 January 2025.",
+   "platform": "perplexity",
+   "source": "Kenyan Foreign Policy",
+   "url": "https://kenyanforeignpolicy.com/emirati-rulers-kenya-visit-uncertain-trade-deal-to-be-signed-in-abu-dhabi/",
+   "publish_date": "2025-01-12",
+   "snippet": "Musalia Mudavadi will today leave for Abu Dhabi for bilateral meetings and the signing of the long-awaited Comprehensive Economic Partnership Agreement between 12th–17th January 2025.",
+   "media": [],
+   "confidence": 0.9,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E11",
+   "claim": "A report asserted the UAE president's planned visit to Kenya was cancelled, with the CEPA instead signed in Abu Dhabi by Musalia Mudavadi.",
+   "platform": "perplexity",
+   "source": "Kenyan Foreign Policy",
+   "url": "https://kenyanforeignpolicy.com/emirati-rulers-kenya-visit-uncertain-trade-deal-to-be-signed-in-abu-dhabi/",
+   "publish_date": "2025-01-12",
+   "snippet": "It appears the visit has been canceled, and the CEPA will now be signed in Abu Dhabi by Kenya's top foreign policy official, Musalia Mudavadi.",
+   "media": [],
+   "confidence": 0.75,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E12",
+   "claim": "Kenya's Foreign Ministry stated on 8 May 2025 that a visit to Kenya by Sheikh Mohamed bin Zayed Al Nahyan was anticipated later in the year, contradicting the cancellation report.",
+   "platform": "perplexity",
+   "source": "Kenya Ministry of Foreign and Diaspora Affairs",
+   "url": "https://mfa.go.ke/appreciating-kenya-uae-relations",
+   "publish_date": "2025-05-08",
+   "snippet": "The meeting served as a precursor to the anticipated visit to Kenya by His Highness Sheikh Mohammed bin Zayed Al Nahyan scheduled to take place later in the year.",
+   "media": [],
+   "confidence": 0.9,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E13",
+   "claim": "On 2 March 2026, President Ruto telephoned UAE President Sheikh Mohamed bin Zayed, condemned Iranian attacks on the UAE, and expressed Kenyan solidarity.",
+   "platform": "perplexity",
+   "source": "Big News Network",
+   "url": "https://www.bignewsnetwork.com/news/278896217/in-phone-call-with-uae-president-kenyan-president-expressed-solidarity-with-the-uae-following-iranian-attacks",
+   "publish_date": "2026-03-02",
+   "snippet": "The Kenyan President condemned the blatant Iranian attacks on the United Arab Emirates and expressed his country's solidarity with the UAE.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E14",
+   "claim": "On 22 April 2026, the UAE and Kenyan presidents discussed advancing the CEPA and expanding cooperation in investment, development, renewable energy, technology and infrastructure.",
+   "platform": "perplexity",
+   "source": "Mohamed bin Zayed official site",
+   "url": "https://www.mohamedbinzayed.ae/en/latest-news-listing/2026/04/UAE-and-Kenyan-Presidents-discuss-cooperation-under-CEPA-and-regional-developments",
+   "publish_date": "2026-04-22",
+   "snippet": "The two governments will continue efforts to advance the UAE–Kenya CEPA and expand cooperation in investment, development, renewable energy, technology and infrastructure.",
+   "media": [],
+   "confidence": 0.9,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E15",
+   "claim": "Kenya's Foreign Ministry stated the CEPA, if approved by Parliament, would eliminate tariffs on more than 80% of traded goods and remove other market-access barriers.",
+   "platform": "perplexity",
+   "source": "Kenya Ministry of Foreign and Diaspora Affairs",
+   "url": "https://mfa.go.ke/appreciating-kenya-uae-relations",
+   "publish_date": "2025-01-14",
+   "snippet": "The announced direction is elimination of tariffs on more than 80% of traded goods and removal of other market-access barriers, pending parliamentary approval.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "gov-source×2",
+    "official-stmt×3"
+   ],
+   "contextWeight": 1.2,
+   "contextWeightNorm": 0.4
+  },
+  {
+   "id": "E16",
+   "claim": "Kenya's Ministry of Investments, Trade and Industry reported bilateral trade of KSh445 billion in 2023, with the UAE as Kenya's sixth-largest export destination and second-largest import source supplying 16% of imports.",
+   "platform": "perplexity",
+   "source": "Kenya Ministry of Industrialization",
+   "url": "https://industrialization.go.ke/kenya-and-uae-sign-landmark-comprehensive-economic-partnership-agreement",
+   "publish_date": "2025-01-14",
+   "snippet": "Bilateral trade reached KSh445 billion in 2023, with the UAE ranked as Kenya's sixth-largest export destination and second-largest import source, supplying 16% of Kenya's imports.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E17",
+   "claim": "Kenya's 2023 exports to the UAE included KSh9.9 billion in meat products, KSh5.2 billion in fruit, and KSh5.6 billion in vegetables and flowers.",
+   "platform": "perplexity",
+   "source": "Kenya Ministry of Industrialization",
+   "url": "https://industrialization.go.ke/kenya-and-uae-sign-landmark-comprehensive-economic-partnership-agreement",
+   "publish_date": "2025-01-14",
+   "snippet": "Kenya's 2023 UAE exports included KSh9.9 billion in meat products, KSh5.2 billion in fruit, and KSh5.6 billion in vegetables and flowers.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E18",
+   "claim": "Kenya reportedly exported KSh9.9 billion of meat and meat products to the UAE in 2023, more than half of Kenya's total meat exports.",
+   "platform": "perplexity",
+   "source": "The Star (Kenya)",
+   "url": "https://www.the-star.co.ke/news/realtime/2025-01-14-kenya-uae-ink-historic-economic-partnership-deal",
+   "publish_date": "2025-01-14",
+   "snippet": "Kenya reportedly exported KSh9.9 billion of meat and meat products to the UAE in 2023—more than half of Kenya's total meat exports.",
+   "media": [],
+   "confidence": 0.82,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E19",
+   "claim": "On 25 August 2025, the UAE and Angola signed a CEPA and related agreements targeting $10 billion in annual bilateral trade by 2033, about $1 billion added to each country's GDP, and nearly 30,000 jobs.",
+   "platform": "perplexity",
+   "source": "The National",
+   "url": "https://www.thenationalnews.com/business/2025/08/25/uae-and-angola-sign-cepa-and-other-deals-as-they-seek-to-boost-trade/",
+   "publish_date": "2025-08-25",
+   "snippet": "The CEPA is intended to raise annual bilateral trade to $10 billion by 2033, add about $1 billion to each country's GDP, and create nearly 30,000 jobs.",
+   "media": [],
+   "confidence": 0.9,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E20",
+   "claim": "Alongside the Angola CEPA, the Central Bank of the UAE and the National Bank of Angola signed a financial-sector cooperation agreement, and Al Dahra signed an agriculture agreement with Angola's Ministry of Agriculture and Forestry.",
+   "platform": "perplexity",
+   "source": "The National",
+   "url": "https://www.thenationalnews.com/business/2025/08/25/uae-and-angola-sign-cepa-and-other-deals-as-they-seek-to-boost-trade/",
+   "publish_date": "2025-08-25",
+   "snippet": "Central Bank of the UAE and National Bank of Angola signed a financial-sector cooperation agreement; Al Dahra signed an agriculture agreement with Angola's ministry.",
+   "media": [],
+   "confidence": 0.88,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E21",
+   "claim": "The UAE launched a US$1 billion 'AI for Development' financing initiative for Africa on 22 November 2025, led by ADEX (export-financing arm of ADFD) and the UAE Foreign Aid Agency, with no Kenya-specific recipient identified.",
+   "platform": "perplexity",
+   "source": "PR Newswire",
+   "url": "https://www.prnewswire.com/il/news-releases/uae-launches-1-billion-ai-for-development-initiative-to-advance-digital-infrastructure-across-africa-led-by-adex-the-export-financing-arm-of-adfd-and-the-uae-foreign-aid-agency-302626830.html",
+   "publish_date": "2025-11-22",
+   "snippet": "Launched a US$1 billion 'AI for Development' financing initiative for Africa, but the announcement identified no Kenya-specific recipient, contract or disbursement.",
+   "media": [],
+   "confidence": 0.9,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E22",
+   "claim": "Reporting on 24 November 2025 described the UAE's Africa-wide AI initiative as addressing the continent's shortage of data-centre capacity, without confirming Kenyan participation.",
+   "platform": "perplexity",
+   "source": "The National",
+   "url": "https://www.thenationalnews.com/future/2025/11/24/uae-investment-set-to-boost-africas-ai-infrastructure-as-it-reaches-inflection-point/",
+   "publish_date": "2025-11-24",
+   "snippet": "Additional reporting described the Africa-wide initiative against the continent's shortage of data-centre capacity, without confirming Kenyan participation.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E23",
+   "claim": "A 15 April 2026 report described UAE trade-facilitation coordination involving the UAE Ministry of Foreign Trade, Dubai Customs, and DP World relevant to Kenyan floriculture, tea and cargo through Mombasa, Lamu and Gulf markets.",
+   "platform": "perplexity",
+   "source": "The People Tribune",
+   "url": "https://thepeopletribune.co.ke/2026/04/15/kenya-set-to-benefit-from-uaes-new-advancedregional-logistics-coordination-initiatives/",
+   "publish_date": "2026-04-15",
+   "snippet": "Coordinated alternative trade corridors and supply-chain continuity measures relevant to Kenyan floriculture, tea and other cargo moving through Mombasa, Lamu and Gulf markets, involving DP World.",
+   "media": [],
+   "confidence": 0.8,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E24",
+   "claim": "In April 2026, Kenya's State Department for Trade and its Dubai embassy pursued exports to Saudi Arabia, Kuwait, Bahrain and Oman while using the UAE as a Gulf distribution and re-export gateway under CEPA implementation.",
+   "platform": "perplexity",
+   "source": "Logistics Update Africa",
+   "url": "https://www.logupdateafrica.com/trade/kenya-expands-trade-across-gulf-region-and-strengthens-economic-ties-with-uae-1358762",
+   "publish_date": "2026-04-13",
+   "snippet": "Kenyan officials were pursuing exports not only to the UAE but also Saudi Arabia, Kuwait, Bahrain and Oman, while CEPA implementation was intended to eliminate tariffs.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E25",
+   "claim": "AI Everything Kenya x GITEX Kenya on 17 June 2026 reportedly attracted more than 15,000 delegates, with the UAE–Kenya relationship framed around AI deployment in public services, healthcare, energy grids and financial services.",
+   "platform": "perplexity",
+   "source": "Kachwanya",
+   "url": "https://www.kachwanya.com/2026/06/17/at-the-g20-summit-held-last-year-the-uae-government-announced-the-1-billion-ai-for-development-initiative-in-africa/",
+   "publish_date": "2026-06-17",
+   "snippet": "AI Everything Kenya x GITEX Kenya reportedly attracted more than 15,000 delegates, framed around deploying AI in public services, healthcare, energy grids and financial services.",
+   "media": [],
+   "confidence": 0.8,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E26",
+   "claim": "Africanews reporting was internally inconsistent, calling the Kenya CEPA the UAE's inaugural African bilateral trade agreement while noting it followed similar agreements with Mauritius and the Republic of the Congo.",
+   "platform": "perplexity",
+   "source": "Africanews",
+   "url": "https://www.africanews.com/2025/01/16/enhancing-trade-relations-uae-and-kenya-sign-economic-pact/",
+   "publish_date": "2025-01-16",
+   "snippet": "This paradigm shift marks the UAE's inaugural bilateral trade agreement with an African nation… following similar agreements with nations like Mauritius and the Republic of the Congo.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E27",
+   "claim": "The CEPA was reported as creating conditions for UAE investment in Kenya to double and for Kenya to serve as a regional commercial gateway.",
+   "platform": "perplexity",
+   "source": "The Africa Report",
+   "url": "https://www.theafricareport.com/374353/whats-driving-the-uae-kenya-comprehensive-economic-partnership-agreement/",
+   "publish_date": "2025-01-14",
+   "snippet": "The CEPA was reported as creating conditions for UAE investment in Kenya to double and for Kenya to serve as a regional commercial gateway.",
+   "media": [],
+   "confidence": 0.82,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E28",
+   "claim": "Kenya identified energy, water, agriculture, health, airports, logistics and ICT as UAE investment opportunities aligned with its policy of reducing borrowing.",
+   "platform": "perplexity",
+   "source": "Eastleigh Voice",
+   "url": "https://eastleighvoice.co.ke/national/104713/kenya-united-arab-emirates-sign-comprehensive-agreement-to-deepen-trade-and-investment-ties",
+   "publish_date": "2025-01-14",
+   "snippet": "Kenya identified energy, water, agriculture, health, airports, logistics and ICT as investment opportunities aligned with its policy of reducing borrowing.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E29",
+   "claim": "A 8 May 2025 transport-cooperation MoU between Kenya and the UAE covers rail, aviation and roads, including joint projects, feasibility studies, regulatory alignment, infrastructure safety and innovation.",
+   "platform": "perplexity",
+   "source": "The Star (Kenya)",
+   "url": "https://www.the-star.co.ke/news/2025-05-09-details-of-seven-agreements-signed-by-kenya-uae",
+   "publish_date": "2025-05-08",
+   "snippet": "Follow-through is expected under the signed transport-cooperation MoU in rail, aviation and roads, including joint projects, feasibility studies, investment opportunities, regulatory alignment.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E30",
+   "claim": "The UAE Federation of Chambers of Commerce and Industry and the Kenya National Chamber of Commerce and Industry announced a UAE–Kenya Joint Business Council to deepen private-sector relations.",
+   "platform": "perplexity",
+   "source": "People Daily",
+   "url": "https://peopledaily.digital/business/kenya-and-uae-sign-7-agreements-to-boost-economic-collaboration",
+   "publish_date": "2025-05-08",
+   "snippet": "The announced UAE–Kenya Joint Business Council is the designated mechanism for closer private-sector relations, trade and investment links, and joint recommendations to both governments.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "official-stmt×3"
+   ],
+   "contextWeight": 1.2,
+   "contextWeightNorm": 0.4
+  },
+  {
+   "id": "E31",
+   "claim": "A Bilateral Framework Agreement on Economic Development was signed between Kenya's National Treasury and the UAE government among the seven May 2025 instruments.",
+   "platform": "perplexity",
+   "source": "Economy Middle East",
+   "url": "https://economymiddleeast.com/news/uae-and-kenya-sign-7-agreements-economic-trade-energy-transport-industry-sectors/",
+   "publish_date": "2025-05-08",
+   "snippet": "A Bilateral Framework Agreement on Economic Development was signed, an observable signal of a potential government-to-government project and financing pipeline.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E32",
+   "claim": "During Ruto's working visit to the UAE, the presidents discussed investment, renewable energy, technology, infrastructure, CEPA implementation, maritime security, and Middle East developments, attended by Sheikh Hamdan bin Mohamed bin Zayed Al Nahyan.",
+   "platform": "instagram",
+   "source": "Instagram reel",
+   "url": "https://www.instagram.com/reel/DXbmCV9jdWU/",
+   "publish_date": null,
+   "snippet": "The two sides discussed strengthening bilateral relations and expanding cooperation across investment, development, renewable energy, technology, and infrastructure under the UAE-Kenya CEPA.",
+   "media": [
+    {
+     "kind": "image",
+     "url": "/api/correlation/media/KE/KE-20260719070155-ig1.jpg",
+     "originUrl": "https://airevdev.blob.core.windows.net/on-demand-dev/6692b763e851d28a036ab30e/agents/vASG3Zo0tU.png?se=2026-07-26T07%3A17%3A14Z&sig=Wtx1wv264NB%2FDWLs9AnT7p4Fak1%2FPzI8wudWPUPUp2k%3D&ske=2026-07-20T15%3A17%3A14Z&skoid=f6fe3b05-8f6e-4558-96bd-b7f53ddd5066&sks=b&skt=2026-07-19T07%3A07%3A14Z&sktid=03628b8d-e6ad-4dd7-bca0-020e6a6cfdda&skv=2025-05-05&sp=r&sr=b&st=2026-07-19T07%3A17%3A14Z&sv=2025-05-05",
+     "bytes": 170228,
+     "sourceHandle": "wamnews",
+     "shortcode": null
+    }
+   ],
+   "confidence": 0.75,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E33",
+   "claim": "Mudavadi visited Abu Dhabi in July 2024, where a Joint Commission for Cooperation took place between Kenya and the UAE.",
+   "platform": "perplexity",
+   "source": "Kenyan Foreign Policy",
+   "url": "https://kenyanforeignpolicy.com/emirati-rulers-kenya-visit-uncertain-trade-deal-to-be-signed-in-abu-dhabi/",
+   "publish_date": null,
+   "snippet": "Mudavadi had visited Abu Dhabi in July 2024, where a Joint Commission for Cooperation (JCC) took place between the two countries.",
+   "media": [],
+   "confidence": 0.8,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E34",
+   "claim": "Kenya and the UAE agreed customs cooperation covering information sharing, streamlined procedures, enforcement, action against illicit trade and improved border controls under a mutual-assistance agreement.",
+   "platform": "perplexity",
+   "source": "The Star (Kenya)",
+   "url": "https://www.the-star.co.ke/news/2025-05-09-details-of-seven-agreements-signed-by-kenya-uae",
+   "publish_date": "2025-05-08",
+   "snippet": "Customs cooperation should proceed through information sharing, streamlined procedures, stronger enforcement, action against illicit trade and improved border controls.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E35",
+   "claim": "An unverified X post candidate from Kenya's trade ministry account was surfaced but its date and UAE–Kenya relevance could not be confirmed.",
+   "platform": "x",
+   "source": "@Trade_Kenya",
+   "url": "https://x.com/Trade_Kenya/status/1987899713069207764",
+   "publish_date": null,
+   "snippet": "Official-account candidate surfaced by search, but exact dates and substantive relevance could not be validated.",
+   "media": [],
+   "confidence": 0.3,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "multi-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E36",
+   "claim": "An unverified X post candidate from Kenya's Foreign Office account was surfaced but could not be validated for date or content.",
+   "platform": "x",
+   "source": "@ForeignOfficeKE",
+   "url": "https://x.com/ForeignOfficeKE/status/2020737358484967855",
+   "publish_date": null,
+   "snippet": "Official-account candidate surfaced by search; publication date, post text, and UAE–Kenya relevance could not be confirmed reliably.",
+   "media": [],
+   "confidence": 0.3,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "multi-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E37",
+   "claim": "The Emirates News Agency Instagram account @wamnews is verified with 391,380 followers and operates as a business account.",
+   "platform": "instagram",
+   "source": "@wamnews",
+   "url": null,
+   "publish_date": null,
+   "snippet": "Emirates News Agency (WAM) official account; followers 391,380; verified; business account.",
+   "media": [],
+   "confidence": 0.9,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E38",
+   "claim": "The most recent @wamnews Instagram post (shortcode Da9zM6UDQei) was downloaded but its caption was unavailable, so Kenya or UAE-partnership relevance could not be verified.",
+   "platform": "instagram",
+   "source": "@wamnews",
+   "url": "https://airevdev.blob.core.windows.net/on-demand-dev/6692b763e851d28a036ab30e/agents/vASG3Zo0tU.png?se=2026-07-26T07%3A17%3A14Z&sig=Wtx1wv264NB%2FDWLs9AnT7p4Fak1%2FPzI8wudWPUPUp2k%3D&ske=2026-07-20T15%3A17%3A14Z&skoid=f6fe3b05-8f6e-4558-96bd-b7f53ddd5066&sks=b&skt=2026-07-19T07%3A07%3A14Z&sktid=03628b8d-e6ad-4dd7-bca0-020e6a6cfdda&skv=2025-05-05&sp=r&sr=b&st=2026-07-19T07%3A17%3A14Z&sv=2025-05-05",
+   "publish_date": null,
+   "snippet": "Post shortcode Da9zM6UDQei downloaded successfully; caption not available in retrieved data, so mention of Kenya or UAE partnerships could not be verified.",
+   "media": [],
+   "confidence": 0.6,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.8,
+   "contextWeightNorm": 0.267
+  },
+  {
+   "id": "E39",
+   "claim": "Reddit searches returned no posts explicitly mentioning ADNOC, Mubadala, DP World, Kenya–UAE investment, bilateral aid, or a Kenya–UAE partnership, and retrieved posts lacked URLs and dates.",
+   "platform": "reddit",
+   "source": "Reddit (subreddits not supplied)",
+   "url": null,
+   "publish_date": null,
+   "snippet": "No retrieved title explicitly mentioned ADNOC, Mubadala, DP World, Kenya–UAE investment, bilateral aid, or a Kenya–UAE partnership; identifying metadata was not returned.",
+   "media": [],
+   "confidence": 0.7,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "uae-relevance×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  },
+  {
+   "id": "E40",
+   "claim": "Kenya's Foreign Ministry material described CEPA as covering services sectors including finance, tourism, logistics and ICT, with parliamentary approval a stated prerequisite for benefits.",
+   "platform": "perplexity",
+   "source": "Kenya Ministry of Foreign and Diaspora Affairs",
+   "url": "https://mfa.go.ke/appreciating-kenya-uae-relations",
+   "publish_date": "2025-01-14",
+   "snippet": "Bilateral work is expected to continue around services—particularly finance, tourism, logistics and ICT; parliamentary approval remains the stated prerequisite for CEPA benefits.",
+   "media": [],
+   "confidence": 0.85,
+   "weightClass": "historical",
+   "weightFactors": [
+    "historical",
+    "gov-source×2"
+   ],
+   "contextWeight": 0.4,
+   "contextWeightNorm": 0.133
+  }
+ ],
+ "edges": [
+  {
+   "id": "ED1",
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Trade",
+   "direction": "both",
+   "claim": "The UAE and Kenya signed a Comprehensive Economic Partnership Agreement on 14 January 2025, described as the UAE's first with a mainland African country, projected to eliminate tariffs on over 80% of traded goods and cover services including finance, tourism, logistics and ICT.",
+   "evidence_record_ids": [
+    "E1",
+    "E2",
+    "E15",
+    "E27",
+    "E40",
+    "E3",
+    "E4",
+    "E16",
+    "E17",
+    "E18"
+   ],
+   "confidence": 0.95,
+   "stance": "cooperation",
+   "weight": 0.4435,
+   "recency": 0,
+   "evidencePlatforms": [
+    "perplexity"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 10
+  },
+  {
+   "id": "ED2",
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Diplomatic",
+   "direction": "both",
+   "claim": "Kenya and the UAE maintain high-level diplomatic engagement including a July 2024 Joint Commission for Cooperation, Mudavadi's January 2025 Abu Dhabi visit for the CEPA signing, seven agreements and MoUs signed on 8 May 2025, and a Bilateral Framework Agreement on Economic Development between Kenya's National Treasury and the UAE government.",
+   "evidence_record_ids": [
+    "E5",
+    "E10",
+    "E31",
+    "E33",
+    "E13",
+    "E14",
+    "E32"
+   ],
+   "confidence": 0.9,
+   "stance": "cooperation",
+   "weight": 0.4399,
+   "recency": 0,
+   "evidencePlatforms": [
+    "perplexity",
+    "instagram"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 7
+  },
+  {
+   "id": "ED3",
+   "entity_a": "etihadrail",
+   "entity_b": "kerail",
+   "relationship_type": "Infrastructure",
+   "direction": "both",
+   "claim": "Etihad Rail and Kenya Railways Corporation signed an MoU/partnership in May 2025 covering railway-infrastructure cooperation, knowledge sharing, expertise transfer and feasibility-study work.",
+   "evidence_record_ids": [
+    "E6",
+    "E7"
+   ],
+   "confidence": 0.9,
+   "stance": "cooperation",
+   "weight": 0.3319,
+   "recency": 0,
+   "evidencePlatforms": [
+    "perplexity"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 2
+  },
+  {
+   "id": "ED4",
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Infrastructure",
+   "direction": "both",
+   "claim": "An 8 May 2025 transport-cooperation MoU between Kenya and the UAE covers rail, aviation and roads, including joint projects, feasibility studies, regulatory alignment, infrastructure safety and innovation.",
+   "evidence_record_ids": [
+    "E29"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "weight": 0.2347,
+   "recency": 0,
+   "evidencePlatforms": [
+    "perplexity"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 1
+  },
+  {
+   "id": "ED5",
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Security",
+   "direction": "both",
+   "claim": "Kenya and the UAE agreed defence, customs and border-control cooperation in May 2025, including information sharing, streamlined procedures, enforcement, action against illicit trade and improved border controls under a mutual-assistance agreement.",
+   "evidence_record_ids": [
+    "E5",
+    "E34"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "weight": 0.2785,
+   "recency": 0,
+   "evidencePlatforms": [
+    "perplexity"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 2
+  },
+  {
+   "id": "ED6",
+   "entity_a": "arise",
+   "entity_b": "ke",
+   "relationship_type": "Investment",
+   "direction": "a->b",
+   "claim": "Dubai-based ARISE Integrated Industrial Platforms announced plans on 26 March 2026 to mobilize over US$3 billion in five years for Kenyan industrial projects (two coastal export zones, a Naivasha park, Rivatex), collaborating with KCB Group and Afreximbank on an US$800 million investor facility.",
+   "evidence_record_ids": [
+    "E8",
+    "E9"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "weight": 0.2817,
+   "recency": 0.0003,
+   "evidencePlatforms": [
+    "perplexity"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 2
+  },
+  {
+   "id": "ED7",
+   "entity_a": "dpworld",
+   "entity_b": "ke",
+   "relationship_type": "Trade",
+   "direction": "both",
+   "claim": "UAE trade-facilitation coordination involving the UAE Ministry of Foreign Trade, Dubai Customs and DP World supports Kenyan floriculture, tea and cargo through Mombasa, Lamu and Gulf markets, with Kenya using the UAE as a Gulf distribution and re-export gateway under CEPA implementation.",
+   "evidence_record_ids": [
+    "E23",
+    "E24"
+   ],
+   "confidence": 0.75,
+   "stance": "cooperation",
+   "weight": 0.2738,
+   "recency": 0.001,
+   "evidencePlatforms": [
+    "perplexity"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 2
+  },
+  {
+   "id": "ED8",
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Investment",
+   "direction": "a->b",
+   "claim": "Kenya identified energy, water, agriculture, health, airports, logistics and ICT as UAE investment opportunities aligned with reducing borrowing, with the CEPA reported as creating conditions for UAE investment in Kenya to double.",
+   "evidence_record_ids": [
+    "E27",
+    "E28"
+   ],
+   "confidence": 0.8,
+   "stance": "cooperation",
+   "weight": 0.2749,
+   "recency": 0,
+   "evidencePlatforms": [
+    "perplexity"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 2
+  },
+  {
+   "id": "ED9",
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Technology",
+   "direction": "both",
+   "claim": "The UAE–Kenya relationship was framed around AI deployment in public services, healthcare, energy grids and financial services at the AI Everything Kenya x GITEX Kenya event on 17 June 2026, which reportedly attracted more than 15,000 delegates.",
+   "evidence_record_ids": [
+    "E25"
+   ],
+   "confidence": 0.7,
+   "stance": "cooperation",
+   "weight": 0.2943,
+   "recency": 0.0996,
+   "evidencePlatforms": [
+    "perplexity"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 1
+  },
+  {
+   "id": "ED10",
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Media-narrative",
+   "direction": "both",
+   "claim": "Reporting contained contradictions: a claim that the UAE president's Kenya visit was cancelled was contradicted by Kenya's Foreign Ministry anticipating a visit later in 2025, and Africanews inconsistently called the Kenya CEPA the UAE's inaugural African trade agreement while noting prior agreements with Mauritius and the Republic of the Congo.",
+   "evidence_record_ids": [
+    "E11",
+    "E12",
+    "E26"
+   ],
+   "confidence": 0.8,
+   "stance": "neutral",
+   "weight": 0.3167,
+   "recency": 0,
+   "evidencePlatforms": [
+    "perplexity"
+   ],
+   "contradiction": false,
+   "tier": "Verified",
+   "interactions": 3
+  }
+ ],
+ "nodes": [
+  {
+   "id": "uae",
+   "label": "UAE",
+   "fullName": "United Arab Emirates",
+   "kind": "country",
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": {
+    "score": "Very High",
+    "reasoning": "Central actor: signed CEPA with Kenya and Angola, seven May 2025 agreements, US$1 billion Africa AI initiative, presidential diplomacy, and top-partner trade volumes with Kenya.",
+    "dimensions": [
+     "trade",
+     "diplomacy",
+     "investment",
+     "technology",
+     "food security",
+     "energy",
+     "defence",
+     "foreign policy",
+     "economic diversification"
+    ]
+   }
+  },
+  {
+   "id": "oda",
+   "label": "ODA",
+   "fullName": "Office of Development Affairs",
+   "kind": "entity",
+   "aliases": [
+    "office of development affairs"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "mofa",
+   "label": "MOFA",
+   "fullName": "Ministry of Foreign Affairs",
+   "kind": "entity",
+   "aliases": [
+    "ministry of foreign affairs",
+    "mofaic",
+    "uae foreign ministry"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "adq",
+   "label": "ADQ",
+   "fullName": "ADQ (Abu Dhabi sovereign holding)",
+   "kind": "entity",
+   "aliases": [
+    "adq"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "mubadala",
+   "label": "Mubadala",
+   "fullName": "Mubadala Investment Company",
+   "kind": "entity",
+   "aliases": [
+    "mubadala"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "g42",
+   "label": "G42",
+   "fullName": "G42 (Group 42)",
+   "kind": "entity",
+   "aliases": [
+    "g42",
+    "group 42"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "core42",
+   "label": "Core42",
+   "fullName": "Core42 (G42 cloud/AI)",
+   "kind": "entity",
+   "aliases": [
+    "core42"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "adnoc",
+   "label": "ADNOC",
+   "fullName": "Abu Dhabi National Oil Company",
+   "kind": "entity",
+   "aliases": [
+    "adnoc",
+    "adnoc distribution",
+    "adnoc gas"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "adports",
+   "label": "AD Ports",
+   "fullName": "AD Ports Group",
+   "kind": "entity",
+   "aliases": [
+    "ad ports",
+    "ad ports group",
+    "abu dhabi ports"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "presight",
+   "label": "Presight",
+   "fullName": "Presight AI (G42)",
+   "kind": "entity",
+   "aliases": [
+    "presight"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "adfd",
+   "label": "ADFD",
+   "fullName": "Abu Dhabi Fund for Development",
+   "kind": "entity",
+   "aliases": [
+    "adfd",
+    "abu dhabi fund"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": {
+    "score": "Medium",
+    "reasoning": "ADEX, ADFD's export-financing arm, co-leads the UAE's US$1 billion 'AI for Development' initiative for Africa, though no Kenya-specific recipient was identified.",
+    "dimensions": [
+     "technology",
+     "investment",
+     "National AI Strategy"
+    ]
+   }
+  },
+  {
+   "id": "masdar",
+   "label": "Masdar",
+   "fullName": "Masdar (clean energy)",
+   "kind": "entity",
+   "aliases": [
+    "masdar"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "etihad",
+   "label": "Etihad",
+   "fullName": "Etihad Airways",
+   "kind": "entity",
+   "aliases": [
+    "etihad",
+    "etihad airways"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "dpworld",
+   "label": "DP World",
+   "fullName": "DP World",
+   "kind": "entity",
+   "aliases": [
+    "dp world"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": {
+    "score": "Medium",
+    "reasoning": "DP World participated in UAE trade-facilitation coordination for Kenyan floriculture, tea and cargo corridors through Mombasa, Lamu and Gulf markets in April 2026.",
+    "dimensions": [
+     "trade",
+     "food security"
+    ]
+   }
+  },
+  {
+   "id": "edge",
+   "label": "EDGE",
+   "fullName": "EDGE Group (defence)",
+   "kind": "entity",
+   "aliases": [
+    "edge group",
+    "edge"
+   ],
+   "geo": {
+    "lat": 24.3,
+    "lng": 54.4
+   },
+   "impact": null
+  },
+  {
+   "id": "ke",
+   "label": "Kenya",
+   "fullName": "Kenya",
+   "kind": "country-side",
+   "geo": {
+    "lat": 0.02,
+    "lng": 37.9
+   },
+   "impact": {
+    "score": "Very High",
+    "reasoning": "Kenya is the CEPA counterparty, top Gulf trade partner recipient, target of US$3 billion ARISE mobilization, rail and transport MoUs, and Gulf re-export gateway under CEPA implementation.",
+    "dimensions": [
+     "trade",
+     "diplomacy",
+     "investment",
+     "technology",
+     "food security",
+     "defence",
+     "foreign policy"
+    ]
+   }
+  },
+  {
+   "id": "etihadrail",
+   "label": "Etihadrail",
+   "fullName": "etihadrail",
+   "kind": "country-side",
+   "geo": {
+    "lat": 0.02,
+    "lng": 37.9
+   },
+   "impact": {
+    "score": "High",
+    "reasoning": "Etihad Rail signed an MoU with Kenya Railways covering railway-infrastructure cooperation, expertise transfer, knowledge exchange and feasibility work during Sheikh Abdullah bin Zayed's May 2025 visit.",
+    "dimensions": [
+     "investment",
+     "trade",
+     "diplomacy"
+    ]
+   }
+  },
+  {
+   "id": "kerail",
+   "label": "Kerail",
+   "fullName": "kerail",
+   "kind": "country-side",
+   "geo": {
+    "lat": 0.02,
+    "lng": 37.9
+   },
+   "impact": {
+    "score": "High",
+    "reasoning": "Kenya Railways Corporation partnered with Etihad Rail for railway cooperation, knowledge sharing and feasibility studies under the May 2025 agreements.",
+    "dimensions": [
+     "investment",
+     "trade"
+    ]
+   }
+  },
+  {
+   "id": "arise",
+   "label": "Arise",
+   "fullName": "arise",
+   "kind": "country-side",
+   "geo": {
+    "lat": 0.02,
+    "lng": 37.9
+   },
+   "impact": {
+    "score": "High",
+    "reasoning": "Dubai-based ARISE IIP announced mobilizing over US$3 billion for Kenyan industrial projects and an US$800 million investor facility with KCB Group and Afreximbank.",
+    "dimensions": [
+     "investment",
+     "trade",
+     "economic diversification"
+    ]
+   }
+  },
+  {
+   "id": "angola",
+   "label": "Angola",
+   "fullName": "angola",
+   "kind": "country-side",
+   "geo": {
+    "lat": 0.02,
+    "lng": 37.9
+   },
+   "impact": {
+    "score": "Medium",
+    "reasoning": "Angola signed a CEPA with the UAE targeting $10 billion annual trade by 2033, plus central-bank and Al Dahra agriculture agreements; not directly Kenya-linked.",
+    "dimensions": [
+     "trade",
+     "investment",
+     "food security",
+     "diplomacy"
+    ]
+   }
+  }
+ ],
+ "inferredEdges": [
+  {
+   "id": "IE1",
+   "entity_a": "masdar",
+   "entity_b": "ke",
+   "relationship_type": "Energy",
+   "direction": "a->b",
+   "claim": "Masdar is likely to pursue renewable-energy projects in Kenya as the commercial vehicle for the UAE's May 2025 renewable-energy MoU and presidential-level clean-energy commitments.",
+   "tier": "Predicted",
+   "probability": 0.5,
+   "basis_evidence_ids": [
+    "E5",
+    "E14",
+    "E28"
+   ],
+   "supporting": "Renewable energy appears in the May 2025 MoU package, the April 2026 presidential call, and Kenya's stated UAE investment-opportunity sectors.",
+   "counter": "No evidence names Masdar specifically; other UAE or third-country developers could execute the renewable-energy cooperation instead.",
+   "reasoning": "Masdar is the UAE's flagship clean-energy vehicle; repeated state-level renewable-energy commitments to Kenya structurally imply Masdar as the probable implementer.",
+   "stance": "neutral",
+   "weight": 0.5,
+   "interactions": 3
+  },
+  {
+   "id": "IE2",
+   "entity_a": "adfd",
+   "entity_b": "ke",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "a->b",
+   "claim": "ADFD (via ADEX and the Bilateral Framework Agreement on Economic Development) is a probable development-financing channel for Kenya, consistent with Kenya's policy of substituting UAE investment for borrowing.",
+   "tier": "Possible",
+   "probability": 0.45,
+   "basis_evidence_ids": [
+    "E21",
+    "E28",
+    "E31"
+   ],
+   "supporting": "A Treasury-level economic-development framework agreement exists, Kenya seeks UAE capital to reduce borrowing, and ADFD/ADEX lead UAE Africa financing initiatives.",
+   "counter": "No Kenya-specific ADFD disbursement is documented; the AI-for-Development initiative named no Kenyan recipient.",
+   "reasoning": "Funding-chain logic: ADFD/ADEX is the UAE's Africa development-finance arm, and Kenya's Treasury framework agreement creates the natural counterparty channel.",
+   "stance": "neutral",
+   "weight": 0.475,
+   "interactions": 3
+  },
+  {
+   "id": "IE3",
+   "entity_a": "g42",
+   "entity_b": "ke",
+   "relationship_type": "Technology",
+   "direction": "a->b",
+   "claim": "G42 (with Core42/Presight) is likely to enter Kenyan AI and data-centre markets given the UAE's Africa AI financing push, the data-centre capacity framing, and the GITEX Kenya AI-deployment agenda.",
+   "tier": "Predicted",
+   "probability": 0.5,
+   "basis_evidence_ids": [
+    "E21",
+    "E22",
+    "E25"
+   ],
+   "supporting": "US$1bn UAE AI-for-Africa initiative, reporting on Africa's data-centre shortage, and a 15,000-delegate UAE-framed AI event in Nairobi.",
+   "counter": "No evidence names G42 or its subsidiaries in Kenya; the AI initiative confirmed no Kenyan participation.",
+   "reasoning": "G42/Core42 are the UAE's principal AI/data-centre operators; sequential UAE AI-Africa announcements plus Kenya's AI event structurally point to their entry.",
+   "stance": "neutral",
+   "weight": 0.5,
+   "interactions": 3
+  },
+  {
+   "id": "IE4",
+   "entity_a": "adports",
+   "entity_b": "ke",
+   "relationship_type": "Infrastructure",
+   "direction": "a->b",
+   "claim": "AD Ports Group may seek Kenyan port or logistics-zone involvement, as CEPA gateway framing, Mombasa/Lamu cargo corridors, and maritime-security talks create openings beyond DP World's role.",
+   "tier": "Possible",
+   "probability": 0.35,
+   "basis_evidence_ids": [
+    "E23",
+    "E24",
+    "E27",
+    "E32"
+   ],
+   "supporting": "Kenya positioned as a regional gateway, active UAE cargo coordination through Mombasa and Lamu, and presidential-level maritime-security discussions.",
+   "counter": "DP World, not AD Ports, is the UAE operator actually named in the trade-facilitation evidence and may crowd out a rival Emirati entrant.",
+   "reasoning": "Common-counterparty and shared-infrastructure logic: UAE port champions compete for African gateways, and Kenya's corridor prominence structurally invites AD Ports interest.",
+   "stance": "neutral",
+   "weight": 0.425,
+   "interactions": 4
+  },
+  {
+   "id": "IE5",
+   "entity_a": "edge",
+   "entity_b": "ke",
+   "relationship_type": "Security",
+   "direction": "a->b",
+   "claim": "EDGE Group defence-industrial engagement with Kenya is plausible as a follow-on to the May 2025 defence MoU, deepening security alignment shown by Kenya's solidarity after Iranian attacks on the UAE.",
+   "tier": "Predicted",
+   "probability": 0.4,
+   "basis_evidence_ids": [
+    "E5",
+    "E13",
+    "E32"
+   ],
+   "supporting": "A signed defence-cooperation agreement, Ruto's public solidarity call in March 2026, and maritime-security discussions at presidential level.",
+   "counter": "The defence MoU may remain government-to-government training/customs cooperation without any defence-industry procurement component.",
+   "reasoning": "EDGE is the UAE's state defence-industrial arm; formal defence cooperation plus visible political-security alignment typically precedes its export engagement.",
+   "stance": "neutral",
+   "weight": 0.45,
+   "interactions": 3
+  },
+  {
+   "id": "IE6",
+   "entity_a": "uae",
+   "entity_b": "angola",
+   "relationship_type": "Diplomatic",
+   "direction": "a->b",
+   "claim": "The Kenya CEPA appears to have served as a template for the UAE's August 2025 Angola CEPA, indicating a sequenced UAE Africa-wide CEPA strategy with Kenya as the mainland pilot.",
+   "tier": "Likely",
+   "probability": 0.65,
+   "basis_evidence_ids": [
+    "E1",
+    "E2",
+    "E19",
+    "E20",
+    "E26"
+   ],
+   "supporting": "Kenya CEPA (January 2025) framed as the first mainland-African agreement, followed within months by an Angola CEPA with parallel financial and sectoral side-agreements.",
+   "counter": "Reporting notes earlier agreements with Mauritius and the Republic of the Congo, so Angola may follow those precedents rather than the Kenya model.",
+   "reasoning": "Sequential-announcement pattern: near-identical CEPA structures signed months apart imply a deliberate templated UAE Africa trade-diplomacy rollout.",
+   "stance": "neutral",
+   "weight": 0.575,
+   "interactions": 5
+  },
+  {
+   "id": "IE7",
+   "entity_a": "etihad",
+   "entity_b": "ke",
+   "relationship_type": "Infrastructure",
+   "direction": "a->b",
+   "claim": "Expanded UAE–Kenya aviation links, potentially involving Etihad Airways, are a plausible outgrowth of the May 2025 transport MoU's aviation pillar and Kenya's airport investment agenda.",
+   "tier": "Predicted",
+   "probability": 0.4,
+   "basis_evidence_ids": [
+    "E28",
+    "E29"
+   ],
+   "supporting": "The transport MoU explicitly covers aviation joint projects and feasibility studies, and Kenya lists airports among priority UAE investment sectors.",
+   "counter": "No evidence names Etihad Airways; Emirates or other carriers and airport operators could fulfil the aviation cooperation instead.",
+   "reasoning": "Aviation cooperation plus airport-investment demand structurally implies a UAE flag-carrier role, with Etihad the registry's named aviation entity.",
+   "stance": "neutral",
+   "weight": 0.45,
+   "interactions": 2
+  }
+ ],
+ "articleIntel": {
+  "E1": {
+   "summary50": "Kenya and the UAE signed a Comprehensive Economic Partnership Agreement on 14 January 2025 intended to deepen bilateral trade and investment.",
+   "summary100": null,
+   "keyPoints": [
+    "CEPA signed 14 January 2025",
+    "Aims to deepen bilateral trade and investment"
+   ],
+   "entities": [
+    "UAE",
+    "Kenya",
+    "Kenya Ministry of Industrialization"
+   ],
+   "riskLevel": "Low",
+   "importance": 9,
+   "uaeRelation": "The UAE signed a landmark trade agreement (CEPA) with Kenya."
+  },
+  "E2": {
+   "summary50": "The UAE–Kenya CEPA was described as the UAE's first such agreement with a mainland African country, positioning Kenya as a gateway to East and Southern Africa.",
+   "summary100": null,
+   "keyPoints": [
+    "First UAE CEPA with a mainland African country",
+    "Kenya framed as gateway to East and Southern Africa"
+   ],
+   "entities": [
+    "UAE",
+    "Kenya",
+    "Africanews"
+   ],
+   "riskLevel": "Low",
+   "importance": 8,
+   "uaeRelation": "Frames the CEPA as a strategic first for the UAE on mainland Africa."
+  },
+  "E3": {
+   "summary50": "UAE–Kenya non-oil trade reached US$3.1 billion in the first nine months of 2024, a 29.1% year-over-year increase versus the same 2023 period.",
+   "summary100": null,
+   "keyPoints": [
+    "Non-oil trade hit $3.1 billion in nine months of 2024",
+    "29.1% year-over-year growth"
+   ],
+   "entities": [
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 7,
+   "uaeRelation": "Quantifies rapidly growing UAE–Kenya non-oil trade."
+  },
+  "E4": {
+   "summary50": "Kenya's Foreign Ministry stated the UAE is Kenya's top Gulf trading partner with USD 3.4 billion bilateral trade in 2023, and Kenya's third-largest trading partner globally.",
+   "summary100": null,
+   "keyPoints": [
+    "UAE is Kenya's top Gulf trading partner",
+    "USD 3.4 billion bilateral trade in 2023",
+    "UAE is Kenya's 3rd largest partner globally"
+   ],
+   "entities": [
+    "UAE",
+    "Kenya",
+    "Kenya Ministry of Foreign and Diaspora Affairs"
+   ],
+   "riskLevel": "Low",
+   "importance": 7,
+   "uaeRelation": "Establishes the UAE's status as Kenya's leading Gulf trade partner."
+  },
+  "E5": {
+   "summary50": "On 8 May 2025 Kenya and the UAE signed seven agreements and MoUs covering defence, customs, border control, renewable energy, transport, and business cooperation, institutionalising the relationship.",
+   "summary100": null,
+   "keyPoints": [
+    "Seven agreements/MoUs signed 8 May 2025",
+    "Cover defence, customs, border control, energy, transport, business"
+   ],
+   "entities": [
+    "UAE",
+    "Kenya",
+    "The Star (Kenya)"
+   ],
+   "riskLevel": "Low",
+   "importance": 8,
+   "uaeRelation": "The UAE deepened institutional ties with Kenya across multiple sectors."
+  },
+  "E6": {
+   "summary50": "Kenya Railways Corporation and Etihad Rail signed a partnership covering railway cooperation, knowledge sharing and feasibility-study work; a Joint Business Council was also established.",
+   "summary100": null,
+   "keyPoints": [
+    "Kenya Railways–Etihad Rail partnership signed",
+    "Covers knowledge sharing and feasibility studies",
+    "Joint Business Council established"
+   ],
+   "entities": [
+    "Kenya Railways Corporation",
+    "Etihad Rail",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 7,
+   "uaeRelation": "UAE's Etihad Rail partnered with Kenya Railways on rail cooperation."
+  },
+  "E7": {
+   "summary50": "During Sheikh Abdullah bin Zayed Al Nahyan's May 2025 African visit, Etihad Rail and Kenya Railways signed an MoU on railway-infrastructure cooperation, expertise transfer and knowledge exchange.",
+   "summary100": null,
+   "keyPoints": [
+    "MoU signed during Sheikh Abdullah bin Zayed's African visit",
+    "Covers rail infrastructure, expertise transfer, knowledge exchange"
+   ],
+   "entities": [
+    "Sheikh Abdullah bin Zayed Al Nahyan",
+    "Etihad Rail",
+    "Kenya Railways",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 7,
+   "uaeRelation": "UAE rail operator formalised cooperation with Kenya during a senior UAE visit."
+  },
+  "E8": {
+   "summary50": "On 26 March 2026, Dubai-based ARISE Integrated Industrial Platforms announced plans to help mobilize over US$3 billion across five years for Kenyan industrial projects, including two coastal export zones, a Naivasha park, and Rivatex.",
+   "summary100": "Dubai-based ARISE Integrated Industrial Platforms announced on 26 March 2026 plans to help mobilize more than US$3 billion over five years for Kenyan industrial projects. Targets include two coastal export zones, a Naivasha industrial park, and Rivatex. The report clarified ARISE would not itself supply the entire amount, positioning it as a mobilizer of capital rather than sole financier.",
+   "keyPoints": [
+    "ARISE IIP to help mobilize US$3 billion over five years",
+    "Projects include coastal export zones, Naivasha park, Rivatex",
+    "ARISE not supplying entire amount itself"
+   ],
+   "entities": [
+    "ARISE Integrated Industrial Platforms",
+    "Kenya",
+    "Rivatex",
+    "Naivasha"
+   ],
+   "riskLevel": "Medium",
+   "importance": 8,
+   "uaeRelation": "A Dubai-based platform is mobilizing major industrial investment into Kenya."
+  },
+  "E9": {
+   "summary50": "ARISE IIP said it would collaborate with KCB Group and Afreximbank to establish an US$800 million facility supporting future investors in the new Kenyan industrial and export zones.",
+   "summary100": null,
+   "keyPoints": [
+    "US$800 million investor-support facility planned",
+    "Partners: ARISE IIP, KCB Group, Afreximbank"
+   ],
+   "entities": [
+    "ARISE IIP",
+    "KCB Group",
+    "Afreximbank",
+    "Kenya"
+   ],
+   "riskLevel": "Medium",
+   "importance": 7,
+   "uaeRelation": "Dubai-based ARISE structuring financing for Kenyan industrial zones."
+  },
+  "E10": {
+   "summary50": "Musalia Mudavadi, Kenya's Prime Cabinet Secretary and Foreign Affairs Cabinet Secretary, departed for Abu Dhabi on 12 January 2025 for bilateral meetings and the CEPA signing scheduled for 12–17 January 2025.",
+   "summary100": null,
+   "keyPoints": [
+    "Mudavadi travelled to Abu Dhabi 12 January 2025",
+    "CEPA signing scheduled 12–17 January 2025"
+   ],
+   "entities": [
+    "Musalia Mudavadi",
+    "Abu Dhabi",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 6,
+   "uaeRelation": "Kenya's top foreign-policy official travelled to the UAE for CEPA signing."
+  },
+  "E11": {
+   "summary50": "A report asserted the UAE president's planned visit to Kenya was cancelled, with the CEPA instead signed in Abu Dhabi by Musalia Mudavadi.",
+   "summary100": null,
+   "keyPoints": [
+    "Claimed cancellation of UAE presidential visit to Kenya",
+    "CEPA signed in Abu Dhabi by Mudavadi instead"
+   ],
+   "entities": [
+    "UAE president",
+    "Musalia Mudavadi",
+    "Abu Dhabi",
+    "Kenya"
+   ],
+   "riskLevel": "Medium",
+   "importance": 5,
+   "uaeRelation": "Reports a disputed change in UAE presidential travel plans regarding Kenya."
+  },
+  "E12": {
+   "summary50": "Kenya's Foreign Ministry stated on 8 May 2025 that a visit to Kenya by Sheikh Mohamed bin Zayed Al Nahyan was anticipated later that year, contradicting the earlier cancellation report.",
+   "summary100": null,
+   "keyPoints": [
+    "Anticipated MBZ visit to Kenya later in 2025",
+    "Contradicts earlier cancellation report"
+   ],
+   "entities": [
+    "Sheikh Mohamed bin Zayed Al Nahyan",
+    "Kenya Ministry of Foreign and Diaspora Affairs",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 5,
+   "uaeRelation": "Signals expected high-level UAE presidential engagement with Kenya."
+  },
+  "E13": {
+   "summary50": "On 2 March 2026, President Ruto telephoned UAE President Sheikh Mohamed bin Zayed, condemned Iranian attacks on the UAE, and expressed Kenyan solidarity.",
+   "summary100": null,
+   "keyPoints": [
+    "Ruto–MBZ phone call 2 March 2026",
+    "Kenya condemned Iranian attacks on the UAE",
+    "Expressed solidarity with the UAE"
+   ],
+   "entities": [
+    "President Ruto",
+    "Sheikh Mohamed bin Zayed",
+    "UAE",
+    "Kenya",
+    "Iran"
+   ],
+   "riskLevel": "High",
+   "importance": 8,
+   "uaeRelation": "Kenya offered diplomatic solidarity to the UAE after reported Iranian attacks."
+  },
+  "E14": {
+   "summary50": "On 22 April 2026, the UAE and Kenyan presidents discussed advancing the CEPA and expanding cooperation in investment, development, renewable energy, technology and infrastructure.",
+   "summary100": null,
+   "keyPoints": [
+    "Presidential discussions 22 April 2026",
+    "Advancing CEPA implementation",
+    "Cooperation in investment, energy, technology, infrastructure"
+   ],
+   "entities": [
+    "UAE",
+    "Kenya",
+    "Mohamed bin Zayed"
+   ],
+   "riskLevel": "Low",
+   "importance": 7,
+   "uaeRelation": "Direct UAE presidential engagement on advancing Kenya cooperation."
+  },
+  "E15": {
+   "summary50": "Kenya's Foreign Ministry said the CEPA, if approved by Parliament, would eliminate tariffs on more than 80% of traded goods and remove other market-access barriers.",
+   "summary100": null,
+   "keyPoints": [
+    "Tariff elimination on over 80% of traded goods",
+    "Parliamentary approval required for benefits"
+   ],
+   "entities": [
+    "Kenya Ministry of Foreign and Diaspora Affairs",
+    "Kenyan Parliament",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Medium",
+   "importance": 7,
+   "uaeRelation": "Defines the CEPA's tariff-liberalisation scope between the UAE and Kenya."
+  },
+  "E16": {
+   "summary50": "Kenya's trade ministry reported bilateral trade of KSh445 billion in 2023, with the UAE as Kenya's sixth-largest export destination and second-largest import source supplying 16% of imports.",
+   "summary100": null,
+   "keyPoints": [
+    "Bilateral trade KSh445 billion in 2023",
+    "UAE is Kenya's 6th export destination",
+    "UAE supplies 16% of Kenya's imports"
+   ],
+   "entities": [
+    "Kenya Ministry of Investments, Trade and Industry",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 6,
+   "uaeRelation": "Details the UAE's rank and share in Kenya's trade profile."
+  },
+  "E17": {
+   "summary50": "Kenya's 2023 exports to the UAE included KSh9.9 billion in meat products, KSh5.2 billion in fruit, and KSh5.6 billion in vegetables and flowers.",
+   "summary100": null,
+   "keyPoints": [
+    "Meat exports KSh9.9 billion",
+    "Fruit KSh5.2 billion; vegetables and flowers KSh5.6 billion"
+   ],
+   "entities": [
+    "Kenya",
+    "UAE",
+    "Kenya Ministry of Industrialization"
+   ],
+   "riskLevel": "Low",
+   "importance": 5,
+   "uaeRelation": "The UAE is a major buyer of Kenyan agri-food exports."
+  },
+  "E18": {
+   "summary50": "Kenya reportedly exported KSh9.9 billion of meat and meat products to the UAE in 2023, representing more than half of Kenya's total meat exports.",
+   "summary100": null,
+   "keyPoints": [
+    "KSh9.9 billion meat exports to the UAE in 2023",
+    "Over half of Kenya's total meat exports"
+   ],
+   "entities": [
+    "Kenya",
+    "UAE",
+    "The Star (Kenya)"
+   ],
+   "riskLevel": "Low",
+   "importance": 5,
+   "uaeRelation": "The UAE absorbs the majority of Kenya's meat exports."
+  },
+  "E19": {
+   "summary50": "On 25 August 2025, the UAE and Angola signed a CEPA and related agreements targeting $10 billion annual bilateral trade by 2033, about $1 billion added to each GDP, and nearly 30,000 jobs.",
+   "summary100": null,
+   "keyPoints": [
+    "UAE–Angola CEPA signed 25 August 2025",
+    "Targets $10 billion annual trade by 2033",
+    "About $1 billion GDP gain each; nearly 30,000 jobs"
+   ],
+   "entities": [
+    "UAE",
+    "Angola"
+   ],
+   "riskLevel": "Low",
+   "importance": 6,
+   "uaeRelation": "Shows the UAE extending its African CEPA strategy beyond Kenya to Angola."
+  },
+  "E20": {
+   "summary50": "Alongside the Angola CEPA, the Central Bank of the UAE and the National Bank of Angola signed a financial-sector cooperation agreement, and Al Dahra signed an agriculture agreement with Angola's Ministry of Agriculture and Forestry.",
+   "summary100": null,
+   "keyPoints": [
+    "Central-bank cooperation agreement signed",
+    "Al Dahra agriculture agreement with Angola's ministry"
+   ],
+   "entities": [
+    "Central Bank of the UAE",
+    "National Bank of Angola",
+    "Al Dahra",
+    "Angola",
+    "UAE"
+   ],
+   "riskLevel": "Low",
+   "importance": 5,
+   "uaeRelation": "UAE financial and agricultural institutions deepened ties with Angola."
+  },
+  "E21": {
+   "summary50": "On 22 November 2025 the UAE launched a US$1 billion 'AI for Development' financing initiative for Africa, led by ADEX (ADFD's export-financing arm) and the UAE Foreign Aid Agency, with no Kenya-specific recipient identified.",
+   "summary100": null,
+   "keyPoints": [
+    "US$1 billion 'AI for Development' initiative for Africa",
+    "Led by ADEX (ADFD) and UAE Foreign Aid Agency",
+    "No Kenya-specific recipient identified"
+   ],
+   "entities": [
+    "UAE",
+    "ADEX",
+    "ADFD",
+    "UAE Foreign Aid Agency",
+    "Africa"
+   ],
+   "riskLevel": "Low",
+   "importance": 7,
+   "uaeRelation": "Major UAE-led AI financing initiative for Africa via ADFD's export arm."
+  },
+  "E22": {
+   "summary50": "Reporting on 24 November 2025 described the UAE's Africa-wide AI initiative as addressing the continent's shortage of data-centre capacity, without confirming Kenyan participation.",
+   "summary100": null,
+   "keyPoints": [
+    "Initiative targets Africa's data-centre capacity shortage",
+    "Kenyan participation not confirmed"
+   ],
+   "entities": [
+    "UAE",
+    "Africa",
+    "The National"
+   ],
+   "riskLevel": "Low",
+   "importance": 4,
+   "uaeRelation": "Contextualises the UAE's Africa AI push around data-centre gaps."
+  },
+  "E23": {
+   "summary50": "A 15 April 2026 report described UAE trade-facilitation coordination involving the UAE Ministry of Foreign Trade, Dubai Customs, and DP World relevant to Kenyan floriculture, tea and cargo through Mombasa, Lamu and Gulf markets.",
+   "summary100": null,
+   "keyPoints": [
+    "Coordination among UAE Ministry of Foreign Trade, Dubai Customs, DP World",
+    "Alternative trade corridors and supply-chain continuity",
+    "Covers Kenyan floriculture, tea, Mombasa and Lamu cargo"
+   ],
+   "entities": [
+    "UAE Ministry of Foreign Trade",
+    "Dubai Customs",
+    "DP World",
+    "Kenya",
+    "Mombasa",
+    "Lamu"
+   ],
+   "riskLevel": "Medium",
+   "importance": 6,
+   "uaeRelation": "UAE agencies and DP World supported Kenyan trade corridors and supply-chain continuity."
+  },
+  "E24": {
+   "summary50": "In April 2026, Kenya's State Department for Trade and its Dubai embassy pursued exports to Saudi Arabia, Kuwait, Bahrain and Oman while using the UAE as a Gulf distribution and re-export gateway under CEPA implementation.",
+   "summary100": null,
+   "keyPoints": [
+    "Kenya targeting wider Gulf export markets",
+    "UAE used as distribution and re-export gateway",
+    "CEPA implementation intended to eliminate tariffs"
+   ],
+   "entities": [
+    "Kenya State Department for Trade",
+    "UAE",
+    "Saudi Arabia",
+    "Kuwait",
+    "Bahrain",
+    "Oman"
+   ],
+   "riskLevel": "Low",
+   "importance": 6,
+   "uaeRelation": "The UAE serves as Kenya's Gulf re-export hub under CEPA."
+  },
+  "E25": {
+   "summary50": "AI Everything Kenya x GITEX Kenya on 17 June 2026 reportedly attracted over 15,000 delegates, with the UAE–Kenya relationship framed around AI deployment in public services, healthcare, energy grids and financial services.",
+   "summary100": null,
+   "keyPoints": [
+    "AI Everything x GITEX Kenya, 17 June 2026",
+    "Over 15,000 delegates reported",
+    "AI framed for public services, healthcare, energy, finance"
+   ],
+   "entities": [
+    "GITEX Kenya",
+    "AI Everything",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 6,
+   "uaeRelation": "UAE-linked flagship AI event extended technology ties with Kenya."
+  },
+  "E26": {
+   "summary50": "Africanews reporting was internally inconsistent, calling the Kenya CEPA the UAE's inaugural African bilateral trade agreement while noting it followed similar agreements with Mauritius and the Republic of the Congo.",
+   "summary100": null,
+   "keyPoints": [
+    "Inconsistent 'first African agreement' claim",
+    "Prior UAE agreements with Mauritius and Republic of the Congo noted"
+   ],
+   "entities": [
+    "Africanews",
+    "UAE",
+    "Kenya",
+    "Mauritius",
+    "Republic of the Congo"
+   ],
+   "riskLevel": "Medium",
+   "importance": 4,
+   "uaeRelation": "Highlights a reporting inconsistency about the UAE's African CEPA sequence."
+  },
+  "E27": {
+   "summary50": "The CEPA was reported as creating conditions for UAE investment in Kenya to double and for Kenya to serve as a regional commercial gateway.",
+   "summary100": null,
+   "keyPoints": [
+    "CEPA seen enabling doubling of UAE investment in Kenya",
+    "Kenya positioned as regional commercial gateway"
+   ],
+   "entities": [
+    "UAE",
+    "Kenya",
+    "The Africa Report"
+   ],
+   "riskLevel": "Low",
+   "importance": 6,
+   "uaeRelation": "Projects a doubling of UAE investment into Kenya under CEPA."
+  },
+  "E28": {
+   "summary50": "Kenya identified energy, water, agriculture, health, airports, logistics and ICT as UAE investment opportunities aligned with its policy of reducing borrowing.",
+   "summary100": null,
+   "keyPoints": [
+    "Priority sectors: energy, water, agriculture, health, airports, logistics, ICT",
+    "Aligned with Kenya's borrowing-reduction policy"
+   ],
+   "entities": [
+    "Kenya",
+    "UAE",
+    "Eastleigh Voice"
+   ],
+   "riskLevel": "Low",
+   "importance": 5,
+   "uaeRelation": "Kenya courted UAE investment across seven priority sectors."
+  },
+  "E29": {
+   "summary50": "An 8 May 2025 transport-cooperation MoU between Kenya and the UAE covers rail, aviation and roads, including joint projects, feasibility studies, regulatory alignment, infrastructure safety and innovation.",
+   "summary100": null,
+   "keyPoints": [
+    "Transport MoU covering rail, aviation, roads",
+    "Includes joint projects, feasibility studies, regulatory alignment"
+   ],
+   "entities": [
+    "Kenya",
+    "UAE",
+    "The Star (Kenya)"
+   ],
+   "riskLevel": "Low",
+   "importance": 6,
+   "uaeRelation": "The UAE committed to broad transport-sector cooperation with Kenya."
+  },
+  "E30": {
+   "summary50": "The UAE Federation of Chambers of Commerce and Industry and the Kenya National Chamber of Commerce and Industry announced a UAE–Kenya Joint Business Council to deepen private-sector relations.",
+   "summary100": null,
+   "keyPoints": [
+    "UAE–Kenya Joint Business Council announced",
+    "Mechanism for private-sector ties and joint recommendations"
+   ],
+   "entities": [
+    "UAE Federation of Chambers of Commerce and Industry",
+    "Kenya National Chamber of Commerce and Industry",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 5,
+   "uaeRelation": "UAE chambers formalised a private-sector council with Kenya."
+  },
+  "E31": {
+   "summary50": "A Bilateral Framework Agreement on Economic Development was signed between Kenya's National Treasury and the UAE government among the seven May 2025 instruments, signalling a potential government-to-government project and financing pipeline.",
+   "summary100": null,
+   "keyPoints": [
+    "Bilateral Framework Agreement on Economic Development signed",
+    "Kenya's National Treasury paired with UAE government",
+    "Signals G2G project and financing pipeline"
+   ],
+   "entities": [
+    "Kenya National Treasury",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 6,
+   "uaeRelation": "UAE government entered a framework economic-development agreement with Kenya's Treasury."
+  },
+  "E32": {
+   "summary50": "During Ruto's UAE working visit, the presidents discussed investment, renewable energy, technology, infrastructure, CEPA implementation, maritime security, and Middle East developments; Sheikh Hamdan bin Mohamed bin Zayed Al Nahyan attended.",
+   "summary100": null,
+   "keyPoints": [
+    "Presidential talks during Ruto's UAE working visit",
+    "Topics: CEPA implementation, investment, energy, technology, maritime security",
+    "Sheikh Hamdan bin Mohamed bin Zayed attended"
+   ],
+   "entities": [
+    "President Ruto",
+    "Sheikh Hamdan bin Mohamed bin Zayed Al Nahyan",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 7,
+   "uaeRelation": "High-level UAE–Kenya presidential engagement across economic and security topics."
+  },
+  "E33": {
+   "summary50": "Mudavadi visited Abu Dhabi in July 2024, where a Joint Commission for Cooperation took place between Kenya and the UAE.",
+   "summary100": null,
+   "keyPoints": [
+    "July 2024 Mudavadi visit to Abu Dhabi",
+    "Joint Commission for Cooperation held"
+   ],
+   "entities": [
+    "Musalia Mudavadi",
+    "Abu Dhabi",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 4,
+   "uaeRelation": "Earlier institutional cooperation mechanism between the UAE and Kenya."
+  },
+  "E34": {
+   "summary50": "Kenya and the UAE agreed customs cooperation covering information sharing, streamlined procedures, enforcement, action against illicit trade and improved border controls under a mutual-assistance agreement.",
+   "summary100": null,
+   "keyPoints": [
+    "Customs mutual-assistance agreement",
+    "Covers information sharing, enforcement, illicit-trade action, border controls"
+   ],
+   "entities": [
+    "Kenya",
+    "UAE",
+    "The Star (Kenya)"
+   ],
+   "riskLevel": "Low",
+   "importance": 5,
+   "uaeRelation": "UAE–Kenya customs cooperation strengthens trade enforcement and borders."
+  },
+  "E35": {
+   "summary50": "An unverified X post candidate from Kenya's trade ministry account was surfaced, but its date and UAE–Kenya relevance could not be confirmed.",
+   "summary100": null,
+   "keyPoints": [
+    "Unverified X post from @Trade_Kenya",
+    "Date and relevance unconfirmed"
+   ],
+   "entities": [
+    "@Trade_Kenya",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 1,
+   "uaeRelation": "Possible Kenyan trade content; UAE relevance unverified."
+  },
+  "E36": {
+   "summary50": "An unverified X post candidate from Kenya's Foreign Office account was surfaced but could not be validated for date or content.",
+   "summary100": null,
+   "keyPoints": [
+    "Unverified X post from @ForeignOfficeKE",
+    "Publication date and text unvalidated"
+   ],
+   "entities": [
+    "@ForeignOfficeKE",
+    "Kenya"
+   ],
+   "riskLevel": "Low",
+   "importance": 1,
+   "uaeRelation": "Possible Kenyan foreign-affairs content; UAE relevance unverified."
+  },
+  "E37": {
+   "summary50": "The Emirates News Agency Instagram account @wamnews is verified with 391,380 followers and operates as a business account.",
+   "summary100": null,
+   "keyPoints": [
+    "@wamnews is verified",
+    "391,380 followers; business account"
+   ],
+   "entities": [
+    "Emirates News Agency (WAM)",
+    "@wamnews",
+    "UAE"
+   ],
+   "riskLevel": "Low",
+   "importance": 1,
+   "uaeRelation": "Profile details of the UAE's official news agency Instagram account."
+  },
+  "E38": {
+   "summary50": "The most recent @wamnews Instagram post (shortcode Da9zM6UDQei) was downloaded but its caption was unavailable, so relevance to Kenya or UAE partnerships could not be verified.",
+   "summary100": null,
+   "keyPoints": [
+    "Post shortcode Da9zM6UDQei retrieved",
+    "Caption unavailable; relevance unverified"
+   ],
+   "entities": [
+    "@wamnews",
+    "Emirates News Agency",
+    "UAE"
+   ],
+   "riskLevel": "Low",
+   "importance": 1,
+   "uaeRelation": "UAE state media post retrieved but content unverifiable."
+  },
+  "E39": {
+   "summary50": "Reddit searches returned no posts explicitly mentioning ADNOC, Mubadala, DP World, Kenya–UAE investment, bilateral aid, or a Kenya–UAE partnership, and retrieved posts lacked URLs and dates.",
+   "summary100": null,
+   "keyPoints": [
+    "No relevant Reddit posts found",
+    "Retrieved posts lacked URLs and dates"
+   ],
+   "entities": [
+    "Reddit",
+    "ADNOC",
+    "Mubadala",
+    "DP World",
+    "Kenya",
+    "UAE"
+   ],
+   "riskLevel": "Low",
+   "importance": 1,
+   "uaeRelation": "Absence of social-media evidence on UAE–Kenya investment topics."
+  },
+  "E40": {
+   "summary50": "Kenya's Foreign Ministry described the CEPA as covering services sectors including finance, tourism, logistics and ICT, with parliamentary approval a stated prerequisite for benefits.",
+   "summary100": null,
+   "keyPoints": [
+    "CEPA covers finance, tourism, logistics, ICT services",
+    "Parliamentary approval prerequisite for benefits"
+   ],
+   "entities": [
+    "Kenya Ministry of Foreign and Diaspora Affairs",
+    "UAE",
+    "Kenya"
+   ],
+   "riskLevel": "Medium",
+   "importance": 5,
+   "uaeRelation": "Defines the services scope of the UAE–Kenya CEPA and its approval condition."
+  }
+ },
+ "impactScores": {
+  "uae": {
+   "score": "Very High",
+   "reasoning": "Central actor: signed CEPA with Kenya and Angola, seven May 2025 agreements, US$1 billion Africa AI initiative, presidential diplomacy, and top-partner trade volumes with Kenya.",
+   "dimensions": [
+    "trade",
+    "diplomacy",
+    "investment",
+    "technology",
+    "food security",
+    "energy",
+    "defence",
+    "foreign policy",
+    "economic diversification"
+   ]
+  },
+  "ke": {
+   "score": "Very High",
+   "reasoning": "Kenya is the CEPA counterparty, top Gulf trade partner recipient, target of US$3 billion ARISE mobilization, rail and transport MoUs, and Gulf re-export gateway under CEPA implementation.",
+   "dimensions": [
+    "trade",
+    "diplomacy",
+    "investment",
+    "technology",
+    "food security",
+    "defence",
+    "foreign policy"
+   ]
+  },
+  "etihadrail": {
+   "score": "High",
+   "reasoning": "Etihad Rail signed an MoU with Kenya Railways covering railway-infrastructure cooperation, expertise transfer, knowledge exchange and feasibility work during Sheikh Abdullah bin Zayed's May 2025 visit.",
+   "dimensions": [
+    "investment",
+    "trade",
+    "diplomacy"
+   ]
+  },
+  "kerail": {
+   "score": "High",
+   "reasoning": "Kenya Railways Corporation partnered with Etihad Rail for railway cooperation, knowledge sharing and feasibility studies under the May 2025 agreements.",
+   "dimensions": [
+    "investment",
+    "trade"
+   ]
+  },
+  "arise": {
+   "score": "High",
+   "reasoning": "Dubai-based ARISE IIP announced mobilizing over US$3 billion for Kenyan industrial projects and an US$800 million investor facility with KCB Group and Afreximbank.",
+   "dimensions": [
+    "investment",
+    "trade",
+    "economic diversification"
+   ]
+  },
+  "angola": {
+   "score": "Medium",
+   "reasoning": "Angola signed a CEPA with the UAE targeting $10 billion annual trade by 2033, plus central-bank and Al Dahra agriculture agreements; not directly Kenya-linked.",
+   "dimensions": [
+    "trade",
+    "investment",
+    "food security",
+    "diplomacy"
+   ]
+  },
+  "dpworld": {
+   "score": "Medium",
+   "reasoning": "DP World participated in UAE trade-facilitation coordination for Kenyan floriculture, tea and cargo corridors through Mombasa, Lamu and Gulf markets in April 2026.",
+   "dimensions": [
+    "trade",
+    "food security"
+   ]
+  },
+  "adfd": {
+   "score": "Medium",
+   "reasoning": "ADEX, ADFD's export-financing arm, co-leads the UAE's US$1 billion 'AI for Development' initiative for Africa, though no Kenya-specific recipient was identified.",
+   "dimensions": [
+    "technology",
+    "investment",
+    "National AI Strategy"
+   ]
+  }
+ },
+ "narrative": {
+  "text": "The story begins with the Comprehensive Economic Partnership Agreement signed on 14 January 2025 — described as the UAE's first with a mainland African country — which promises to eliminate tariffs on more than 80% of traded goods and cover services from finance to ICT, building on a relationship already worth US$3.4 billion in 2023 with the UAE ranked as Kenya's third-largest trading partner globally. [E1][E2][E15][E40][E4] That agreement rapidly deepened into a broader strategic alignment when the two countries signed seven agreements and MoUs on 8 May 2025 spanning defence, customs, border control, renewable energy, transport and business cooperation, alongside a Bilateral Framework Agreement on Economic Development between Kenya's National Treasury and the UAE government. [E5][E31] Infrastructure emerged as a concrete pillar of this partnership, with Etihad Rail and Kenya Railways Corporation signing an MoU covering railway cooperation, expertise transfer and feasibility-study work, complemented by a wider transport MoU covering rail, aviation and roads. [E6][E7][E29] The diplomatic architecture then translated into capital flows when Dubai-based ARISE Integrated Industrial Platforms announced on 26 March 2026 plans to mobilize over US$3 billion for Kenyan industrial projects, including two coastal export zones, a Naivasha park and Rivatex, working with KCB Group and Afreximbank on an US$800 million investor facility. [E8][E9] Meanwhile, trade-facilitation coordination involving the UAE Ministry of Foreign Trade, Dubai Customs and DP World now supports Kenyan floriculture, tea and cargo through Mombasa, Lamu and Gulf markets, with Kenya using the UAE as a distribution and re-export gateway to Saudi Arabia, Kuwait, Bahrain and Oman under CEPA implementation. [E23][E24] Yet the narrative carries unresolved threads: reporting contradictions surfaced over a claimed cancellation of the UAE president's Kenya visit, which Kenya's Foreign Ministry disputed by anticipating a visit later in 2025, while Africanews inconsistently called the Kenya CEPA the UAE's inaugural African trade agreement despite noting prior deals with Mauritius and the Republic of the Congo. [E11][E12][E26]",
+  "trace": [
+   {
+    "sentence": "The story begins with the Comprehensive Economic Partnership Agreement signed on 14 January 2025 — described as the UAE's first with a mainland African country — which promises to eliminate tariffs on more than 80% of traded goods and cover services from finance to ICT, building on a relationship already worth US$3.",
+    "evidenceIds": []
+   },
+   {
+    "sentence": "4 billion in 2023 with the UAE ranked as Kenya's third-largest trading partner globally.",
+    "evidenceIds": []
+   },
+   {
+    "sentence": "[E1][E2][E15][E40][E4] That agreement rapidly deepened into a broader strategic alignment when the two countries signed seven agreements and MoUs on 8 May 2025 spanning defence, customs, border control, renewable energy, transport and business cooperation, alongside a Bilateral Framework Agreement on Economic Development between Kenya's National Treasury and the UAE government.",
+    "evidenceIds": [
+     "E1",
+     "E2",
+     "E15",
+     "E40",
+     "E4"
+    ]
+   },
+   {
+    "sentence": "[E5][E31] Infrastructure emerged as a concrete pillar of this partnership, with Etihad Rail and Kenya Railways Corporation signing an MoU covering railway cooperation, expertise transfer and feasibility-study work, complemented by a wider transport MoU covering rail, aviation and roads.",
+    "evidenceIds": [
+     "E5",
+     "E31"
+    ]
+   },
+   {
+    "sentence": "[E6][E7][E29] The diplomatic architecture then translated into capital flows when Dubai-based ARISE Integrated Industrial Platforms announced on 26 March 2026 plans to mobilize over US$3 billion for Kenyan industrial projects, including two coastal export zones, a Naivasha park and Rivatex, working with KCB Group and Afreximbank on an US$800 million investor facility.",
+    "evidenceIds": [
+     "E6",
+     "E7",
+     "E29"
+    ]
+   },
+   {
+    "sentence": "[E8][E9] Meanwhile, trade-facilitation coordination involving the UAE Ministry of Foreign Trade, Dubai Customs and DP World now supports Kenyan floriculture, tea and cargo through Mombasa, Lamu and Gulf markets, with Kenya using the UAE as a distribution and re-export gateway to Saudi Arabia, Kuwait, Bahrain and Oman under CEPA implementation.",
+    "evidenceIds": [
+     "E8",
+     "E9"
+    ]
+   },
+   {
+    "sentence": "[E23][E24] Yet the narrative carries unresolved threads: reporting contradictions surfaced over a claimed cancellation of the UAE president's Kenya visit, which Kenya's Foreign Ministry disputed by anticipating a visit later in 2025, while Africanews inconsistently called the Kenya CEPA the UAE's inaugural African trade agreement despite noting prior deals with Mauritius and the Republic of the Congo.",
+    "evidenceIds": [
+     "E23",
+     "E24"
+    ]
+   }
+  ]
+ },
+ "stats": {
+  "evidenceCount": 40,
+  "edgeCount": 10,
+  "inferredCount": 7,
+  "droppedNoEvidence": 0,
+  "contradictions": 0,
+  "igMediaCount": 1,
+  "durationMs": 1207603
+ },
+ "sources": {
+  "perplexity:developments": 2915,
+  "perplexity:funding": 2694,
+  "perplexity:officials": 5739,
+  "perplexity:predictions12mo": 7444,
+  "perplexity:strategic": 17227,
+  "perplexity:contradictions": 7282,
+  "perplexity:missing": 9135,
+  "perplexity:analogues": 4935,
+  "xsearch": 1158,
+  "perplexity:organisations": 12793,
+  "perplexity:confidenceAudit": 9407,
+  "reddit": 2229
+ },
+ "diffFromPrevious": {
+  "addedEdges": [
+   "ke~uae|Trade",
+   "ke~uae|Diplomatic",
+   "etihadrail~kerail|Infrastructure",
+   "ke~uae|Infrastructure",
+   "ke~uae|Security",
+   "arise~ke|Investment",
+   "dpworld~ke|Trade",
+   "ke~uae|Investment",
+   "ke~uae|Technology"
+  ],
+  "removedEdges": [
+   "qatar~uae|Diplomatic",
+   "iran~uae|Diplomatic",
+   "eu~uae|Diplomatic",
+   "relief-beneficiaries~uae|Aid-Humanitarian",
+   "ke~unnamed-investors|Investment"
+  ],
+  "addedEvidence": [
+   "E1",
+   "E2",
+   "E3",
+   "E4",
+   "E5",
+   "E6",
+   "E7",
+   "E8",
+   "E9",
+   "E10",
+   "E11",
+   "E12",
+   "E13",
+   "E14",
+   "E15",
+   "E16",
+   "E17",
+   "E18",
+   "E19",
+   "E20",
+   "E21",
+   "E22",
+   "E23",
+   "E24",
+   "E25",
+   "E26",
+   "E27",
+   "E28",
+   "E29",
+   "E30",
+   "E31",
+   "E32",
+   "E33",
+   "E34",
+   "E35",
+   "E36",
+   "E38",
+   "E40"
+  ],
+  "weightChanges": [
+   {
+    "key": "ke~uae|Media-narrative",
+    "from": 0.736,
+    "to": 0.3167
+   }
+  ],
+  "newEdgeIds": [
+   "ED1",
+   "ED2",
+   "ED3",
+   "ED4",
+   "ED5",
+   "ED6",
+   "ED7",
+   "ED8",
+   "ED9"
+  ]
+ }
+}

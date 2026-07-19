@@ -53,3 +53,53 @@ dashes from the server-computed `edge.contradiction` flag.
 **Verification.** Rendered against run KE-20260719025015 (11 evidence, 6 edges →
 15 woven threads). Vite build green; served from the deployed sandbox
 (sb-5ezbro8pqhgo.vercel.run) with HTTP 200 on all CE routes.
+
+---
+
+## 2026-07-19 — Invention 3: The Context-Weighted Evidence Prism (Correlation Engine V2)
+
+**What it is.** A deterministic, fully auditable **context weighting engine** that turns
+every raw evidence record into a weighted intelligence signal BEFORE any model sees it.
+Each record is classified by age into `historical (0.2)` / `recent (0.6)` / `breaking
+(1.0)` base weights, then multiplied by observable properties of the record itself:
+×2 direct UAE relevance (registry/alias match in claim+snippet), ×2 government source
+(regex over source+URL: wam/mofa/ministry/embassy/.gov/UN organs), ×3 official statement
+(announcement/decree/MoU/joint-communiqué phrasing), ×2 multi-source corroboration
+(≥2 distinct platform:source pairs sharing a 6-word claim stem). Weights cap at 3.0,
+normalize to 0..1, and blend into edge weights at 60% legacy deterministic / 40% context.
+The factors are STORED ON THE RECORD (`weightFactors: ["breaking","gov-source×2",…]`)
+so every edge width in the UI can be audited back to the exact multipliers that produced
+it — no black-box scoring.
+
+**Why it qualifies.** Standard graph tools weight edges by count or recency alone;
+none encode an intelligence-tradecraft weighting doctrine (officialness > corroboration
+> recency > volume) as a pure function with on-record audit trails. It also feeds the
+V2 Heat Mode: `weightClass === 'breaking'` drives the breathing pulse on the canvas —
+the pulse is a fact about the data, not an animation flourish.
+
+**Implementation.** `server/correlation.js` `applyContextWeighting()` (pure, ~40 lines),
+parameters exposed at `/api/correlation/config` (single source of truth for UI + docs).
+
+## 2026-07-19 — Invention 4: Tiered Epistemic Edge Grammar (Verified→Predicted)
+
+**What it is.** A four-tier **visual epistemology** for relationship edges: `Verified`
+(evidence-gated extraction; solid stroke in the category color), `Likely` (inferred,
+p 0.6-0.85; dashed violet), `Possible` (inferred, p 0.35-0.6; dotted slate), `Predicted`
+(forward-looking; long-dash fuchsia). The second-stage AI correlation pass may ONLY
+emit an inference if it cites ≥1 `basis_evidence_ids` from the run's evidence pool —
+inferences with no observable basis are dropped server-side (the same hard gate as
+verified edges, one level up). Every inferred edge carries `probability`, `supporting`,
+`counter`, and `reasoning` fields, rendered verbatim in the Relationship Inspector and
+Prediction Mode. Inferred edges deliberately get NO flow particles — motion is reserved
+for verified flows, so the canvas itself never overstates certainty.
+
+**Why it qualifies.** Knowledge-graph UIs typically render inferred and stated edges
+identically (or hide inference entirely). Encoding epistemic status as a first-class
+visual grammar (color+dash+particle-absence) with per-edge counter-evidence is not a
+library feature anywhere; it is the difference between an intelligence product and a
+picture. The dash patterns survive grayscale printing — the tier remains legible with
+zero color information.
+
+**Implementation.** `TIER_STYLES` in `src/correlation/adapter.js`; inference stage 4b in
+`server/correlation.js`; `TierLegend` chips filter tiers live; Prediction Mode
+(`V2Surfaces.jsx`) separates evidence-backed forecasts from anything speculative.

@@ -96,9 +96,14 @@ export function HoverPreview({ node, run, pos }) {
           <div className="ce-hoverprev__meta">{node.kind} · importance {(node.pagerank * 100).toFixed(1)} · {node.evidenceCount} evidence</div>
         </div>
       </div>
-      {impact && <div className="ce-hoverprev__impact" style={{ borderColor: IMPACT_COLORS[impact.score] }}>UAE impact: <b>{impact.score}</b></div>}
+      {impact && (
+        <div className="ce-hoverprev__impact">
+          UAE impact: <span className="ce-impactchip" style={{ background: IMPACT_COLORS[impact.score], color: ['Low', 'None'].includes(impact.score) ? '#374151' : '#fff' }}>{impact.score}</span>
+          <span className="ce-hoverprev__key">chip color = impact tier ({impact.score})</span>
+        </div>
+      )}
       <div className="ce-hoverprev__news">{latest ? `${latest.date || 'undated'} — ${latest.claim.slice(0, 110)}${latest.claim.length > 110 ? '…' : ''}` : 'No evidence records touch this entity in this run.'}</div>
-      <div className="ce-hoverprev__foot">last updated {latest?.date || run.generated_at?.slice(0, 10)} · click for full inspector</div>
+      <div className="ce-hoverprev__foot">importance = PageRank centrality · last updated {latest?.date || run.generated_at?.slice(0, 10)} · click for full inspector</div>
     </div>
   );
 }
@@ -150,20 +155,26 @@ export function EntityInspector({ node, run, onClose, onQuickQuery, onLightbox }
               <span key={s} className={`ce-stance ce-stance--${s}`} style={{ flex: stances[s] }}>{s} {stances[s]}</span>) : null)}
             {!rels.length && <span className="ce-insp__why">— no verified edges touch this entity.</span>}
           </div>
+          {rels.length > 0 && <p className="ce-stancekey">green = cooperation · gray = neutral · red = tension; segment width = number of edges</p>}
         </section>
 
         <section>
-          <h4>Relationships</h4>
-          {rels.map(e => (
-            <div key={e.id} className="ce-insp__rel">
-              <span className="ce-relchip" style={{ '--c': REL_TYPE_COLORS[e.relationship_type] }}>{e.relationship_type}</span>
-              <span className="ce-insp__reltxt">{e.entity_a === node.id ? '→' : '←'} {e.entity_a === node.id ? e.entity_b : e.entity_a}: {e.claim.slice(0, 90)}{e.claim.length > 90 ? '…' : ''}</span>
-            </div>
-          ))}
+          <h4>Relationships <span className="ce-h4key">(arrow = direction of action/value flow)</span></h4>
+          {rels.map(e => {
+            const outbound = e.entity_a === node.id;
+            const other = outbound ? e.entity_b : e.entity_a;
+            const dirLabel = e.direction === 'both' ? `${node.label} ⇄ ${other}` : outbound ? `${node.label} → ${other}` : `${other} → ${node.label}`;
+            return (
+              <div key={e.id} className="ce-insp__rel">
+                <span className="ce-relchip" style={{ '--c': REL_TYPE_COLORS[e.relationship_type] }}>{e.relationship_type}</span>
+                <span className="ce-insp__reltxt"><b className="ce-dirline">{dirLabel}</b><br />{e.claim}</span>
+              </div>
+            );
+          })}
           {infRels.map(e => (
             <div key={e.id} className="ce-insp__rel ce-insp__rel--inf">
               <span className="ce-relchip" style={{ '--c': TIER_STYLES[e.tier]?.color || '#94a3b8' }}>{e.tier}</span>
-              <span className="ce-insp__reltxt">{e.claim.slice(0, 90)}{e.claim.length > 90 ? '…' : ''} <i>p={e.probability}</i></span>
+              <span className="ce-insp__reltxt"><b className="ce-dirline">{e.entity_a} {e.direction === 'both' ? '⇄' : '→'} {e.entity_b}</b> <i>p={e.probability}</i><br />{e.claim}</span>
             </div>
           ))}
           {!rels.length && !infRels.length && <p className="ce-insp__why">—</p>}
@@ -177,7 +188,7 @@ export function EntityInspector({ node, run, onClose, onQuickQuery, onLightbox }
                 <li key={ev.id}>
                   <span className="ce-insp__tld">{ev.date || 'undated'}</span>
                   <span className={`ce-wclass ce-wclass--${ev.weightClass || 'historical'}`}>{ev.weightClass || '·'}</span>
-                  {ev.claim.slice(0, 100)}{ev.claim.length > 100 ? '…' : ''}
+                  {ev.claim}
                   {ev.url && <a href={ev.url} target="_blank" rel="noopener noreferrer"><ExternalLink size={9} /></a>}
                 </li>
               ))}
@@ -244,7 +255,7 @@ export function RelationshipInspector({ link, run, onClose, onQuickQuery, onLigh
       </div>
       <div className="ce-insp__body">
         <section>
-          <h4>Chain view</h4>
+          <h4>Chain view <span className="ce-h4key">(arrows = direction of the relationship path)</span></h4>
           <div className="ce-chain">
             {chain.map((c, i) => (
               <React.Fragment key={i}>
@@ -253,6 +264,7 @@ export function RelationshipInspector({ link, run, onClose, onQuickQuery, onLigh
               </React.Fragment>
             ))}
           </div>
+          <p className="ce-stancekey">key: category chip color = relationship type (matches canvas legend) · tier chip = epistemic status (Verified/Likely/Possible/Predicted) · platform dot color = source platform</p>
         </section>
         <section>
           <h4>Why this relationship exists</h4>
@@ -462,39 +474,71 @@ export function GeoOverlay({ run, graph, width, height }) {
     Investment: 'investment', Trade: 'trade', 'Aid-Humanitarian': 'aid', Diplomatic: 'diplomacy',
     Infrastructure: 'shipping', Energy: 'energy', Technology: 'technology', Security: 'military', 'Media-narrative': 'media',
   };
+  // direction-true flows: link source→target already encodes the real flow;
+  // arrowheads drawn as explicit path triangles at the curve end (large, per-flow
+  // color) + mid-curve chevron so direction reads even in a static screenshot.
   const flows = graph.links.filter(l => !l.isContext && !l.inferred).map(l => {
-    const a = placed.get(l.a), b = placed.get(l.b);
+    const sid = typeof l.source === 'object' ? l.source.id : l.source;
+    const tid = typeof l.target === 'object' ? l.target.id : l.target;
+    const a = placed.get(sid), b = placed.get(tid);
     if (!a || !b || (Math.abs(a[0] - b[0]) < 2 && Math.abs(a[1] - b[1]) < 2)) return null;
     const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2 - Math.hypot(b[0] - a[0], b[1] - a[1]) * 0.18;
-    return { id: l.id, d: `M${a[0]},${a[1]} Q${mx},${my} ${b[0]},${b[1]}`, color: REL_TYPE_COLORS[l.type], kind: FLOW_KIND[l.type], type: l.type };
+    // quadratic point + tangent for arrowheads
+    const qp = (u) => [
+      (1 - u) * (1 - u) * a[0] + 2 * (1 - u) * u * mx + u * u * b[0],
+      (1 - u) * (1 - u) * a[1] + 2 * (1 - u) * u * my + u * u * b[1],
+    ];
+    const arrowAt = (u, size) => {
+      const [px, py] = qp(u), [qx, qy] = qp(u - 0.05);
+      const ang = Math.atan2(py - qy, px - qx);
+      return `M${px},${py} L${px - size * Math.cos(ang - 0.45)},${py - size * Math.sin(ang - 0.45)} L${px - size * Math.cos(ang + 0.45)},${py - size * Math.sin(ang + 0.45)} Z`;
+    };
+    return {
+      id: l.id, d: `M${a[0]},${a[1]} Q${mx},${my} ${b[0]},${b[1]}`,
+      tipArrow: arrowAt(0.96, 8), midArrow: arrowAt(0.5, 6),
+      color: REL_TYPE_COLORS[l.type], kind: FLOW_KIND[l.type], type: l.type,
+    };
   }).filter(Boolean);
   const kindsPresent = [...new Set(flows.map(f => `${f.type}|${f.kind}`))];
 
+  // greedy label de-clutter: place labels big-first, skip any whose box collides
+  const nodesSorted = [...placed.entries()].map(([nid, xy]) => ({ n: nodesWithGeo.find(v => v.id === nid), xy }))
+    .sort((p, q) => (q.n.kind !== 'entity') - (p.n.kind !== 'entity') || (q.n.size || 0) - (p.n.size || 0));
+  const placedBoxes = [];
+  const labelVisible = (x, y, label, big) => {
+    const w = label.length * (big ? 5.6 : 4.4) + 6, h = big ? 12 : 10;
+    const box = { x0: x - w / 2, x1: x + w / 2, y0: y - h, y1: y };
+    if (placedBoxes.some(b => !(box.x1 < b.x0 || box.x0 > b.x1 || box.y1 < b.y0 || box.y0 > b.y1))) return false;
+    placedBoxes.push(box);
+    return true;
+  };
+
   return (
     <div className="ce-geo">
-      <svg width={width} height={height - 26} role="img" aria-label="Geographic overlay: entities on a world map with animated flows">
+      <svg width={width} height={height - 26} role="img" aria-label="Geographic overlay: entities on a world map with animated directional flows">
         <rect width={width} height={height - 26} fill="#f8fafc" />
         <path d={pathGen(graticule)} fill="none" stroke="#eef2f7" strokeWidth="0.6" />
         {land && land.map((f, i) => <path key={i} d={pathGen(f)} fill="#eceff3" stroke="#d8dee7" strokeWidth="0.5" />)}
         {failed && !land && <text x={12} y={20} fontSize={10} fill="#9ca3af">coastline data unavailable offline — graticule projection shown</text>}
         {flows.map(f => (
           <g key={f.id}>
-            <path d={f.d} fill="none" stroke={f.color} strokeWidth="1.6" opacity="0.85" className="ce-geo__flow" markerEnd="url(#ce-geo-arrow)" />
+            <path d={f.d} fill="none" stroke={f.color} strokeWidth="1.7" opacity="0.85" className="ce-geo__flow" />
+            <path d={f.tipArrow} fill={f.color} opacity="0.95" />
+            <path d={f.midArrow} fill={f.color} opacity="0.8" />
           </g>
         ))}
-        <defs>
-          <marker id="ce-geo-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
-            <path d="M0,0 L8,4 L0,8 z" fill="#64748b" />
-          </marker>
-        </defs>
-        {[...placed.entries()].map(([id, [x, y]]) => {
-          const n = nodesWithGeo.find(v => v.id === id);
+        {nodesSorted.map(({ n, xy: [x, y] }) => {
+          const big = n.kind === 'country' || n.kind === 'country-side';
+          const showLabel = labelVisible(x, y + (big ? -9 : -6), n.label, big);
           return (
-            <g key={id} transform={`translate(${x},${y})`}>
-              <circle r={n.kind === 'country' || n.kind === 'country-side' ? 6 : 3.4}
+            <g key={n.id} transform={`translate(${x},${y})`}>
+              <circle r={big ? 6 : 3.4}
                 fill={n.kind === 'country' ? '#111827' : n.kind === 'country-side' ? '#374151' : '#fff'}
                 stroke={n.tintStroke || '#a5b4fc'} strokeWidth="1.2" />
-              <text y={n.kind === 'country' || n.kind === 'country-side' ? -9 : -6} textAnchor="middle" fontSize={n.kind === 'country' || n.kind === 'country-side' ? 9.5 : 7.5} fontWeight={n.kind === 'country' || n.kind === 'country-side' ? 700 : 500} fill="#374151">{n.label}</text>
+              {showLabel && (
+                <text y={big ? -9 : -6} textAnchor="middle" fontSize={big ? 9.5 : 7.5}
+                  fontWeight={big ? 700 : 500} fill="#374151" stroke="#f8fafc" strokeWidth="2.4" paintOrder="stroke">{n.label}</text>
+              )}
             </g>
           );
         })}
@@ -504,7 +548,7 @@ export function GeoOverlay({ run, graph, width, height }) {
           const [type, kind] = k.split('|');
           return <span key={k}><i style={{ background: REL_TYPE_COLORS[type] }} />{kind}</span>;
         })}
-        <span className="ce-geo__note">animated dashes = live flow direction</span>
+        <span className="ce-geo__note">arrowheads + animated dashes = flow direction (source → target)</span>
       </div>
     </div>
   );
@@ -524,6 +568,7 @@ export function PredictionPanel({ run, onQuickQuery, onClose }) {
         </div>
       </div>
       <p className="ce-predict__rule">Hard separation: every forecast below carries basis evidence from this run. Pure speculation (zero observable signals) is dropped by the engine at extraction time — nothing speculative is shown as fact.</p>
+      <p className="ce-predict__key"><i className="ce-key ce-key--prob" /> probability (evidence-calibrated) · <i className="ce-key ce-key--sup" /> supporting = observable signals for · <i className="ce-key ce-key--ctr" /> counter = strongest reason against</p>
       {preds.length === 0 && <p className="ce-insp__why">No evidence-backed forward-looking inferences in this run. {others.length > 0 ? `${others.length} present-state inference(s) exist (Likely/Possible) — toggle tiers in the legend to see them.` : ''}</p>}
       {preds.map(e => (
         <div key={e.id} className="ce-predict__card">
@@ -569,6 +614,7 @@ export function StoryMode({ run, onClose, onQuickQuery, streamStory }) {
             <button className="ce-btn" onClick={onClose} aria-label="Close story"><X size={12} /></button>
           </div>
         </div>
+        <p className="ce-story__key">key: <em className="ce-story__cite">[E#]</em> = evidence record in this run · <em className="ce-story__cite">[IE#]</em> = inferred edge (tiered) · purple headings = briefing sections</p>
         <div className="ce-story__body" dangerouslySetInnerHTML={{ __html: html || '<p>Streaming…</p>' }} />
         {streaming && <div className="ce-story__stream">streaming from {run.model?.analysis}… <span className="qq-caret">▍</span></div>}
       </motion.article>

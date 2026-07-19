@@ -1410,8 +1410,13 @@ body.ce-noscroll { overflow: hidden; }
 .ce-wclass--historical { background: #f3f4f6; color: #6b7280; }
 .ce-insp__gallery { display: flex; gap: 6px; flex-wrap: wrap; }
 .ce-insp__srcs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
-.ce-srcchip { display: inline-flex; align-items: center; gap: 5px; font: 600 9px Montserrat, sans-serif; color: #4b5563; border: 1px solid #eef0f3; border-radius: 999px; padding: 3px 8px; }
-.ce-srcchip i { width: 7px; height: 7px; border-radius: 50%; }
+.ce-srcchip { display: inline-flex; align-items: center; gap: 5px; font: 600 9px Montserrat, sans-serif; color: #4b5563; border: 1px solid #eef0f3; border-radius: 999px; padding: 3px 8px; max-width: 100%; overflow-wrap: anywhere; }
+.ce-srcchip i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.ce-stancekey { font: 500 8.5px Montserrat, sans-serif; color: #9ca3af; margin: 4px 0 0; }
+.ce-h4key { font: 500 8.5px Montserrat, sans-serif; color: #b6bcc7; text-transform: none; letter-spacing: 0; }
+.ce-dirline { font: 700 10px Montserrat, sans-serif; color: #111827; }
+.ce-insp__reltxt { overflow-wrap: anywhere; }
+.ce-insp__body a { overflow-wrap: anywhere; }
 .ce-tierchip { font: 700 8.5px Montserrat, sans-serif; color: var(--c, #6b7280); border: 1.2px dashed var(--c, #d1d5db); border-radius: 999px; padding: 2px 8px; margin-left: 8px; vertical-align: 2px; }
 .ce-chain { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ce-chain__node { font: 700 10.5px Montserrat, sans-serif; color: #111827; background: #f6f7f9; border: 1px solid #e5e7eb; border-radius: 8px; padding: 4px 10px; }
@@ -1435,7 +1440,8 @@ body.ce-noscroll { overflow: hidden; }
 .ce-hoverprev__avatar { width: 34px; height: 34px; border-radius: 50%; background: #111827; color: #fff; display: flex; align-items: center; justify-content: center; font: 700 12px Montserrat, sans-serif; }
 .ce-hoverprev__head b { font: 700 11.5px Montserrat, sans-serif; color: #111827; }
 .ce-hoverprev__meta { font: 500 9px Montserrat, sans-serif; color: #9ca3af; }
-.ce-hoverprev__impact { font: 600 9.5px Montserrat, sans-serif; color: #374151; border-left: 3px solid #c4b5fd; padding: 2px 0 2px 8px; margin: 7px 0 0; }
+.ce-hoverprev__impact { font: 600 9.5px Montserrat, sans-serif; color: #374151; margin: 7px 0 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ce-hoverprev__impact .ce-impactchip { font-size: 9px; padding: 2px 8px; }
 .ce-hoverprev__news { font: 500 10px/1.5 Montserrat, sans-serif; color: #4b5563; margin-top: 6px; }
 .ce-hoverprev__foot { font: 500 8.5px Montserrat, sans-serif; color: #b6bcc7; margin-top: 6px; }
 
@@ -1475,7 +1481,15 @@ body.ce-noscroll { overflow: hidden; }
 .ce-predict__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ce-predict__head b { font: 700 12px Montserrat, sans-serif; color: #6d28d9; display: inline-flex; align-items: center; gap: 6px; }
 .ce-predict__head > div { display: flex; gap: 6px; }
-.ce-predict__rule { font: 500 9.5px/1.5 Montserrat, sans-serif; color: #9ca3af; margin: 4px 0 8px; }
+.ce-predict__rule { font: 500 9.5px/1.5 Montserrat, sans-serif; color: #9ca3af; margin: 4px 0 4px; }
+.ce-predict__key { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font: 600 9px Montserrat, sans-serif; color: #6b7280; margin: 0 0 8px; }
+.ce-key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+.ce-key--prob { background: linear-gradient(90deg, #a78bfa, #6d28d9); }
+.ce-key--sup { background: #0e9f6e; }
+.ce-key--ctr { background: #d97706; }
+.ce-predict__prob { padding-top: 2px; }
+.ce-predict__body p { overflow-wrap: anywhere; }
+.ce-predict__card { align-items: flex-start; }
 .ce-predict__card { display: flex; gap: 12px; border: 1px solid #f3f4f6; background: #fff; border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
 .ce-predict__prob { flex: none; width: 86px; text-align: center; }
 .ce-predict__prob b { font: 700 17px Montserrat, sans-serif; color: #6d28d9; }
@@ -1498,3 +1512,5 @@ body.ce-noscroll { overflow: hidden; }
 /* item 14 — deep search window select */
 .ce-window { display: inline-flex; align-items: center; gap: 6px; font: 600 10px Montserrat, sans-serif; color: #6b7280; }
 .ce-window select { border: 1px solid #e5e7eb; border-radius: 8px; padding: 5px 8px; font: 600 10.5px Montserrat, sans-serif; color: #1f2937; background: #fff; cursor: pointer; }
+.ce-story__key { font: 500 9px Montserrat, sans-serif; color: #9ca3af; margin: 8px 20px 0; }
+.ce-hoverprev__key { font: 500 8px Montserrat, sans-serif; color: #b6bcc7; }
