@@ -1120,3 +1120,34 @@ ingest (3y window, 30d boost, dedupe vs 509 baseline), NOTES-format run log
 line — emailed per run. Note: platform workflows run server-side and cannot
 write this workspace's files directly; the checkpoint commits land on the
 GitHub branch (checkpoints/auto-checkpoint.md) as the durable audit trail.
+
+## 2026-07-19 — Rule 0: OnDemand session-create + streamed query (LIVE docs, fetched 2026-07-19)
+
+Fetched from the live public docs API (`GET /config/v1/public/docs/categories` →
+`GET /config/v1/public/docs/reference/api/<slug>`; slugs `createchatsession`, `submitquery`):
+
+- **(a) Session create**: `POST https://api.on-demand.io/chat/v1/sessions`
+  (OpenAPI `servers[].url` = https://api.on-demand.io).
+- **(b) Auth**: header `apikey: <YOUR_API_KEY>` (securityScheme `apiKey` in `header`,
+  name `apikey`) — required on both operations.
+- **(c) Request bodies**:
+  - Create session: `{ "externalUserId": string (REQUIRED), "pluginIds": string[] (optional, ≤20) }`.
+  - Submit query (streamed): `POST /chat/v1/sessions/{sessionId}/query` with
+    `{ "query": string (REQUIRED), "endpointId": string (REQUIRED — e.g.
+    predefined-gpt-5.6-sol), "responseMode": "stream" (REQUIRED for SSE),
+    "pluginIds": string[] (optional), "fulfillmentOnly": boolean (optional),
+    "modelConfigs": object (optional; reasoning effort medium set via the app's
+    reasoningEffort extension) }` → SSE stream of fulfillment tokens.
+- Matches `server/ondemand.js` (`H = { apikey: ONDEMAND_API_KEY }`, createOdSession →
+  POST /chat/v1/sessions, streamQuery → POST .../query with responseMode stream).
+
+### HTTP 500 root cause (session-create) — env wiring
+`server/env.js` correctly reads `ONDEMAND_API_KEY` from `.env`/process.env (as declared
+in `.env.example`); the variable name and read order are right, and the read happens at
+module load with a dotenv fallback. The failing deployment simply NEVER RECEIVED the
+key: the staging sandbox was deployed without a `.env` file and without env injection,
+so the server started with an empty key (`[FATAL-CONFIG] ONDEMAND_API_KEY is not set`)
+and every OnDemand call surfaced as HTTP 500 "An unexpected error occurred".
+FIX: inject `ONDEMAND_API_KEY=****redacted****` into the sandbox process environment at
+deploy time (runtime env injection at server start). No code change; no hardcoded keys;
+key never written to files/git/logs.

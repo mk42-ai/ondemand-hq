@@ -21,8 +21,12 @@ function loadDotEnv() {
 }
 const envPath = loadDotEnv();
 
-export const ONDEMAND_API_KEY = process.env.ONDEMAND_API_KEY || '';
-export const ONDEMAND_BASE_URL = (process.env.ONDEMAND_BASE_URL || 'https://api.on-demand.io').replace(/\/$/, '');
+// Env-wiring fix (2026-07-19): accept BOTH naming variants. `.env.example` declares
+// ONDEMAND_API_KEY; some deploy runtimes export the platform-standard spelling
+// ON_DEMAND_API_KEY. The 500 root cause was a deploy that injected neither — the
+// fallback makes runtime injection work under either name. Never hardcoded/logged.
+export const ONDEMAND_API_KEY = process.env.ONDEMAND_API_KEY || process.env.ON_DEMAND_API_KEY || '';
+export const ONDEMAND_BASE_URL = (process.env.ONDEMAND_BASE_URL || process.env.ON_DEMAND_BASE_URL || 'https://api.on-demand.io').replace(/\/$/, '');
 export const PORT = parseInt(process.env.PORT || '8080', 10);
 
 // The ONE model policy: every call, everywhere, uses gpt-5.6-sol-medium =

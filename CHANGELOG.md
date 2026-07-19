@@ -154,3 +154,22 @@ All notable changes to the Correlation Engine, logged with timestamps (UTC).
   ED1 mofa~kenya-ministry-of-agriculture Aid-Humanitarian **Verified** /
   ED2 adq~kenya-agri-processors Investment **Likely** / ED3 masdar~kengen Energy
   **Possible** / ED4 dpworld~mombasa-port Influence-network **Possible**.
+
+## 2026-07-19 — fix: OnDemand session-create HTTP 500 (env wiring) + verified redeploy
+
+- **2026-07-19T22:05Z** — ROOT CAUSE: the prior staging sandbox was deployed with NO
+  `.env` and NO env injection, so `server/env.js` (which correctly reads
+  `ONDEMAND_API_KEY` per `.env.example`) started with an empty key → every OnDemand
+  call (session create POST /chat/v1/sessions) surfaced as HTTP 500. FIX (no code
+  regeneration): (1) deploy-time env injection — the key is passed into the server
+  process environment at start, never written to files/git/logs
+  (`ONDEMAND_API_KEY=****redacted****`); (2) `server/env.js` now also accepts the
+  platform-standard spelling `ON_DEMAND_API_KEY` / `ON_DEMAND_BASE_URL` as fallback so
+  either injection convention binds. Rule-0 doc check (live docs 2026-07-19, NOTES.md):
+  POST /chat/v1/sessions (apikey header, externalUserId required) + streamed
+  POST /chat/v1/sessions/{id}/query (query, endpointId, responseMode:stream).
+  Redeployed HEAD 144b6b3+fix to fresh sandbox **sbx_R55145h4CHwH6qmX1r9uWb3GVsY8**
+  → **https://sb-6003r3hmhyfy.vercel.run**. PROOF (PLUGIN_TESTS.md): root 200 (0.299s),
+  runs API 200 (0.047s) w/ ED1 Verified/ED2 Likely/ED3+ED4 Possible @22:04:44Z; health
+  keyLoaded:true; session-create via backend **200** (was 500), streamed query on
+  gpt-5.6-sol-medium delivered 73 SSE fulfillment tokens (22:05:00→22:05:25Z).

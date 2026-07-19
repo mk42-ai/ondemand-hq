@@ -349,3 +349,23 @@ emitted in the metrics frame and rendered in the UI. Thinking frames
 | `GET /api/correlation/media/KE/KE-20260719024409-ig1.jpg` | 03:13Z (local) | **200**, 90,698 B JPEG |
 | `GET /api/correlation/narrative/KE/…/stream` | 03:15:40Z | **200 SSE** — real fable-5 `fulfillment_thinking` frames |
 | `GET /api/correlation/diff/KE` | 03:13Z | **200** — diff payload above |
+
+## 2026-07-19T22:05Z — session-create 500 fix: deployed-backend HTTP proof (key redacted)
+
+Sandbox sbx_R55145h4CHwH6qmX1r9uWb3GVsY8 · https://sb-6003r3hmhyfy.vercel.run · HEAD 144b6b3 + env-wiring fix.
+ONDEMAND_API_KEY injected at server-start env only (never written to files/git/logs; boot log `key=****JZuA`).
+
+| Check | Result | Latency | Timestamp (UTC) |
+|---|---|---|---|
+| GET / | HTTP 200 | 0.299s | 2026-07-19T22:04:44Z |
+| GET /api/correlation/runs/KE | HTTP 200 | 0.047s | 2026-07-19T22:04:44Z |
+| GET /api/correlation/run/KE/KE-20260719072125 | 200 — ED1 **Verified** / ED2 **Likely** / ED3 **Possible** / ED4 **Possible** | — | 2026-07-19T22:04:44Z |
+| GET /api/health | `{"ok":true,"keyLoaded":true,"model":"predefined-gpt-5.6-sol+medium"}` | — | 2026-07-19T22:04:44Z |
+| POST /api/conversations | HTTP 200 | 0.057s | 2026-07-19T22:05:00Z |
+| POST /api/chat (session-create + streamed query) | **HTTP 200** (was 500) | 25.375s total stream | started 2026-07-19T22:05:00Z · ended 22:05:25Z |
+
+Streamed-query proof (gpt-5.6-sol-medium = predefined-gpt-5.6-sol + reasoningEffort medium):
+OnDemand session `6a5d4a0ef400726bb9845c6f` created via POST /chat/v1/sessions (through the
+deployed backend); SSE stream delivered **73 fulfillment token frames** — first tokens
+`"The"`, `" UAE"`, `"–"` … — plus planning/step thinking frames; terminal frame
+`{"type":"done","sawAnswer":true}`. Session-create HTTP 500 is FIXED.
