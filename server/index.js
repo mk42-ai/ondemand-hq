@@ -21,6 +21,7 @@ import { registerIntelRoutes } from './intel.js';
 import { registerFactsRoutes } from './facts.js';
 import { registerMsmRoutes, getTranscriptText as getMsmTranscript } from './msm.js';
 import { registerCorrelateRoutes } from './correlate.js';
+import { registerQuickQueryRoutes } from './quickquery.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -44,6 +45,9 @@ registerMsmRoutes(app);
 
 // Correlation Engine routes (evidence pipeline, versioned graph runs, 24h workflow target).
 registerCorrelateRoutes(app);
+
+// Quick Query micro-answers (GLM-4.7 Cerebras, RULE-0 verified 2026-07-19).
+registerQuickQueryRoutes(app);
 
 // ---------- health ----------
 app.get('/api/health', (req, res) => res.json({

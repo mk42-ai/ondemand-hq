@@ -158,3 +158,28 @@ day records under `server/data/msm/` (videoId-keyed global dedupe index).
   logical properties).
 - Model policy: identical to the suite — `predefined-gpt-5.6-sol` + top-level
   `reasoningEffort` only (no modelConfigs/maxTokens anywhere in the module).
+
+## Correlation Engine — Phase C visual layer + Quick Query (2026-07-19)
+
+- `src/correlate/graphAdapter.js` — PURE adapter run-JSON → react-force-graph
+  {nodes,links}: weight→width, recency→opacity+particle speed, type→color,
+  platform→glyph badges, IG media→node thumbnails; graphology pre-pass: PageRank→
+  node size, Louvain→community hue tints. Date scrubber = same adapter, different run.
+- `src/correlate/CorrelationEngine.jsx` — fg2d canvas (custom node draw: country
+  XXL / UAE-entity initials / IG photo-nodes; hover lights neighborhood + dims rest
+  to 15%; hover popover w/ claim+source+date+snippet+IG thumbs; click → lightbox
+  (full proof, verified badge, outbound link) + evidence drawer w/ 'Send to chat';
+  diff-driven new-edge pulse; search→zoom-to-node; zoomToFit on load; drag physics;
+  ?debug=1 drawer shows fps + adapter stats). Controls rail: type chips, time-range
+  + min-weight sliders w/ live fade, labels/physics toggles. PNG export via canvas
+  toDataURL; per-run evidence+edges JSON download. Bilingual EN/AR loader reused.
+- `src/correlate/EvidencePanels.jsx` — echarts-for-react panels (evidence volume,
+  platform donut, confidence strip) cross-filtering the graph on click + the novel
+  D3 Evidence-Density Heat Ring (see INNOVATION_LOG.md).
+- `server/quickquery.js` — ⚡ Quick Query on GLM-4.7 Cerebras
+  (byoi-6e314690-4eaf-4def-a33c-380809acf1f5, RULE-0 verified active/streaming
+  2026-07-19; predefined-glm-4.7 INACTIVE). fulfillmentOnly streaming, prompt-contract
+  1–3 sentences (~150-token budget; NO undocumented maxTokens — live dead-end),
+  server-side char cap guard, ms latency emitted in the final SSE frame and shown
+  in the UI pill. ⚡ affordances on edges, evidence cards, narrative, drawer;
+  EN/AR chips; 'Continue in chat →' hands the mini-artifact into the main suite.

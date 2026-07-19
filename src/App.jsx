@@ -280,6 +280,17 @@ export default function App() {
     newChat(key, { wizard: WIZARD_FEATURES.has(key) });
   };
 
+  /* Correlation Engine 'Continue in chat' — hand a mini-artifact + Quick Query context to the main suite */
+  const corrToChat = async (artifact, question, answer) => {
+    setCorrOpen(false);
+    const convId = await newChat('chat');
+    if (!convId) return;
+    send(
+      `Correlation Engine handoff — continue this analysis in depth for ODA leadership.\nMINI-ARTIFACT JSON:\n${JSON.stringify(artifact).slice(0, 3000)}\n${question ? `QUICK QUERY ASKED: ${question}` : ''}\n${answer ? `QUICK ANSWER GIVEN: ${answer}` : ''}\nExpand with full evidence-grounded analysis.`,
+      null, null, {},
+    );
+  };
+
   /* MSM 'Analyse deeper' — open a chat with the stored transcript injected server-side */
   const analyseDeeper = async (video) => {
     setMsmOpen(false);
@@ -304,7 +315,7 @@ export default function App() {
         open={sidebarOpen} />
       {corrOpen ? (
         <div className="main main--intel">
-          <CorrelationEngine onExit={() => setCorrOpen(false)} />
+          <CorrelationEngine onExit={() => setCorrOpen(false)} onSendToChat={corrToChat} />
         </div>
       ) : msmOpen ? (
         <div className="main main--intel">
