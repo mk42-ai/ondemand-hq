@@ -1,0 +1,518 @@
+{
+ "id": "1784430409823-v2",
+ "version": 2,
+ "iso": "EG",
+ "country": "Egypt",
+ "generatedAt": "2026-07-19T03:06:49.823Z",
+ "startedAt": "2026-07-19T03:00:16.484Z",
+ "trigger": "workflow",
+ "model": "predefined-claude-fable-5+medium (production)",
+ "endpointId": "predefined-claude-fable-5",
+ "reasoningEffort": "medium",
+ "pluginsCalled": [
+  "plugin-1722260873",
+  "plugin-1751872652",
+  "plugin-1716326559",
+  "plugin-1748003575",
+  "plugin-1716164040",
+  "plugin-1762980461"
+ ],
+ "evidenceCount": 20,
+ "graph": {
+  "nodes": [
+   {
+    "id": "MOFA",
+    "label": "MOFA",
+    "type": "uae-entity",
+    "evidenceIds": [
+     "E7acd59bb"
+    ],
+    "weight": 1,
+    "platforms": [
+     "x"
+    ]
+   },
+   {
+    "id": "UAE",
+    "label": "UAE",
+    "type": "country",
+    "evidenceIds": [
+     "E386b54fb",
+     "E5790087e",
+     "E545029e7",
+     "E15ea40ac",
+     "E125ff986",
+     "E16653bac",
+     "E2f100297",
+     "E4e3b03e1",
+     "E1ffaaf16",
+     "E5db34220",
+     "E6d3f8988",
+     "E2c736c2f",
+     "E636c9c83",
+     "E50820814"
+    ],
+    "weight": 14,
+    "platforms": [
+     "x",
+     "instagram",
+     "reddit"
+    ]
+   },
+   {
+    "id": "EG",
+    "label": "Egypt",
+    "type": "country",
+    "evidenceIds": [
+     "E5790087e",
+     "E545029e7",
+     "E50820814"
+    ],
+    "weight": 3,
+    "platforms": [
+     "x",
+     "reddit"
+    ]
+   },
+   {
+    "id": "EG_MOFA",
+    "label": "Egyptian Ministry of Foreign Affairs",
+    "type": "ministry",
+    "evidenceIds": [
+     "E7acd59bb"
+    ],
+    "weight": 1,
+    "platforms": [
+     "x"
+    ]
+   },
+   {
+    "id": "MADA",
+    "label": "Mada City New Cairo Urban Project",
+    "type": "project",
+    "evidenceIds": [
+     "E386b54fb"
+    ],
+    "weight": 1,
+    "platforms": [
+     "x"
+    ]
+   },
+   {
+    "id": "EG_DEF",
+    "label": "Egyptian Armed Forces / Defence Establishment",
+    "type": "ministry",
+    "evidenceIds": [
+     "E15ea40ac",
+     "E125ff986"
+    ],
+    "weight": 2,
+    "platforms": [
+     "x"
+    ]
+   },
+   {
+    "id": "IRAN_RISK",
+    "label": "Iranian attacks / regional escalation",
+    "type": "risk",
+    "evidenceIds": [
+     "E16653bac",
+     "E2f100297"
+    ],
+    "weight": 2,
+    "platforms": [
+     "x",
+     "instagram"
+    ]
+   },
+   {
+    "id": "HORMUZ",
+    "label": "Strait of Hormuz navigation disruption",
+    "type": "risk",
+    "evidenceIds": [
+     "E4e3b03e1",
+     "E1ffaaf16"
+    ],
+    "weight": 2,
+    "platforms": [
+     "x"
+    ]
+   },
+   {
+    "id": "GAZA_HEALTH",
+    "label": "Gaza health system (via WHO)",
+    "type": "sector",
+    "evidenceIds": [
+     "E5db34220"
+    ],
+    "weight": 1,
+    "platforms": [
+     "x"
+    ]
+   },
+   {
+    "id": "EG_MIGRANTS",
+    "label": "Egyptian migrant workforce in UAE",
+    "type": "sector",
+    "evidenceIds": [
+     "E1c3c54fc",
+     "E58f96e53"
+    ],
+    "weight": 2,
+    "platforms": [
+     "reddit"
+    ]
+   },
+   {
+    "id": "REDDIT",
+    "label": "Reddit discourse (unverified social media)",
+    "type": "media",
+    "evidenceIds": [
+     "E1c3c54fc",
+     "E58f96e53",
+     "E2c736c2f",
+     "E636c9c83"
+    ],
+    "weight": 4,
+    "platforms": [
+     "reddit"
+    ]
+   },
+   {
+    "id": "EDU_FUND",
+    "label": "FIFA / Global Citizen education fund",
+    "type": "fund",
+    "evidenceIds": [
+     "E6d3f8988"
+    ],
+    "weight": 1,
+    "platforms": [
+     "x"
+    ]
+   }
+  ],
+  "edges": [
+   {
+    "id": "UAE--MADA::Investment",
+    "source": "UAE",
+    "target": "MADA",
+    "type": "Investment",
+    "direction": "a->b",
+    "claim": "Egyptian and Emirati firms signed a USD 3.1 billion strategic partnership for the New Cairo urban project in Mada City",
+    "allClaims": [
+     "Egyptian and Emirati firms signed a USD 3.1 billion strategic partnership for the New Cairo urban project in Mada City"
+    ],
+    "evidenceIds": [
+     "E386b54fb"
+    ],
+    "evidenceCount": 1,
+    "platforms": [
+     "x"
+    ],
+    "avgConfidence": 0.9,
+    "recency": 0.226,
+    "weight": 0.288,
+    "contradiction": null
+   },
+   {
+    "id": "UAE--EG::Diplomatic",
+    "source": "UAE",
+    "target": "EG",
+    "type": "Diplomatic",
+    "direction": "bidirectional",
+    "claim": "UAE President met Egyptian President in El Alamein, reaffirming fraternal ties and expanding cooperation across sectors",
+    "allClaims": [
+     "UAE President met Egyptian President in El Alamein, reaffirming fraternal ties and expanding cooperation across sectors"
+    ],
+    "evidenceIds": [
+     "E5790087e"
+    ],
+    "evidenceCount": 1,
+    "platforms": [
+     "x"
+    ],
+    "avgConfidence": 0.85,
+    "recency": 0.226,
+    "weight": 0.272,
+    "contradiction": null
+   },
+   {
+    "id": "MOFA--EG_MOFA::Diplomatic",
+    "source": "MOFA",
+    "target": "EG_MOFA",
+    "type": "Diplomatic",
+    "direction": "bidirectional",
+    "claim": "UAE and Egyptian foreign ministers discussed regional developments and the US-Iran MOU by phone",
+    "allClaims": [
+     "UAE and Egyptian foreign ministers discussed regional developments and the US-Iran MOU by phone"
+    ],
+    "evidenceIds": [
+     "E7acd59bb"
+    ],
+    "evidenceCount": 1,
+    "platforms": [
+     "x"
+    ],
+    "avgConfidence": 0.8,
+    "recency": 0.226,
+    "weight": 0.256,
+    "contradiction": null
+   },
+   {
+    "id": "EG--UAE::Security",
+    "source": "EG",
+    "target": "UAE",
+    "type": "Security",
+    "direction": "a->b",
+    "claim": "Sisi reaffirmed solidarity with UAE against Iranian attacks; Presidents jointly inspected an Egyptian fighter jet",
+    "allClaims": [
+     "Sisi reaffirmed solidarity with UAE against Iranian attacks; Presidents jointly inspected an Egyptian fighter jet"
+    ],
+    "evidenceIds": [
+     "E545029e7"
+    ],
+    "evidenceCount": 1,
+    "platforms": [
+     "x"
+    ],
+    "avgConfidence": 0.85,
+    "recency": 0.226,
+    "weight": 0.272,
+    "contradiction": null
+   },
+   {
+    "id": "EG_DEF--UAE::Security",
+    "source": "EG_DEF",
+    "target": "UAE",
+    "type": "Security",
+    "direction": "a->b",
+    "claim": "Egyptian forces are stationed in the UAE, seen during President Sisi's visit, underscoring deep-rooted ties",
+    "allClaims": [
+     "Egyptian forces are stationed in the UAE, seen during President Sisi's visit, underscoring deep-rooted ties",
+     "Tawazun Council highlighted strong UAE-Egypt relationship and shared interest in defence cooperation during a visit"
+    ],
+    "evidenceIds": [
+     "E15ea40ac",
+     "E125ff986"
+    ],
+    "evidenceCount": 2,
+    "platforms": [
+     "x"
+    ],
+    "avgConfidence": 0.775,
+    "recency": 0.226,
+    "weight": 0.341,
+    "contradiction": null
+   },
+   {
+    "id": "IRAN_RISK--UAE::Security",
+    "source": "IRAN_RISK",
+    "target": "UAE",
+    "type": "Security",
+    "direction": "a->b",
+    "claim": "UAE strongly condemned renewed Iranian attacks on Bahrain, Kuwait and Jordan and expressed deep concern over regional escalation",
+    "allClaims": [
+     "UAE strongly condemned renewed Iranian attacks on Bahrain, Kuwait and Jordan and expressed deep concern over regional escalation"
+    ],
+    "evidenceIds": [
+     "E16653bac",
+     "E2f100297"
+    ],
+    "evidenceCount": 2,
+    "platforms": [
+     "x",
+     "instagram"
+    ],
+    "avgConfidence": 0.9,
+    "recency": 0.946,
+    "weight": 0.4455,
+    "contradiction": null
+   },
+   {
+    "id": "UAE--HORMUZ::Security",
+    "source": "UAE",
+    "target": "HORMUZ",
+    "type": "Security",
+    "direction": "a->b",
+    "claim": "UAE called for immediate halt to escalation, maximum restraint, return to negotiations, and safety of navigation in the Strait of Hormuz; GCC and EU condemned Iranian attacks there",
+    "allClaims": [
+     "UAE called for immediate halt to escalation, maximum restraint, return to negotiations, and safety of navigation in the Strait of Hormuz; GCC and EU condemned Iranian attacks there"
+    ],
+    "evidenceIds": [
+     "E4e3b03e1",
+     "E1ffaaf16"
+    ],
+    "evidenceCount": 2,
+    "platforms": [
+     "x"
+    ],
+    "avgConfidence": 0.925,
+    "recency": 0.946,
+    "weight": 0.407,
+    "contradiction": null
+   },
+   {
+    "id": "UAE--GAZA_HEALTH::Aid/Humanitarian",
+    "source": "UAE",
+    "target": "GAZA_HEALTH",
+    "type": "Aid/Humanitarian",
+    "direction": "a->b",
+    "claim": "UAE's Gallant Knight 3 operation delivered a medicines convoy to the WHO supporting Gaza's health system",
+    "allClaims": [
+     "UAE's Gallant Knight 3 operation delivered a medicines convoy to the WHO supporting Gaza's health system"
+    ],
+    "evidenceIds": [
+     "E5db34220"
+    ],
+    "evidenceCount": 1,
+    "platforms": [
+     "x"
+    ],
+    "avgConfidence": 0.9,
+    "recency": 0.946,
+    "weight": 0.288,
+    "contradiction": null
+   },
+   {
+    "id": "UAE--EDU_FUND::Aid/Humanitarian",
+    "source": "UAE",
+    "target": "EDU_FUND",
+    "type": "Aid/Humanitarian",
+    "direction": "a->b",
+    "claim": "UAE pledged USD 5 million to the FIFA and Global Citizen education fund supporting inclusive opportunities for future generations",
+    "allClaims": [
+     "UAE pledged USD 5 million to the FIFA and Global Citizen education fund supporting inclusive opportunities for future generations"
+    ],
+    "evidenceIds": [
+     "E6d3f8988"
+    ],
+    "evidenceCount": 1,
+    "platforms": [
+     "x"
+    ],
+    "avgConfidence": 0.95,
+    "recency": 0.946,
+    "weight": 0.304,
+    "contradiction": null
+   },
+   {
+    "id": "REDDIT--EG_MIGRANTS::Media narrative",
+    "source": "REDDIT",
+    "target": "EG_MIGRANTS",
+    "type": "Media narrative",
+    "direction": "a->b",
+    "claim": "Reddit threads claim UAE cancelled many Pakistani visas after the Iran war and may be moving on to Egyptians, with visa cancellations reported",
+    "allClaims": [
+     "Reddit threads claim UAE cancelled many Pakistani visas after the Iran war and may be moving on to Egyptians, with visa cancellations reported",
+     "Reddit commenters say the US-Israel-Iran conflict spilling into the Gulf has hit UAE jobs, tourism, aviation and pay, with Egyptian and South Asian migrant workers feeling the effects"
+    ],
+    "evidenceIds": [
+     "E1c3c54fc",
+     "E58f96e53"
+    ],
+    "evidenceCount": 2,
+    "platforms": [
+     "reddit"
+    ],
+    "avgConfidence": 0.675,
+    "recency": 0.226,
+    "weight": 0.297,
+    "contradiction": null
+   },
+   {
+    "id": "REDDIT--UAE::Media narrative",
+    "source": "REDDIT",
+    "target": "UAE",
+    "type": "Media narrative",
+    "direction": "a->b",
+    "claim": "Reddit threads discuss Iranian threats against the UAE and calls to evacuate UAE airports and ports amid wartime disruption, citing a WSJ piece on UAE AI chips and the Iran war",
+    "allClaims": [
+     "Reddit threads discuss Iranian threats against the UAE and calls to evacuate UAE airports and ports amid wartime disruption, citing a WSJ piece on UAE AI chips and the Iran war"
+    ],
+    "evidenceIds": [
+     "E2c736c2f",
+     "E636c9c83"
+    ],
+    "evidenceCount": 2,
+    "platforms": [
+     "reddit"
+    ],
+    "avgConfidence": 0.525,
+    "recency": 0.226,
+    "weight": 0.231,
+    "contradiction": null
+   },
+   {
+    "id": "UAE--EG::Media narrative",
+    "source": "UAE",
+    "target": "EG",
+    "type": "Media narrative",
+    "direction": "bidirectional",
+    "claim": "Everyday people-to-people ties reflected in traveler discussions about gifts to bring to Egypt (candy, electronics, perfumes, skincare)",
+    "allClaims": [
+     "Everyday people-to-people ties reflected in traveler discussions about gifts to bring to Egypt (candy, electronics, perfumes, skincare)"
+    ],
+    "evidenceIds": [
+     "E50820814"
+    ],
+    "evidenceCount": 1,
+    "platforms": [
+     "reddit"
+    ],
+    "avgConfidence": 0.4,
+    "recency": 0.226,
+    "weight": 0.128,
+    "contradiction": null
+   }
+  ]
+ },
+ "narrative": {
+  "text": "UAE\u2013Egypt momentum is accelerating on both the diplomatic and economic tracks, anchored by the presidential summit in El Alamein and a USD 3.1 billion strategic partnership for the Mada City urban project in New Cairo [E:5790087e,E:386b54fb]. Security convergence is deepening, with Egyptian forces stationed in the UAE during President Sisi's visit and the Tawazun Council highlighting shared defence-cooperation interests [E:15ea40ac,E:125ff986]. The dominant risk vector remains Iranian escalation, as the UAE condemned renewed Iranian attacks on Bahrain, Kuwait and Jordan and expressed deep concern over regional developments while urging immediate de-escalation [E:16653bac,E:2f100297]. Maritime exposure is acute in the Strait of Hormuz, where the UAE, GCC and EU have jointly demanded a halt to Iranian attacks, restraint, and a return to negotiations to preserve continuity of trade flows [E:4e3b03e1,E:1ffaaf16]. Cross-platform narrative signals show reputational stress, with Reddit threads linking the Iran conflict to mass visa cancellations affecting migrants and a deteriorating UAE job and tourism market [E:1c3c54fc,E:58f96e53]. Countervailing soft-power momentum persists through the UAE's USD 5 million pledge to the FIFA\u2013Global Citizen education fund and the 'Gallant Knight 3' medicines convoy delivered to the WHO for Gaza's health system [E:6d3f8988,E:5db34220].",
+  "latencyMs": 393339
+ },
+ "diff": {
+  "newEdges": [
+   "UAE--MADA::Investment",
+   "UAE--EG::Diplomatic",
+   "MOFA--EG_MOFA::Diplomatic",
+   "EG--UAE::Security",
+   "EG_DEF--UAE::Security",
+   "IRAN_RISK--UAE::Security",
+   "UAE--HORMUZ::Security",
+   "UAE--GAZA_HEALTH::Aid/Humanitarian",
+   "UAE--EDU_FUND::Aid/Humanitarian",
+   "REDDIT--EG_MIGRANTS::Media narrative",
+   "REDDIT--UAE::Media narrative"
+  ],
+  "removedEdges": [
+   "UAE--EG::Energy",
+   "EG_MOP--DANAGAS::Energy",
+   "GOGAS--MADKOUR::Infrastructure",
+   "GOGAS--MAURITANIA::Infrastructure",
+   "GOGAS--BANDA_TEVET::Energy",
+   "EG_MOP--ADPORTS::Infrastructure",
+   "EG_MOP--TCM::Infrastructure",
+   "UAE--EG::Technology",
+   "MOFA--EG::Diplomatic"
+  ],
+  "newNodes": [
+   "EG_MOFA",
+   "MADA",
+   "EG_DEF",
+   "IRAN_RISK",
+   "HORMUZ",
+   "GAZA_HEALTH",
+   "EG_MIGRANTS",
+   "REDDIT",
+   "EDU_FUND"
+  ],
+  "changedWeights": [
+   {
+    "id": "UAE--EG::Media narrative",
+    "from": 0.272,
+    "to": 0.128
+   }
+  ]
+ },
+ "prevRunId": "1784429572200-v1"
+}

@@ -379,14 +379,18 @@ export function registerCorrelateRoutes(app) {
   });
   // Workflow delivery target (24h Agents Flow Builder webhook posts here) — re-runs
   // the pipeline server-side so each scheduled tick produces a fresh versioned run.
-  app.post('/api/correlate/trigger', async (req, res) => {
+  app.post('/api/correlate/trigger', (req, res) => {
     const iso = (req.body?.iso || 'EG').toUpperCase();
     const country = req.body?.country || ({ EG: 'Egypt' }[iso] || iso);
-    try {
-      const run = await runCorrelate(iso, country, 'workflow', null, 'production');
-      res.json({ ok: true, runId: run.id, version: run.version, generatedAt: run.generatedAt, model: run.model, evidenceCount: run.evidenceCount, diff: run.diff });
-    } catch (e) {
-      res.status(500).json({ ok: false, error: e.message });
+    // Respond 202 IMMEDIATELY (webhook deliveries time out in seconds; the full
+    // pipeline takes minutes) and run the pipeline async — the versioned run JSON
+    // persists to disk regardless of the caller's timeout budget.
+    if (jobState(iso) && !['complete', 'error'].includes(jobState(iso).stage)) {
+      return res.status(202).json({ ok: true, accepted: false, note: 'run already in progress', stage: jobState(iso).stage });
     }
+    res.status(202).json({ ok: true, accepted: true, iso, country, mode: 'production', startedAt: now() });
+    runCorrelate(iso, country, 'workflow', null, 'production')
+      .then(run => console.log(`[correlate] workflow run ${run.id} complete (${run.model})`))
+      .catch(e => console.error(`[correlate] workflow run failed: ${e.message}`));
   });
 }

@@ -298,3 +298,39 @@ KEY OPERATIONAL LESSON: sessions created WITH `agentIds` at session-create time 
   mubadala.ae → OFFICIAL sovereign investor confirmed.
 - 02:21:54Z→02:22:22Z recent-media call → 3 latest wamnews posts with shortcodes
   (Da8rDLZDYa1 186♥, Da8jb1KjXZG 236♥, Da8YQPUja9_ 60♥), media_type 1, pagination cursor present.
+
+---
+
+## 2026-07-19 (Phase B, 02:34–03:07 UTC) — Workflow API 200-tests + two-run pipeline proof
+
+### Agents Flow Builder endpoints (all REAL calls, apikey auth, before product use)
+- 02:34:40–42Z docs specs re-fetched live: activate/deactivate/execute/stream_logs — all HTTP 200
+  (see NOTES.md Phase B RULE 0 entry for per-slug latencies).
+- GET workflow 6a5b94d321d41c1c02073c3a → 200 (config retrieved; old webhook target was the
+  expired sb-2cwzeyiiol91 host = the known 410 dead end).
+- UPDATE workflow (PUT-equivalent via automation API) → 200: webhook delivery re-pointed to
+  https://sb-3kzrc0fb12yr.vercel.run/api/correlate/trigger; nodes/cron/email unchanged
+  (lastModifiedAtInMilliseconds 1784429861588 = 03:57:41.588Z epoch-ms proof).
+- POST /workflow/6a5b94d321d41c1c02073c3a/activate → success (workflow isActive: true on re-GET).
+- POST /workflow/6a5b94d321d41c1c02073c3a/execute → 200 {"executionID":"6a5c3d5638c41d8583229e32"}.
+- Execution logs (GET) → 9 lines: in-0 104,737 ms success (fable-5 + internet-search plugin) →
+  analyzer-corr 30 ms → "workflow execution outputs retrieved" → "output delivery completed
+  successfully" status:success at 1784430016630 (03:00:16.630Z) — the webhook delivery chain
+  that was DEAD (410) in every prior audit is now REPAIRED AND PROVEN.
+
+### Webhook target behavior (repo route /api/correlate/trigger)
+- Responds 202 immediately (delivery timeout budget) and runs the pipeline async in
+  production mode (fable-5+medium) — run persists regardless of caller timeout.
+- Proof: webhook POST 03:00:16.484Z → job stages perplexity→xsearch→xuser→reddit→iginfo→
+  igdownload→edges→narrative→complete → run 1784430409823-v2 at 03:06:49.823Z.
+
+### Two consecutive REAL runs (no mocks) — versioned + diffable
+| Run | id | generatedAt | model (logged in run JSON) | trigger | evidence | edges/nodes |
+|---|---|---|---|---|---|---|
+| 1 | 1784429572200-v1 | 2026-07-19T02:52:52.200Z | predefined-claude-sonnet-5+medium (build) | manual | 7 | 10 / 11 |
+| 2 | 1784430409823-v2 | 2026-07-19T03:06:49.823Z | predefined-claude-fable-5+medium (production) | workflow | 20 | 12 / 12 |
+- Diff v1→v2 (computed + stored in v2.diff): 11 newEdges, 9 removedEdges, 9 newNodes,
+  1 changedWeight (UAE--EG::Media narrative 0.272→0.128). prevRunId chain intact.
+- Evidence store schemaVersion 2, 20 items across web/x/instagram/reddit; IG items carry
+  on-disk media proofs (/proofs/wamnews-Da8rDLZDYa1.jpg 95,209 B; /proofs/wamnews-Da8jb1KjXZG.jpg
+  191,436 B) re-downloaded in-pipeline at 02:51:30/02:51:42Z.

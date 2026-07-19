@@ -1048,3 +1048,17 @@ Decision: 24h scheduling uses the NATIVE Agents Flow Builder API (cron trigger +
   (5 web + 2 instagram with in-pipeline re-downloaded on-disk proofs /proofs/wamnews-*.jpg
   95,209 B + 191,436 B), 10 evidence-gated edges / 11 nodes, narrative 1,852 chars with
   [E:] citations, diff v0→v1 = 10 new edges / 11 new nodes.
+
+## 2026-07-19 (Phase B, 02:56–03:07 UTC) — 24h workflow repaired, activated, PROVEN with run v2
+
+- /api/correlate/trigger hardened: responds 202 immediately, pipeline runs async in
+  FORCED production mode (fable-5+medium) — fixes the delivery-timeout risk and honors the
+  model contract for scheduled runs.
+- Workflow 6a5b94d321d41c1c02073c3a: webhook delivery re-pointed from the dead sb-2cwzeyiiol91
+  (410) to the live sandbox sb-3kzrc0fb12yr; activate → isActive true; manual execute
+  6a5c3d5638c41d8583229e32 → all nodes success + "output delivery completed successfully"
+  (platform log 03:00:16.630Z) → webhook fired the repo route → RUN 2 v2 1784430409823-v2
+  generatedAt 03:06:49.823Z, trigger "workflow", model predefined-claude-fable-5+medium
+  (production), 20 evidence, 12 edges / 12 nodes, diff vs v1 stored in-run (11 new / 9 removed
+  edges, 9 new nodes, 1 weight change). Cron 0 15 2 * * * (06:15 GST) remains armed for the
+  daily fire; all versions kept on disk for the date scrubber.
