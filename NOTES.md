@@ -1053,3 +1053,66 @@ merged module: 0 hits for `modelConfigs`/`maxTokens` or any undocumented param.
   Correlation Engine tab): in-viewport audit `{canvasInVp:4, echInVp:3, qqInVp:true, scrubInVp:3}`
   — react-force-graph canvas, 3 ECharts panels, ⚡ Quick Query button, date scrubbers all rendered;
   zero page errors. Screenshot: country-overview-correlation-engine.png (session artifact).
+
+## 2026-07-19 — Correlation Engine VISUAL CLARITY OVERHAUL (graph layer only) + vision-QA loop + redeploy (05:35–06:00 UTC)
+
+**Problem (user screenshots):** default KE graph read as two big nodes (Kenya '8', UAE '9+'
+count badges) joined by merged translucent blue/green blobs — no edge labels, no legible
+direction, no click feedback; data flow unreadable without the text panel.
+
+**Changes (edit-in-place, `src/correlation/` only — commit `af93169`):**
+1. **Edge readability** — every relationship is its own crisp category-colored curved edge
+   (adapter curvature fan ±0.16/±0.36, alternate sides — parallel edges never merge);
+   persistent on-edge caption pills `Category · w0.28 · 2ev` at screen-constant ~11px
+   (font = 11/globalScale); big target-end arrowheads (≥9px, scaled to width) + mid-curve
+   chevrons at u=0.28/0.72; solid strokes (opacity 0.92 — translucent recency-opacity
+   dropped in favor of caption text).
+2. **Direction-true flow particles** — adapter orients link source→target to the REAL flow
+   (`b->a` edges flipped), so linkDirectionalParticles always travel the true direction;
+   speed ∝ weight (0.004 + w·0.012); width 3.6; 'both' edges: no particles, double arrowheads.
+3. **Interactivity** — onNodeClick/onLinkClick pin the evidence popover (claim, source
+   handle + verified badge, date, snippet, up to 3 evidence records, IG thumbnails →
+   lightbox, direction line `A → B (flow)`, `All evidence →` opens the full drawer);
+   cursor:pointer on hover (canvas style toggle); wide invisible hit-band via
+   linkPointerAreaPaint (≥10px) so edges are easy to hit.
+4. **Hover focus** — node AND edge hover dim all non-neighbors (nodes + edges) to ~15%
+   (new isDimLink; previously edge-dim only applied on edge hover).
+5. **Cluster expansion** — ALL entity nodes from the run registry always render individually
+   with white-pill labels (ODA, MOFA, ADQ, Mubadala, G42, Core42, ADNOC, AD Ports, Presight,
+   ADFD, Masdar, Etihad, DP World, EDGE + Kenya-side nodes); edge-less entities get faint
+   dashed context tethers (#cbd5e1, non-interactive) to the country anchor. Count badges no
+   longer stand in for hidden entities (the purple '8'/'9+' badges now only annotate
+   evidence counts on visible nodes).
+6. **zoomToFit(400, 60)** exactly once per data load (fitDone ref + bbox polling).
+7. `?debug=1` hook `window.__ceFg` (fg instance + live graph) for scripted QA drivers.
+
+**Iterative vision-QA loop (Gemini 3.5 Flash via OnDemand chat API, session 6a5c6617):**
+question asked verbatim each pass: "Can a viewer tell what data is flowing where without
+reading the text? Are edges distinctly colored and labeled by category, is flow direction
+obvious, and does clicking reveal evidence?"
+- **Iter 1 — VERDICT: FAIL.** Flagged: arrowheads not prominent / flow ambiguous; captions
+  effectively invisible at default zoom (font shrank with graph-units); reliance on popover
+  text. (Click-reveals-evidence already passed.)
+- **Fixes:** arrowSize ≥9px scaled to edge width + chevrons at 1/4 & 3/4; caption font
+  switched to screen-constant 11/globalScale; particle width 2.6→3.6.
+- **Iter 2 — VERDICT: PASS, zero issues.** "Flow direction is now highly obvious…
+  persistent on-edge caption pills rendered clearly… interface visually self-explanatory."
+Local QA driver: headless Chromium CDP script (steps: root → intel → Kenya → CE tab →
+hover Media-narrative edge midpoint → click UAE node → popover audit → All evidence →
+drawer audit). Verified popover DOM text ("United Arab Emirates · country · 5 connections
+· 8 evidence …") and drawer ("Evidence — 11 records") — real click feedback, not assumed.
+
+**Push:** `6c9c673..af93169 main -> main` at 2026-07-19T05:57:13Z (fast-forward; token
+scrubbed from remote URL after).
+
+**Redeploy:** FRESH sandbox `sbx_GpoIT4AJj0WvtQLVHtN9cLKXQEw6` →
+https://sb-1bs5p4a4mljf.vercel.run (tarball copy → npm install --omit=dev → node
+server/index.js). `/__commit.txt` = `af93169c45479c90a6b3c3cd3641fce0af3fa2a7` = pushed HEAD ✓.
+**All 15 routes HTTP 200 (2026-07-19T05:58:10Z–05:58:38Z):** `/` · `/api/health` ·
+`/__commit.txt` · msm config/dates/day/transcript · correlation runs/run/download/diff/
+status/media/narrative-SSE · POST quick-query (real GLM answer) · POST regenerate
+(job KE-20260719055838 started).
+
+**Screenshot pack:** before (old build: badge clusters + blob connectors) vs after
+(labeled arced edges, arrowheads/chevrons, expanded entity ring, popover, drawer) —
+7 PNGs delivered with the run response.
