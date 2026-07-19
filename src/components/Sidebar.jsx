@@ -1,8 +1,9 @@
 import React from 'react';
 import {
   LayoutGrid, FileText, Scale, BarChart3, Languages, Newspaper, Type, PieChart,
-  Globe, Plus,
+  Globe, Plus, MonitorPlay,
 } from 'lucide-react';
+import { LANG } from '../i18n.js';
 
 const TOOLS = [
   { key: 'design',        Icon: LayoutGrid, label: 'Deck' },
@@ -25,7 +26,7 @@ function groupLabel(iso) {
   return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
-export default function Sidebar({ conversations, activeId, onSelect, onNew, onTool, onIntel, intelActive, open }) {
+export default function Sidebar({ conversations, activeId, onSelect, onNew, onTool, onIntel, intelActive, onMsm, msmActive, open }) {
   const groups = [];
   let last = null;
   for (const c of conversations) {
@@ -43,6 +44,10 @@ export default function Sidebar({ conversations, activeId, onSelect, onNew, onTo
       </button>
       <button className={`sidebar__intel${intelActive ? ' active' : ''}`} onClick={() => onIntel?.()}>
         <Globe size={15} strokeWidth={2} aria-hidden /> ODA Intelligence
+      </button>
+      <button className={`sidebar__intel${msmActive ? ' active' : ''}`} onClick={() => onMsm?.()}
+        dir={LANG === 'ar' ? 'rtl' : 'ltr'}>
+        <MonitorPlay size={15} strokeWidth={2} aria-hidden /> {LANG === 'ar' ? 'تحليل الإعلام' : 'MSM Analysis'}
       </button>
       <div className="sidebar__history">
         {groups.length === 0 && <div className="sidebar__empty">No conversations yet — start one on the right.</div>}

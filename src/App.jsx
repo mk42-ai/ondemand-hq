@@ -7,6 +7,7 @@ import { jget, jpost, streamChat } from './api.js';
 import DebugDrawer from './components/DebugDrawer.jsx';
 import BilingualLoader from './components/BilingualLoader.jsx';
 import IntelDashboard from './intel/IntelDashboard.jsx';
+import MsmDashboard from './msm/MsmDashboard.jsx';
 import { ArrowDown, X, AlertTriangle } from 'lucide-react';
 import { dissect } from './markdown.jsx';
 
@@ -37,6 +38,19 @@ export default function App() {
   const [atBottom, setAtBottom] = useState(true);
   const [sidebarOpen] = useState(false);
   const [intelOpen, setIntelOpen] = useState(false); // ODA Intelligence module view
+  // MSM Analysis module view — /msm-analysis route (deep-linkable + history-integrated)
+  const [msmOpen, setMsmOpen] = useState(() => {
+    try { return window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'; } catch { return false; }
+  });
+  useEffect(() => {
+    const want = msmOpen ? '/msm-analysis' : '/';
+    try { if (window.location.pathname !== want) window.history.pushState({}, '', want); } catch { /* noop */ }
+  }, [msmOpen]);
+  useEffect(() => {
+    const onPop = () => { try { setMsmOpen(window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'); } catch { /* noop */ } };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   const streamRef = useRef(null);
   const draftRef = useRef(null);   // keeps the in-flight user text so an error never loses it
@@ -123,6 +137,7 @@ export default function App() {
       feature: extra.feature || pendingTool || undefined,
       wizard: wizard.active ? { active: true, step: wizard.step } : undefined,
       editTarget: extra.editTarget || undefined,
+      msmVideoId: extra.msmVideoId || undefined, // MSM 'Analyse deeper': server injects the stored transcript as context
     };
     // 2026-07-17 passthrough refactor: raw upstream eventTypes arrive directly.
     //  planning_thinking / step_thinking → live Thinking… accordion (thinking.delta)
@@ -259,19 +274,36 @@ export default function App() {
   const activeFeature = pendingTool;
 
   const startTool = (key) => {
-    setIntelOpen(false);
+    setIntelOpen(false); setMsmOpen(false);
     newChat(key, { wizard: WIZARD_FEATURES.has(key) });
+  };
+
+  /* MSM 'Analyse deeper' — open a chat with the stored transcript injected server-side */
+  const analyseDeeper = async (video) => {
+    setMsmOpen(false);
+    const convId = await newChat('chat');
+    if (!convId) return;
+    const title = video.title || `YouTube ${video.videoId}`;
+    send(
+      `Analyse this broadcast segment in depth for ODA leadership: "${title}" (${video.videoId}). Assess the framing, the implications for UAE/Gulf development narratives, and any follow-up ODA should consider. Ground everything in the attached transcript.`,
+      null, null, { msmVideoId: video.videoId },
+    );
   };
 
   return (
     <div className="app">
       <Sidebar conversations={convs} activeId={activeId}
-        onSelect={(id) => { setIntelOpen(false); loadConversation(id); }}
-        onNew={() => { setIntelOpen(false); newChat('chat'); }}
+        onSelect={(id) => { setIntelOpen(false); setMsmOpen(false); loadConversation(id); }}
+        onNew={() => { setIntelOpen(false); setMsmOpen(false); newChat('chat'); }}
         onTool={startTool}
-        onIntel={() => setIntelOpen(true)} intelActive={intelOpen}
+        onIntel={() => { setMsmOpen(false); setIntelOpen(true); }} intelActive={intelOpen}
+        onMsm={() => { setIntelOpen(false); setMsmOpen(true); }} msmActive={msmOpen}
         open={sidebarOpen} />
-      {intelOpen ? (
+      {msmOpen ? (
+        <div className="main main--intel">
+          <MsmDashboard onExit={() => setMsmOpen(false)} onAnalyseDeeper={analyseDeeper} />
+        </div>
+      ) : intelOpen ? (
         <div className="main main--intel">
           <IntelDashboard onExit={() => setIntelOpen(false)} />
         </div>

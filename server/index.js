@@ -19,6 +19,7 @@ import { extractText } from './extract.js';
 import { registerSpeechRoutes } from './speech.js';
 import { registerIntelRoutes } from './intel.js';
 import { registerFactsRoutes } from './facts.js';
+import { registerMsmRoutes, getTranscriptText as getMsmTranscript } from './msm.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -35,6 +36,10 @@ registerIntelRoutes(app);
 // Country development facts — resilient World Bank / WHO GHO / UN SDG pipeline
 // (6s timeout, 2 retries, 24h cache, committed validated fallback — never empty).
 registerFactsRoutes(app);
+
+// MSM Analysis routes (daily mainstream-media monitor: Media-API transcription +
+// gpt-5.6-sol-medium per-video analysis, disk-persisted under server/data/msm/).
+registerMsmRoutes(app);
 
 // ---------- health ----------
 app.get('/api/health', (req, res) => res.json({
@@ -81,7 +86,7 @@ app.get('/api/country-data/:query', async (req, res) => {
 // POST /api/chat  {conversationId, text, feature?, fileId?, wizard?:{active,step}, editTarget?}
 // Streams SSE frames: routing, plugin_status, thinking, answer, artifact_hint, error, done
 app.post('/api/chat', async (req, res) => {
-  const { conversationId, text = '', feature: forcedFeature, fileId, wizard, editTarget } = req.body || {};
+  const { conversationId, text = '', feature: forcedFeature, fileId, wizard, editTarget, msmVideoId } = req.body || {};
   const conv = store.getConversation(conversationId);
   if (!conv) return res.status(404).json({ error: 'Conversation not found' });
   if (!text.trim() && !fileId) return res.status(400).json({ error: 'Empty message' });
@@ -166,6 +171,19 @@ app.post('/api/chat', async (req, res) => {
     if (file) {
       send('plugin_status', { plugin: 'File Directory Search', message: `Reading ${file.name}…` });
       queryParts.push(`ATTACHED SOURCE (${file.name}) — extracted text follows between markers. Every figure you use MUST trace to it.\n<<<SOURCE\n${file.text}\nSOURCE>>>`);
+    }
+
+    // MSM 'Analyse deeper': inject the stored broadcast transcript as grounded context.
+    if (msmVideoId) {
+      const tx = getMsmTranscript(String(msmVideoId));
+      if (tx) {
+        send('plugin_status', { plugin: 'MSM Analysis', message: `Attaching broadcast transcript ${msmVideoId} (${tx.length} chars)…` });
+        const cap = 24000;
+        const body = tx.length > cap ? `${tx.slice(0, cap)}\n[transcript truncated at ${cap} of ${tx.length} chars]` : tx;
+        queryParts.push(`ATTACHED BROADCAST TRANSCRIPT (MSM Analysis, YouTube ${msmVideoId}) — ground every claim in it.\n<<<TRANSCRIPT\n${body}\nTRANSCRIPT>>>`);
+      } else {
+        send('plugin_status', { plugin: 'MSM Analysis', message: `No stored transcript for ${msmVideoId} — continuing without it.` });
+      }
     }
 
     // country-data: fetch verified data blocks server-side FIRST (never let the model invent)

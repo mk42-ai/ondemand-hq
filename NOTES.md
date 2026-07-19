@@ -925,3 +925,33 @@ archive. Both workflows remain ACTIVE on their existing crons, untouched.
 - Local archive integrity: server/data/correlate/runs/EG/1784386387198-v1.json byte-equivalent
   (sort-keys JSON compare TRUE) to the served /api/correlate/run/EG/1784386387198-v1 — the
   repo copy and the live archive agree.
+
+---
+
+## 2026-07-19 01:31 UTC — MSM Analysis module merged from divergent 07-18 snapshot
+
+The MSM Analysis module (daily mainstream-media monitor) existed only in the working-tree
+snapshot `code-files-20260718-091224_v1.zip` (built 2026-07-18 ~09:12 UTC on a line that
+forked before commits 5811f69/4f387f1) and was never committed to git. This pass merged it
+into checkpoint 70146e2 WITHOUT regressing any newer repo code (X-data feed, intel fixes,
+Recorder styling, checkpoint notes all preserved — only additive wiring applied).
+
+**Files ADDED (22):** `server/msm.js` (Media-API transcription pipeline + per-video
+gpt-5.6-sol-medium analysis; routes GET /api/msm/config|dates|day/:date|transcript/:videoId
+[/download] + POST /api/msm/run), `src/msm/MsmDashboard.jsx` (newsroom dashboard, RTL-safe),
+`server/data/msm/2026-07-18.json`, `server/data/msm/index.json`, 18 transcripts under
+`server/data/msm/transcripts/`.
+
+**Files MODIFIED (4, additive only):**
+- `server/index.js` — import + `registerMsmRoutes(app)`; `/api/chat` accepts `msmVideoId`
+  and injects the stored transcript (24k-char cap) as grounded context.
+- `src/components/Sidebar.jsx` — MSM Analysis nav button (MonitorPlay icon, AR/EN label).
+- `src/App.jsx` — `/msm-analysis` deep-linkable route state (pushState/popstate),
+  `analyseDeeper()` chat hand-off, MsmDashboard render branch, `msmVideoId` in payload.
+- `src/styles.css` — appended the zip's 10,756-char `.msm*` style block (logical
+  properties, RTL-safe).
+
+**Model policy compliance (NOTES_v1.md digest):** msm.js calls `streamQuery()` from
+`server/ondemand.js`, which uses `ENDPOINT_ID = 'predefined-gpt-5.6-sol'` +
+top-level `reasoningEffort` (env REASONING_EFFORT, default 'medium') — grep across the
+merged module: 0 hits for `modelConfigs`/`maxTokens` or any undocumented param.

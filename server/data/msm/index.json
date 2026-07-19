@@ -1,0 +1,131 @@
+{
+ "videos": {
+  "sHKSIVg7rqU": {
+   "mediaId": "6a5b36acb88ae2788ce79da6",
+   "transcriptChars": 319855,
+   "transcriptionHours": 7.970833333333333,
+   "firstProcessedAt": "2026-07-18T08:17:55Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=sHKSIVg7rqU",
+   "note": "transcribed during the live Media-API verification call (PLUGIN_TESTS.md test 1) — reused via dedupe, never re-transcribed"
+  },
+  "K9C2upCeESs": {
+   "mediaId": "6a5b3ba7db404d38defdb764",
+   "transcriptChars": 12277,
+   "transcriptionHours": 0.20805555555555555,
+   "firstProcessedAt": "2026-07-18T08:39:13.578Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=K9C2upCeESs"
+  },
+  "pEAnENxNiZs": {
+   "mediaId": "6a5b3ba7db404d38defdb763",
+   "transcriptChars": 13849,
+   "transcriptionHours": 0.24,
+   "firstProcessedAt": "2026-07-18T08:39:49.003Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=pEAnENxNiZs"
+  },
+  "qLuiF3DNkJY": {
+   "mediaId": "6a5b3cd1db404d38defdb77e",
+   "transcriptChars": 103651,
+   "transcriptionHours": 1.58,
+   "firstProcessedAt": "2026-07-18T08:44:20.156Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=qLuiF3DNkJY"
+  },
+  "2IYDWDja3E0": {
+   "mediaId": "6a5b3cee7675cd3b310d348c",
+   "transcriptChars": 23101,
+   "transcriptionHours": 0.3188888888888889,
+   "firstProcessedAt": "2026-07-18T08:44:35.458Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=2IYDWDja3E0"
+  },
+  "ohAstmb29lE": {
+   "mediaId": "6a5b3cfcb88ae2788ce79dad",
+   "transcriptChars": 878,
+   "transcriptionHours": 0.029722222222222223,
+   "firstProcessedAt": "2026-07-18T08:44:48.833Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=ohAstmb29lE"
+  },
+  "JQSB2Fdv398": {
+   "mediaId": "6a5b3cfcb88ae2788ce79dae",
+   "transcriptChars": 41023,
+   "transcriptionHours": 0.7680555555555556,
+   "firstProcessedAt": "2026-07-18T08:44:49.371Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=JQSB2Fdv398"
+  },
+  "wzcoHTVAobY": {
+   "mediaId": "6a5b3d0ddb404d38defdb790",
+   "transcriptChars": 72230,
+   "transcriptionHours": 1.273611111111111,
+   "firstProcessedAt": "2026-07-18T08:45:07.482Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=wzcoHTVAobY"
+  },
+  "C0a3Q2NtAD0": {
+   "mediaId": "6a5b3d21b88ae2788ce79daf",
+   "transcriptChars": 838,
+   "transcriptionHours": 0.019444444444444445,
+   "firstProcessedAt": "2026-07-18T08:45:25.928Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=C0a3Q2NtAD0"
+  },
+  "E76BzrJPDWY": {
+   "mediaId": "6a5b3cfddb404d38defdb787",
+   "transcriptChars": 15426,
+   "transcriptionHours": 0.24583333333333332,
+   "firstProcessedAt": "2026-07-18T08:45:32.977Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=E76BzrJPDWY"
+  },
+  "NaDT5rVDm60": {
+   "mediaId": "6a5b3d31db404d38defdb79d",
+   "transcriptChars": 22979,
+   "transcriptionHours": 0.45694444444444443,
+   "firstProcessedAt": "2026-07-18T08:45:42.117Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=NaDT5rVDm60"
+  },
+  "njPpXh8pjpc": {
+   "mediaId": "6a5b3d377675cd3b310d3496",
+   "transcriptChars": 4566,
+   "transcriptionHours": 0.08944444444444444,
+   "firstProcessedAt": "2026-07-18T08:45:52.164Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=njPpXh8pjpc"
+  },
+  "cBWOtw-ofbw": {
+   "mediaId": "6a5b3d41b88ae2788ce79dbc",
+   "transcriptChars": 4967,
+   "transcriptionHours": 0.08555555555555555,
+   "firstProcessedAt": "2026-07-18T08:45:58.324Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=cBWOtw-ofbw"
+  },
+  "2gUKBwDTxzA": {
+   "mediaId": "6a5b3d4adb404d38defdb7a4",
+   "transcriptChars": 5622,
+   "transcriptionHours": 0.11138888888888888,
+   "firstProcessedAt": "2026-07-18T08:46:07.077Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=2gUKBwDTxzA"
+  },
+  "eaBUNBDOgkU": {
+   "mediaId": "6a5b3dbd7675cd3b310d34a3",
+   "transcriptChars": 1720,
+   "transcriptionHours": 0.03388888888888889,
+   "firstProcessedAt": "2026-07-18T08:48:01.624Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=eaBUNBDOgkU"
+  },
+  "KmO_nii-9QM": {
+   "mediaId": "6a5b3dbd7675cd3b310d34a2",
+   "transcriptChars": 481290,
+   "transcriptionHours": 7.931388888888889,
+   "firstProcessedAt": "2026-07-18T08:48:04.763Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=KmO_nii-9QM"
+  },
+  "b1bOVBHtSho": {
+   "mediaId": "6a5b3dbdb88ae2788ce79dbf",
+   "transcriptChars": 28128,
+   "transcriptionHours": 0.42777777777777776,
+   "firstProcessedAt": "2026-07-18T08:48:56.975Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=b1bOVBHtSho"
+  },
+  "Y0gi4Pd9wkQ": {
+   "mediaId": "6a5b3e047675cd3b310d34ac",
+   "transcriptChars": 354132,
+   "transcriptionHours": 8.719444444444445,
+   "firstProcessedAt": "2026-07-18T08:49:13.694Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=Y0gi4Pd9wkQ"
+  }
+ }
+}

@@ -138,3 +138,23 @@ Every artifact card in-chat shows filename, type icon, Download + Open preview, 
 - PPTX/DOCX/PDF assembly is deterministic template-based (native text boxes, editable) rather than the blueprint's full HTML-capture pipeline — the right scope for a serverless preview build; the section model keeps the swap possible later.
 - Thinking-token UI depends on the model actually emitting `fulfillment_thinking` frames (gpt-5.6-sol did not in Phase-1 captures; the accordion appears whenever frames arrive).
 - Vercel Sandbox previews sleep on TTL expiry; `vercel.json` documents the equivalent serverless mapping for a persistent deployment.
+
+---
+
+## MSM Analysis module (merged 2026-07-19)
+
+Daily mainstream-media monitor: YouTube broadcast transcripts (OnDemand Media API
+transcription pipeline) → per-video gpt-5.6-sol-medium analysis (strict-JSON: ODA-audience
+summary, sentiment w/ confidence, narrative-impact flag, entities, topics) → disk-persisted
+day records under `server/data/msm/` (videoId-keyed global dedupe index).
+
+- Backend: `server/msm.js` → `registerMsmRoutes(app)`: GET `/api/msm/config`, `/api/msm/dates`,
+  `/api/msm/day/:date`, `/api/msm/transcript/:videoId`, `/api/msm/transcript/:videoId/download`;
+  POST `/api/msm/run`.
+- Chat bridge: `/api/chat` accepts `msmVideoId` — server injects the stored transcript
+  (24k cap) as grounded context ("Analyse deeper" flow).
+- Frontend: `src/msm/MsmDashboard.jsx` at deep-linkable `/msm-analysis` (pushState-integrated),
+  sidebar entry in `Sidebar.jsx`, styles in the `.msm*` block of `styles.css` (RTL-safe,
+  logical properties).
+- Model policy: identical to the suite — `predefined-gpt-5.6-sol` + top-level
+  `reasoningEffort` only (no modelConfigs/maxTokens anywhere in the module).

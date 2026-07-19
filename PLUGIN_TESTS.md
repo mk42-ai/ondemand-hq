@@ -229,3 +229,15 @@ Pipeline per country: Perplexity `plugin-1722260873` → X Search `plugin-175187
 | `GET /api/health` | 07:59:10.932Z | **200** `{"ok":true,...,"time":"2026-07-18T07:59:10.932Z"}` |
 | `GET /api/intel/overview` | 07:59:10Z | **200** — countriesWithData 16, risks 16 (all 16 countries, severity round-robin), correlations 20 |
 | Puppeteer DOM audit | 07:59:17Z | Risk Engine 16 rows w/ pills; UAE Correlation Engine SVG rendered; KE facts strip 7/7; console errors 0; failed requests 0 |
+
+---
+
+## 2026-07-19 — MSM Analysis merge verification (static + route-level)
+
+- `node --check server/index.js` + `node --check server/msm.js`: PASS (post-merge).
+- Model-policy grep on merged module: `modelConfigs|maxTokens` → 0 hits; analysis path
+  uses `predefined-gpt-5.6-sol` + top-level `reasoningEffort` via shared `streamQuery()`.
+- MSM data present: 18 transcripts + day record 2026-07-18.json + index.json (dedupe index).
+- Route-level HTTP verification results recorded in NOTES.md merge entry and the run
+  response (fresh sandbox: /, /api/health, /api/msm/config, /api/msm/dates,
+  /api/msm/day/2026-07-18 — expected 200s; live proof in the deployment log).
