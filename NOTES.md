@@ -813,3 +813,115 @@ All timestamps ISO UTC. Evidence artifacts: `debug-evidence/*.json` (workspace),
 
 ### Ship
 - Rebuild: `vite build` clean (index-Ct-cNfbH.js). Redeploy to sandbox sbx_r7Op4si2VGVFldZ0TeQx1PXYQ2Jj → https://sb-19jbrors6x5n.vercel.run (root 200 + health 200 + overview 200 + facts 200, 07:59:10Z). NOTE: `sandbox copy file → :/vercel/sandbox/` OVERWRITES the workdir as a file — copy to `:/tmp/x.tgz` then `tar -C /vercel/sandbox` (recovered live this pass).
+
+---
+
+## 2026-07-19 00:52 UTC — Checkpoint restore note
+
+The 2026-07-18 late-day local workspace (which held the Prompt 6 visual-QA/v5-run section of
+NOTES.md, the runs archive v1–v5 under server/data/correlate/runs/EG/, the 51-item schema-v2
+evidence stores, and 58 proof images) was wiped between turns and its sandbox host expired
+(HTTP 410). What is restored below verbatim is the Prompt 7 READ-ONLY inspection log authored
+2026-07-18 17:25–17:38 UTC, which documents the exact run/evidence schemas as verified against
+those files while they were live — the schema record survives even though the run archive
+files themselves could not be recovered this turn.
+
+---
+
+## 2026-07-18 (Prompt 7, 17:25–17:38 UTC) — READ-ONLY run-output inspection (zero workflow changes)
+
+Scope guard honored: no workflow was created, modified, re-registered, activated, deactivated,
+or executed this turn. Only GETs, one documented POST /workflow/stream_logs (a read that
+streams logs of an ALREADY-COMPLETED execution), and GETs against the deployed app's run
+archive. Both workflows remain ACTIVE on their existing crons, untouched.
+
+### RULE 0 doc-consult log (live authenticated docs API — every reference consulted)
+- 17:25:59Z `GET /config/v1/public/docs/categories` → HTTP 200 in 148 ms. 8 services;
+  relevant slugs re-confirmed: Agents Flow Builder API → `post_workflow-id-activate`,
+  `post_workflow-id-deactivate`, `post_workflow-id-execute`, `streamworkflowlogs`;
+  Media API → `fetchmedia`, `createmediaurl`, `deletemedia`.
+- 17:26:11Z `GET /config/v1/public/docs/reference/api/post_workflow-id-execute` → HTTP 200
+  in 516 ms. Learned (verbatim from spec): `POST /workflow/{id}/execute` on server
+  `https://api.on-demand.io/automation/api`; path param `id` (string, required); security
+  `ApiKeyAuth` = header `apikey`; 200 body `{ "executionID": string }` — this executionID is
+  the ONLY handle the execute API returns; run outputs are NOT in the execute response.
+  (400 invalid/inactive, 404 not found, 500 server error.)
+- 17:26:12Z `GET /config/v1/public/docs/reference/api/streamworkflowlogs` → HTTP 200 in
+  374 ms. Learned: `POST /workflow/stream_logs` (same server), required JSON body
+  `{ "executionID": "<from execute>" }`, security `ApiKeyAuth` header `apikey`; response is a
+  stream of `StreamEvent` objects — required `event_type` enum **["log","output"]**, plus
+  `execution_id`, `workflow_id`, `message`, `timestamp` (date-time). So documented delivery of
+  a run's output = subscribe to stream_logs and read `event_type:"output"` events; delivery
+  channels (webhook/email) configured on the workflow are the push-side complement.
+- 17:26:12Z `GET /config/v1/public/docs/reference/api/fetchmedia` → HTTP 200 in 319 ms.
+  Learned: `GET /media/v1/public/file` on server `https://api.on-demand.io`, header `apikey`;
+  query params sort (default `-createdAt`), page, limit, plugins, externalUserId, source enum
+  [document,audio,video,youtube,image]; 200 → `{message, data:[{id, companyId, sessionId, url,
+  sourceUrl, name, source, mimeType, extension, plugins[], actionStatus, isDeleted,
+  responseMode, transcriptionHours, externalUserId, createdBy, updatedBy}]}` — artifact/media
+  retrieval path for platform-hosted media.
+- 17:31:10Z live verification of the streaming doc: `POST
+  https://api.on-demand.io/automation/api/workflow/stream_logs` body
+  `{"executionID":"6a5bacc39084cb6abda6f86b"}` → HTTP 200 `text/event-stream`; a COMPLETED
+  execution emits only `event: ping` keepalives (no replay of historical log/output events) —
+  stream_logs is for tailing IN-FLIGHT runs; for finished runs use the execution
+  logs/node-outputs records (below) or the delivery-side archive.
+
+### Read-only platform inspection (automation API, ~17:26–17:32Z)
+- GET workflow `6a5b94d321d41c1c02073c3a` (CORR daily 24h): isActive TRUE, cron `0 15 2 * * *`
+  (06:15 GST), nodes in-0 (llm, fable-5, plugin-1713924030) → analyzer-corr (o_analyzer);
+  delivery = webhook POST `https://sb-2cwzeyiiol91.vercel.run/api/correlate/trigger` + email.
+  NOTE: delivery webhook already points at TODAY'S host sb-2cwzeyiiol91 (patched in a prior
+  turn); recorded here as observed state only — nothing changed this turn.
+- Workflow list keyword "MSM": `6a5b4d6c0a9d7b5ce1455358` (Daily 06:00 GST) isActive TRUE.
+- Execution list CORR: 4 records, all `status:"success"` — latest `6a5bacc39084cb6abda6f86b`
+  (started 1784392899171 = 16:41:39Z, 65,886 ms). Execution list MSM: 2 success + 1 failed
+  (the known first-run failure).
+- Execution record + logs + node outputs for `6a5bacc39084cb6abda6f86b`: 9 log lines
+  (starting → in-0 deps satisfied → node executed 64,301 ms → analyzer 31 ms → "workflow
+  execution outputs retrieved" → "output delivery completed successfully"); node outputs =
+  {trigger:"", in-0: CORR-RUN-DATE 2026-07-17 + 5 sourced bullets (sessionID
+  6a5bacc3d38ebead02613a96), analyzer-corr: same text, 19 ms}. Confirms the platform stores
+  per-node output VALUES retrievable after completion — this is the pull-side record of what
+  the webhook/email delivery pushed.
+
+### Stored per-country daily run inspection (deployed archive, read-only GETs)
+- 17:28:20Z `GET /api/correlate/runs/EG` → 5 versions (v1 14:53:07.198Z manual/build →
+  v2 15:01:53.932Z, v3 15:03:45.645Z, v4 15:20:04.810Z, v5 16:43:05.926Z all
+  workflow/production). Index rows carry {id, version, generatedAt, model, evidenceCount,
+  trigger, diffSummary{newEdges,removedEdges,newNodes}}.
+- 17:28:34Z fetched full runs: TODAY'S `1784392985926-v5` (8,067 B), past `1784386387198-v1`
+  (6,785 B, populated diff), past `1784388004810-v4` (6,655 B). All three share the exact
+  same 17 top-level keys: id, version, iso, country, generatedAt, startedAt, trigger, model,
+  endpointId, reasoningEffort, pluginsCalled[5], evidenceCount, graph{nodes,edges},
+  narrative{text,latencyMs,sessionId}, narrativeError, diff{newEdges,removedEdges,newNodes},
+  prevRunId. Version chain verified: v1.prevRunId null … v4.prevRunId=…-v3,
+  v5.prevRunId=1784388004810-v4.
+- 17:29:14Z `GET /api/correlate/evidence/EG` → schemaVersion 2, builtAt 16:32:48.309Z,
+  51 items; item field union: {id, claim, platform, source, url, publishDate, snippet,
+  media[], confidence, igPk, igHandle, igVerified, igTakenAt, igFollowers, redditComments};
+  igAccounts meta (mubadala pk 207083051 verified 89,648; wamnews pk 372421815 verified
+  391,347, verifiedAt 16:29Z).
+- 17:36:01Z IG proof-path spot check: `GET /proofs/DJC6gq8FHG.png` → HTTP 200, 297,753 B,
+  image/png — media[] paths in IG evidence items resolve to real served images.
+
+### Schema facts verified against the real files (not guessed)
+- Edge weight formula CONFIRMED exact on stored data: weight = min(1, 0.25 + 0.15·n) ×
+  avgConfidence — ADQ--EGY n=4 avgConf 0.9075 → 0.771375 (stored 0.771375); WAM--UAE n=10
+  avgConf 0.8380 → 0.8380 (stored, capped factor 1). Matches server/correlate.js:131.
+- Recency lives in EVIDENCE (publishDate on all items; igTakenAt epoch-seconds on IG items),
+  not on edges; run-level recency = generatedAt/startedAt + prevRunId chain.
+- Relationship typing: edge.rel free-text + edge.type enum observed {investment, diplomacy,
+  narrative, risk} (v5: 6/3/2/2); node.type observed {country, investor, project, agreement,
+  media, risk}.
+- Evidence platform fields: node.platforms / edge.platforms unions from item.platform
+  (web | x | instagram | reddit); edge.sharedEvidence boolean marks intersection-backed edges.
+- Diff structure: diff.newEdges[] + diff.removedEdges[] (edge ids "A--B") and diff.newNodes[]
+  (node ids) vs prevRunId; v1 diff populated (13 new edges / 11 new nodes), v2–v5 diffs empty
+  at same evidence base or evidence growth WITHOUT topology change — v4→v5 evidence 32→51
+  changed WEIGHTS on 9 of 13 edges (e.g. WAM--UAE 0.3360→0.8380, ADQ--EGY 0.3600→0.7714)
+  with 0 new edges, i.e. weight-drift is diffed implicitly via the stored per-version weights,
+  only topology changes appear in diff lists.
+- Local archive integrity: server/data/correlate/runs/EG/1784386387198-v1.json byte-equivalent
+  (sort-keys JSON compare TRUE) to the served /api/correlate/run/EG/1784386387198-v1 — the
+  repo copy and the live archive agree.
