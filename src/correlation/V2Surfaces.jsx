@@ -99,7 +99,11 @@ export function HoverPreview({ node, run, pos }) {
       {impact && (
         <div className="ce-hoverprev__impact">
           UAE impact: <span className="ce-impactchip" style={{ background: IMPACT_COLORS[impact.score], color: ['Low', 'None'].includes(impact.score) ? '#374151' : '#fff' }}>{impact.score}</span>
-          <span className="ce-hoverprev__key">chip color = impact tier ({impact.score})</span>
+          <span className="ce-hoverprev__tiers" aria-label="Impact tier color key">
+            {Object.entries(IMPACT_COLORS).map(([t, c]) => (
+              <span key={t} className={impact.score === t ? 'on' : ''}><i style={{ background: c }} />{t.replace('Very High', 'V.High')}</span>
+            ))}
+          </span>
         </div>
       )}
       <div className="ce-hoverprev__news">{latest ? `${latest.date || 'undated'} — ${latest.claim.slice(0, 110)}${latest.claim.length > 110 ? '…' : ''}` : 'No evidence records touch this entity in this run.'}</div>
