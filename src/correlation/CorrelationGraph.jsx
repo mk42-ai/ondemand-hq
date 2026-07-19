@@ -22,6 +22,13 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
   const widthRef = useRef(width); widthRef.current = width;
   const heightRef = useRef(height); heightRef.current = height;
 
+  // QA hook: expose fg instance + live graph + wrap el for test drivers.
+  // Unconditional (the SPA's history.pushState can strip the ?debug=1 query
+  // before this mounts); read-only handle, no behavioural effect.
+  useEffect(() => {
+    try { window.__ceFg = { fg: fgRef.current, graph, wrap: wrapRef.current }; } catch { /* noop */ }
+  }, [graph]);
+
   // Gesture UX package (2026-07-19): pinch-zoom / swipe-pan / double-tap-center
   useEffect(() => {
     const el = wrapRef.current;

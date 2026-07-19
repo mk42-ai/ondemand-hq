@@ -68,3 +68,37 @@ All notable changes to the Correlation Engine, logged with timestamps (UTC).
   orchestration → official-X corroboration → unified snapshot JSON assembler (weighting +
   verification tiers + correlation layer + predictions + impact) → analyzer sink; cron
   `0 0 0 * * *` (daily 00:00 UTC); **reactivated — isActive: true verified via API**.
+
+## 2026-07-19 — FIX: Expand Intelligence View — inspectors not opening in full-screen mode
+
+- **2026-07-19T15:50Z** — **BUG**: clicking a node or edge in the full-screen "Expand
+  Intelligence View" did not open the Entity/Relationship Inspector (worked in normal mode).
+  **ROOT CAUSE**: the consolidated build had dropped the V2 inspector wiring — the expand
+  overlay rendered the graph with NO inspector-opening click handlers, and the (removed)
+  inspector panels had lived inside the section-level stacking context, below the
+  `position:fixed` full-screen modal (z-999), so even when mounted they were invisible/
+  non-interactive behind the overlay.
+  **FIX (edited in place, no regeneration)**:
+  - `src/correlation/CorrelationEngine.jsx`: shared `handleNodeClick`/`handleLinkClick`
+    used by BOTH the normal graph and the expand-mode graph; Expand FAB
+    (`data-testid="ce-expand-fab"`) + full-screen overlay (`.ce2-fullscreen`, z-999,
+    ESC closes, body scroll locked, canvas fills viewport); `EntityInspector` /
+    `RelationshipInspector` rendered at section end as `position:fixed` panels with
+    **z-index 1001 — above the modal** — so they are visible and interactive in both modes.
+  - `src/correlation/V2Panels.jsx` **restored** (Entity/Relationship inspectors, evidence-gap
+    states, streamed summaries) + supporting exports re-added: `adapter.js`
+    (`evPlatform`, `VERIFICATION_STYLES`), `api.js` (`summarizeEvidence`, `streamStory`),
+    `server/correlation.js` (`POST /api/correlation/summarize`,
+    `GET /api/correlation/story/:iso/:runId/stream` — gpt-5.6-sol-medium streamed).
+  - `src/styles.css`: V2 inspector/FAB/fullscreen CSS layer restored (fullscreen z-999 <
+    inspector z-1001).
+  - Deep link `/correlation-engine?iso=KE` re-wired (App.jsx, IntelDashboard.jsx,
+    CountryPage.jsx) — it had also been dropped in the drift.
+  - `src/correlation/CorrelationGraph.jsx`: `window.__ceFg` QA hook restored.
+  **VERIFICATION (headless Chromium + puppeteer-core, real mouse clicks)**: expand mode
+  opened → node click (mofa) → Entity Inspector visible at z-1001 ("Ministry of Foreign
+  Affairs") → closed → edge click (ED1 at 35% along the line) → Relationship Inspector
+  visible at z-1001, edge variant with connection chain ("Aid-Humanitarian · conf 0.90")
+  → **RESULT: PASS**. QA screenshot: `expand-mode-inspector-qa.png` (Relationship Inspector
+  open inside the full-screen expanded view) + `expand-mode-inspector-qa-entity.png`.
+  Vite rebuild green (7.5s).

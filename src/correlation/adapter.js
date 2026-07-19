@@ -166,3 +166,15 @@ export function nodeToMiniArtifact(run, node) {
       .slice(0, 6).map(e => ({ id: e.id, platform: e.platform, source: e.source, date: e.publish_date, claim: e.claim, url: e.url })),
   };
 }
+
+// ---- V2 inspector support (restored 2026-07-19, expand-mode fix) ----
+/** platform-or-source_type accessor (round-1 runs use platform; deep-v2 uses source_type). */
+export const evPlatform = (ev) => ev.platform || ev.source_type || 'other';
+
+/** Verification-tier styling contract — brand tokens #159a7a / #1dac89. */
+export const VERIFICATION_STYLES = {
+  Verified:  { color: '#159a7a', dash: [],     label: 'Verified — solid' },
+  Likely:    { color: '#1dac89', dash: [],     label: 'Likely — solid (lighter)' },
+  Possible:  { color: '#1dac89', dash: [7, 5], label: 'Possible — dashed' },
+  Predicted: { color: '#8aa8a0', dash: [2, 5], label: 'Predicted — dotted' },
+};

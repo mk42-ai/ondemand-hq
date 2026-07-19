@@ -687,6 +687,81 @@ export function registerCorrelationRoutes(app, { countries }) {
     res.status(404).json({ error: 'Media not found' });
   });
 
+  // ---------- V2 inspector support (restored 2026-07-19, expand-mode fix) ----------
+  // Streamed article summary for one evidence record — gpt-5.6-sol-medium.
+  app.post('/api/correlation/summarize', async (req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+    try {
+      const { iso, runId, evidenceId } = req.body || {};
+      const run = getRun(String(iso || '').toUpperCase(), runId);
+      const ev = run?.evidence.find(v => v.id === evidenceId);
+      if (!ev) throw new Error('Evidence record not found');
+      const sid = await createOdSession(`ce-sum-${iso}-${evidenceId}`, []);
+      await streamQuery({
+        odSessionId: sid,
+        endpointId: 'predefined-gpt-5.6-sol', reasoningEffort: 'medium',
+        query: `Evidence record from the ODA Correlation Engine run on ${run.country} (${run.generated_at}):
+CLAIM: ${ev.claim}
+SOURCE: ${ev.source} (${ev.platform || ev.source_type || 'unknown'})${ev.publish_date ? ' · ' + ev.publish_date : ''}${ev.url ? '\nURL: ' + ev.url : ''}
+SNIPPET: ${ev.snippet || '(none)'}
+
+Produce EXACTLY these sections, grounded ONLY in the record above (no outside facts):
+## 50-word summary
+## 100-word summary
+## Key points
+## Named entities
+## Risk level (Low/Medium/High + one line why)
+## Importance (Low/Medium/High + one line why)
+## UAE relevance (one line)`,
+        pluginIds: [],
+        systemPrompt: 'You are the ODA Correlation Engine article summarizer. Ground everything in the given record only; never invent facts, dates, or URLs.',
+        onRaw: (event, data) => res.write(`event: ${event}\ndata: ${data}\n\n`),
+      });
+      res.write('data: [DONE]\n\n');
+    } catch (e) {
+      res.write(`event: error\ndata: ${JSON.stringify({ error: e.message })}\n\n`);
+    }
+    res.end();
+  });
+
+  // One-click Story Mode — gpt-5.6-sol-medium, streamed SSE.
+  app.get('/api/correlation/story/:iso/:runId/stream', async (req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+    try {
+      const iso = req.params.iso.toUpperCase();
+      const run = getRun(iso, req.params.runId);
+      if (!run) throw new Error('Run not found');
+      const evList = run.evidence.map(v => `${v.id}: [${v.platform || v.source_type}/${v.source}${v.publish_date ? '/' + v.publish_date : ''}] ${v.claim}`).join('\n') || '(no evidence this run)';
+      const edgeList = run.edges.map(e => `${e.id}: ${e.entity_a} -[${e.relationship_type}${e.verification ? '/' + e.verification : ''}]-> ${e.entity_b} :: ${e.claim}`).join('\n') || '(no edges this run)';
+      const sid = await createOdSession(`ce-story-${iso}-${run.runId}`, []);
+      await streamQuery({
+        odSessionId: sid,
+        endpointId: 'predefined-gpt-5.6-sol', reasoningEffort: 'medium',
+        query: `ODA Correlation Engine intelligence picture for UAE ↔ ${run.country} (run ${run.runId}).
+EVIDENCE:
+${evList}
+
+GRAPH EDGES:
+${edgeList}
+
+Narrate in EXACTLY these sections, 2-4 sentences each, every factual sentence ending with its evidence id(s) in square brackets; mark forecasts as (forecast):
+## Beginning
+## Key actors
+## Major developments
+## Current situation
+## Risks
+## Future outlook`,
+        pluginIds: [],
+        systemPrompt: 'You are the ODA Correlation Engine story narrator. Evidence-traceable sentences only; forecasts explicitly marked; never invent facts.',
+        onRaw: (event, data) => res.write(`event: ${event}\ndata: ${data}\n\n`),
+      });
+      res.write('data: [DONE]\n\n');
+    } catch (e) {
+      res.write(`event: error\ndata: ${JSON.stringify({ error: e.message })}\n\n`);
+    }
+    res.end();
+  });
+
   // Quick Query — GLM 4.7 Cerebras only, SSE frames + final metrics with latency stamp.
   app.post('/api/quick-query', async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });

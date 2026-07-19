@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Download, Image as ImageIcon, Search, Zap, X, ExternalLink, BadgeCheck, Send, ChevronDown } from 'lucide-react';
+import { RefreshCw, Download, Image as ImageIcon, Search, Zap, X, ExternalLink, BadgeCheck, Send, ChevronDown, Maximize2 } from 'lucide-react';
 import CorrelationGraph from './CorrelationGraph.jsx';
+import { EntityInspector, RelationshipInspector } from './V2Panels.jsx';
 import EChartsPanels from './EChartsPanels.jsx';
 import SignalLoom from './BespokeViz.jsx';
 import QuickQuery from './QuickQuery.jsx';
@@ -147,9 +148,32 @@ export default function CorrelationEngine({ iso, countryName }) {
   const [narrative, setNarrative] = useState({ text: '', streaming: false });
   const [searchNodeId, setSearchNodeId] = useState(null);
   const [size, setSize] = useState({ w: 860, h: 560 });
+  // ---- Expand Intelligence View (full-screen) + inspectors (2026-07-19 fix) ----
+  const [expanded, setExpanded] = useState(false);
+  const [inspector, setInspector] = useState(null); // {kind:'node'|'edge', node|link}
   const graphWrapRef = useRef();
   const pollRef = useRef(null);
   const graphInstRef = useRef(null);
+
+  // ESC closes expand mode; lock body scroll while expanded
+  useEffect(() => {
+    if (!expanded) return;
+    const kd = (e) => { if (e.key === 'Escape') setExpanded(false); };
+    window.addEventListener('keydown', kd);
+    document.body.style.overflow = 'hidden';
+    return () => { window.removeEventListener('keydown', kd); document.body.style.overflow = ''; };
+  }, [expanded]);
+
+  // SHARED click handlers — identical logic in normal AND expand mode (bug fix:
+  // expand mode previously had no inspector wiring; clicks opened nothing).
+  const handleNodeClick = useCallback((n, evt) => {
+    if (!n) { setPinPop(null); setInspector(null); return; }
+    setInspector({ kind: 'node', node: n });
+  }, []);
+  const handleLinkClick = useCallback((l) => {
+    if (!l) { setInspector(null); return; }
+    setInspector({ kind: 'edge', link: l });
+  }, []);
 
   // ---------- data ----------
   const loadRuns = useCallback(async () => {
@@ -218,11 +242,21 @@ export default function CorrelationEngine({ iso, countryName }) {
     const el = graphWrapRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => {
+      if (expanded) { setSize({ w: window.innerWidth, h: window.innerHeight }); return; }
       setSize({ w: el.clientWidth, h: Math.max(420, Math.min(620, el.clientWidth * 0.62)) });
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [expanded]);
+
+  // expand-mode sizing: canvas fills the viewport
+  useEffect(() => {
+    if (expanded) setSize({ w: window.innerWidth, h: window.innerHeight });
+    else {
+      const el = graphWrapRef.current;
+      if (el) setSize({ w: el.clientWidth, h: Math.max(420, Math.min(620, el.clientWidth * 0.62)) });
+    }
+  }, [expanded]);
 
   // ---------- graph ----------
   // Evidence-density stats (corpus-wide truth for node badges — hundreds-scale)
@@ -412,14 +446,15 @@ export default function CorrelationEngine({ iso, countryName }) {
                 showLabels={showLabels} physics={physics}
                 onHoverLink={onHoverLink}
                 onHoverNode={() => { if (!pinPop) setPop(null); }}
-                onClickLink={(l, evt) => l && setPinPop({ kind: 'edge', id: l.id, ...graphPos(evt || { clientX: 40, clientY: 40 }), link: l })}
-                onClickNode={(n, evt) => {
-                  if (!n) { setPinPop(null); return; }
-                  setPinPop({ kind: 'node', id: n.id, ...graphPos(evt || { clientX: 40, clientY: 40 }), node: n });
-                }}
+                onClickLink={handleLinkClick}
+                onClickNode={handleNodeClick}
                 searchNodeId={searchNodeId?.split(':')[0]}
                 pulseKeys={pulseKeys}
               />
+              {/* (fix 2026-07-19) Expand Intelligence View FAB */}
+              <button className="ce2-fab" data-testid="ce-expand-fab" onClick={() => setExpanded(true)} title="Expand Intelligence View">
+                <Maximize2 size={15} /> Expand Intelligence View
+              </button>
               {/* Legend strip (2026-07-19 Gemini UX fix): maps EVERY visual channel —
                   incl. the previously-unlabeled community halo bubbles — so no
                   lavender/gray/peach circle is unexplained. */}
@@ -452,6 +487,45 @@ export default function CorrelationEngine({ iso, countryName }) {
           <SignalLoom run={run} onPickEvidence={onPickEvidence} />
         </>
       )}
+
+      {/* (fix 2026-07-19) Expand Intelligence View — full-screen modal. The graph
+          re-renders at viewport size INSIDE the overlay with the SAME click
+          handlers as normal mode, so node/edge clicks open the inspectors. */}
+      {expanded && run && (
+        <div className="ce2-fullscreen" data-testid="ce-fullscreen">
+          <CorrelationGraph
+            graph={graph} width={size.w} height={size.h}
+            showLabels={showLabels} physics={physics}
+            onHoverLink={() => {}}
+            onHoverNode={() => {}}
+            onClickLink={handleLinkClick}
+            onClickNode={handleNodeClick}
+            searchNodeId={searchNodeId?.split(':')[0]}
+            pulseKeys={pulseKeys}
+          />
+          <button className="ce2-fab ce2-fab--close" data-testid="ce-expand-close" onClick={() => setExpanded(false)} title="Close (ESC)">
+            <X size={15} /> ESC to close
+          </button>
+        </div>
+      )}
+
+      {/* (fix 2026-07-19) Entity / Relationship inspectors — rendered LAST in the
+          section (position:fixed, z-index above .ce2-fullscreen) so they sit ON TOP
+          of the full-screen modal and stay interactive in both modes. */}
+      <AnimatePresence>
+        {inspector?.kind === 'node' && run && (
+          <EntityInspector node={inspector.node} run={run} iso={iso}
+            onClose={() => setInspector(null)}
+            onLightbox={setLightbox}
+            onQuickQuery={() => setQuick({ artifact: nodeToMiniArtifact(run, inspector.node) })} />
+        )}
+        {inspector?.kind === 'edge' && run && (
+          <RelationshipInspector link={inspector.link} run={run} iso={iso}
+            onClose={() => setInspector(null)}
+            onLightbox={setLightbox}
+            onQuickQuery={() => setQuick({ artifact: edgeToMiniArtifact(run, inspector.link) })} />
+        )}
+      </AnimatePresence>
 
       {/* lightbox + drawer + quick query */}
       <AnimatePresence>
