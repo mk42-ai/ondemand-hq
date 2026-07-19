@@ -290,3 +290,62 @@ implemented CLIENT-side: stream abort at ~150 tokens + sentence truncation. Late
 rendered in UI per call.
 
 **Verdicts: all five CE plugins ADOPTED for the evidence pipeline.**
+
+---
+
+## 2026-07-19 (02:44–03:20 UTC) — CE pipeline runs, workflow executions, Quick Query, deploy
+
+### Two consecutive REAL pipeline runs (versioned, diffable) — model: claude-fable-5 + medium (prod default, from config)
+
+| Run | runId | Evidence | Edges | droppedNoEvidence | IG media | Duration | Narrative |
+|---|---|---|---|---|---|---|---|
+| 1 | `KE-20260719024409` | 12 | 5 | 0 | 1 JPEG (90,698 B) | 178.0 s | streamed, 7 sentences, [E#]-traced |
+| 2 | `KE-20260719025015` | 11 | 6 | 0 | 1 JPEG | 207.5 s | streamed, 6 sentences, [E#]-traced |
+
+Diff run1→run2 (stored in run 2, verified via `GET /api/correlation/diff/KE` 03:13Z):
+addedEdges 5, removedEdges 4, addedEvidence 1, weightChanges 1 (iran~uae Diplomatic 0.256→0.276),
+newEdgeIds 5 (canvas pulse). Plugins per run: perplexity 200, xsearch 200, reddit 200,
+igUserInfo ×2 200, igDownload 200 (statuses stored in `run.pluginsCalled`).
+Both runs: `model.analysis = predefined-claude-fable-5+medium`, `model.plugins = predefined-gpt-5.6-sol+medium`.
+
+### 24h workflow (Agents Flow Builder) — registered, activated, executed, cron-fired
+
+Workflow `6a5c3bb2353902e0e3c55400` "ODA Correlation Engine — 24h country evidence refresh"
+(nodes: in-0 Perplexity gather → in-1 X gather → in-2 fable-5 digest → analyzer).
+Created 02:51:30Z, ACTIVATED, executed:
+
+| Execution | Trigger | Started (UTC) | Duration | Status |
+|---|---|---|---|---|
+| `6a5c3bcb38c41d8583229e15` | api (manual) | 02:51:55 | 201.3 s | **success** |
+| `6a5c3c848a845853270b8a17` | **cron** | 02:55:00 | 207.1 s | **success** |
+| `6a5c3db08a845853270b8a38` | **cron** | 03:00:00 | 92.8 s | **success** |
+
+Cadence proven on a temporary 5-min cron, then RESTORED to production `0 0 0 * * *`
+(verified via GET workflow 03:03:58Z: `isActive:true`, cron advanced `0 0 0 * * *`).
+Delivery array intentionally empty (webhook chain is a dead 410 path — PRIOR_KNOWLEDGE.md D1).
+
+### Quick Query (GLM 4.7 Cerebras `byoi-6e314690-4eaf-4def-a33c-380809acf1f5`)
+
+| Call | Mode | Latency | Result |
+|---|---|---|---|
+| sync probe (trivial q) | sync, fulfillmentOnly, low | **883 ms** (default effort) / **1,247 ms** (low) | 200, correct answer |
+| route call 1 (cold session) | stream + mini-artifact ctx | 3,626 ms total | 200, grounded 1–2 sentences |
+| route call 2 (pooled session) | stream + ctx | 3,154 ms total · **1,346 ms first-token** | 200 |
+| route call 3 (pooled) | stream + ctx | 3,751 ms total · 1,730 ms first-token | 200, real platform list |
+
+Hard ~150-token stop: client-side abort at 600 chars + sentence truncation
+(NO documented max-token param — live docs 2026-07-19 02:17Z; undocumented
+`modelConfigs.maxTokens` known-empty from 2026-07-18). Latency + first-token stamps
+emitted in the metrics frame and rendered in the UI. Thinking frames
+(`fulfillment_thinking`) stream through on every call.
+
+### Deployed end-state (sandbox `sbx_zm9i3Ind7saB4epYAXDcvc05Gp7N`, https://sb-5ezbro8pqhgo.vercel.run)
+
+| Check | Timestamp | Result |
+|---|---|---|
+| `GET /` | 03:20:03Z | **200** |
+| `GET /api/health` | 03:20:03Z | **200** `{"ok":true,…}` |
+| `GET /api/correlation/runs/KE` | 03:20:03Z | **200** — 2 seeded runs hydrated (fable-5+medium logged) |
+| `GET /api/correlation/media/KE/KE-20260719024409-ig1.jpg` | 03:13Z (local) | **200**, 90,698 B JPEG |
+| `GET /api/correlation/narrative/KE/…/stream` | 03:15:40Z | **200 SSE** — real fable-5 `fulfillment_thinking` frames |
+| `GET /api/correlation/diff/KE` | 03:13Z | **200** — diff payload above |

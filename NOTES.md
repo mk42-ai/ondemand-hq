@@ -981,3 +981,36 @@ merged module: 0 hits for `modelConfigs`/`maxTokens` or any undocumented param.
 
 ### Plugin battery → see PLUGIN_TESTS.md 2026-07-19 section (5/5 200-usable + GLM 1.276s + sonnet/fable 200).
 ### Prior attempts mined → PRIOR_KNOWLEDGE.md (dead ends D1–D8: 410 webhook chain, suffixed model id, modelConfigs.maxTokens, STT, Media-API 500s, WB mrnev, gitignored-store, old SVG CE).
+
+### Correlation Engine build log (2026-07-19, chronological)
+- 02:09Z input consumed: media-knowledge + searchFileDirectory ×2 + Perplexity ×2
+  (orchestration layer). 52 prior artifacts downloaded (docs/state/graph-stack-all.zip).
+  Repo cloned (public): HEAD `db1b1fc` = MSM merge (ea8d6af) + graph deps (f1cc8f5)
+  + CE-remnant cleanup (db1b1fc) — prior turns of this session.
+- 02:14Z PRIOR_KNOWLEDGE.md mined (dead ends D1–D8).
+- 02:16Z npm install (417 pkgs) + smoke imports; esbuild blocked-postinstall fixed
+  (`node node_modules/esbuild/install.js`); vite build green 2.18s.
+- 02:17Z RULE-0 live docs read (categories + submitquery + workflow execute/logs specs).
+- 02:18–02:26Z BREAKING change found+fixed: query-time pluginIds → 400 "agents are
+  invalid" on ALL models; `agentIds` works. `toAgentIds` wire translation in
+  ondemand.js. Plugin-execution also rejected on Claude endpoints → CE plugin calls
+  pinned to gpt-5.6-sol (config CE_PLUGIN_ENDPOINT_ID).
+- 02:29–02:33Z plugin battery: 5/5 200-usable (FIRST Reddit proof; IG download
+  byte-verified JPEG 90,698 B) + GLM 1,276 ms + sonnet-5 1,709 ms + fable-5 2,011 ms.
+  Commit `61cce1e`.
+- 02:44Z RUN-1 KE done 02:47Z (12 ev, 5 edges, fable-5+medium, streamed narrative).
+- 02:50Z RUN-2 KE done 02:53Z (11 ev, 6 edges; real diff +5/−4 edges, 5 newEdgeIds).
+- 02:51–03:04Z workflow 6a5c3bb2 created+activated; manual execution success (201s);
+  TWO cron-triggered executions success (5-min temp cron); restored to 24h `0 0 0 * * *`.
+- 03:04–03:12Z Quick Query live: pooled GLM session, TTFT 1.35–1.73s, total ~3.4s,
+  hard 150-token client stop, latency stamps. (Session pooling + fulfillmentOnly
+  measured; GLM thinking time dominates — sync floor 883 ms documented.)
+- 03:14Z seeds committed (correlation-seed/KE ×2 runs + IG media); commit `6683c54`.
+- 03:15Z narrative SSE route verified (real fable-5 thinking frames stream).
+- 03:16–03:20Z deployed: sandbox sbx_zm9i3Ind7saB4epYAXDcvc05Gp7N →
+  https://sb-5ezbro8pqhgo.vercel.run (/, /api/health, /api/correlation/runs/KE all 200,
+  seed hydration confirmed). tarball copy method (sandbox copy dir-mode EISDIR bug
+  on this CLI version — tar+extract works).
+- GitHub push: BLOCKED — no git credentials in this environment (.creds empty,
+  get_github_token path not allowed by security policy). Commits are local, labeled,
+  and listed in the run response; push resumes the moment a token is provided.

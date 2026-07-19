@@ -158,3 +158,91 @@ day records under `server/data/msm/` (videoId-keyed global dedupe index).
   logical properties).
 - Model policy: identical to the suite — `predefined-gpt-5.6-sol` + top-level
   `reasoningEffort` only (no modelConfigs/maxTokens anywhere in the module).
+
+---
+
+## 10 Correlation Engine (added 2026-07-19, round 1)
+
+Evidence-gated relationship graphs per country. Suite shell (chat, sidebar, streaming,
+country overviews, MSM) untouched — CE is additive: one new backend module, one new
+frontend section mounted as a tab inside every Country Overview.
+
+### Backend — `server/correlation.js`
+- **UAE node registry** (`UAE_REGISTRY`): uae + ODA, MOFA, ADQ, Mubadala, G42, Core42,
+  ADNOC, AD Ports, Presight, ADFD, Masdar, Etihad, DP World, EDGE — extensible; country-side
+  nodes surface per run as slugified ids (`kemfa`, `iran`, `qatar`, …).
+- **Pipeline** (`runPipeline(iso, name)` → async job with stage streaming):
+  1. `gather` — Perplexity `plugin-1722260873` + X Search `plugin-1751872652` + Reddit
+     `plugin-1748003575` in PARALLEL on `CE_PLUGIN_ENDPOINT_ID` (gpt-5.6-sol; Claude
+     endpoints reject plugin attachment — live 400s logged in PLUGIN_TESTS.md 2026-07-19).
+  2. `instagram` — IG user-info `plugin-1716164040` (officialness: verified flag,
+     followers) for official channels (`wamnews`, `mofauae`) + IG download
+     `plugin-1762980461` → real post JPEGs fetched to disk
+     (`server/data/correlation-media/<ISO>/<runId>-igN.jpg`, byte-verified ≥5 KB).
+  3. `normalize` — analysis model → ONE evidence schema:
+     `{id, claim, platform, source, url, publish_date, snippet, media[], confidence}`.
+  4. `edges` — analysis model → `{entity_a, entity_b, relationship_type (9 enum),
+     direction, claim, evidence_record_ids[], confidence, stance}`.
+     HARD RULE enforced server-side: edges with zero valid evidence ids are DROPPED
+     (counted in `stats.droppedNoEvidence`); no general-knowledge edges.
+  5. Deterministic graph math: `weight = 0.35·count + 0.25·platform-diversity +
+     0.20·recency-decay(exp(-ageDays/14)) + 0.20·avg-confidence` (→ width);
+     `recency` (→ opacity); dedupe merges same pair+type stacking evidence ids;
+     contradiction ⚠ when one pair+type carries both cooperation and tension stances.
+  6. `narrative` — Connected Dots, STREAMED (`streamQuery` on the CE analysis model),
+     4–6 sentences, each sentence ends with `[E#]` evidence refs; `narrative.trace`
+     maps sentence → evidence ids (untagged sentences flagged in UI).
+  7. `persist` — versioned run JSON `server/data/correlation/<ISO>/run-<id>.json`
+     (ALL versions kept), `diffFromPrevious` (added/removed edges, added evidence,
+     weight changes, newEdgeIds for the canvas pulse), `model` + `pluginsCalled`
+     logged per run. Committed seeds under `server/data/correlation-seed/` hydrate a
+     fresh deploy (same pattern as intel-seed).
+- **Routes**: `GET /api/correlation/runs/:iso` · `GET /api/correlation/run/:iso/:runId`
+  · `GET …/download` (attachment) · `GET /api/correlation/diff/:iso[?a&b]` ·
+  `POST /api/correlation/regenerate/:iso` ('Regenerate now') · `GET /api/correlation/status/:iso`
+  · `GET /api/correlation/narrative/:iso/:runId/stream` (real SSE from the model)
+  · `GET /api/correlation/media/:iso/:file` (IG proofs) · `POST /api/quick-query` (GLM SSE).
+- **Quick Query**: GLM 4.7 Cerebras ONLY (`byoi-6e314690-4eaf-4def-a33c-380809acf1f5`),
+  pooled session, `fulfillmentOnly`, hard ~150-token stop = client-side abort at 600 chars
+  + sentence-boundary truncation (NO documented max-token param — live docs 2026-07-19),
+  metrics frame `{latencyMs, ttftMs, approxTokens, stoppedEarly, model}`.
+- **24h scheduling**: OnDemand-native workflow `6a5c3bb2353902e0e3c55400`
+  (Agents Flow Builder, cron `0 0 0 * * *`, ACTIVE; nodes: perplexity → xsearch →
+  fable-5 digest; proven live 2026-07-19 with 2 cron-triggered + 1 manual executions,
+  all `success`). Webhook delivery chain deliberately NOT used (dead 410 chain,
+  PRIOR_KNOWLEDGE.md D1) — versioned runs are produced by the server pipeline; the
+  platform workflow is the registered native scheduler.
+- **BREAKING platform change (2026-07-19)**: chat query bodies must carry `agentIds`
+  (not `pluginIds`); `server/ondemand.js#toAgentIds` translates `plugin-…`→`agent-…`
+  for every caller. Suite-wide fix, all features benefit.
+
+### Model policy (config, not hardcoded — `server/env.js`)
+| Concern | Config | Default |
+|---|---|---|
+| CE plugin/gather calls | `CE_PLUGIN_ENDPOINT_ID` | `predefined-gpt-5.6-sol` (platform constraint) |
+| CE analysis/extraction/narrative | `CE_ANALYSIS_ENDPOINT_ID` + `CE_ANALYSIS_REASONING_EFFORT` | `predefined-claude-fable-5` + `medium` (PROD) |
+| CE build/test override | env | `predefined-claude-sonnet-5` |
+| Quick Query | fixed GLM id | `byoi-6e314690-…` |
+Model logged per run (`run.model`) and per call in PLUGIN_TESTS.md.
+
+### Frontend — `src/correlation/`
+- `adapter.js` — PURE: run JSON → `{nodes,links}` (weight→width, recency→opacity,
+  type→color, platform→glyph badge, IG media→image refs) + graphology pre-render
+  (`pagerank` → node size, `louvain` → community hue tints, golden-angle spread).
+- `CorrelationGraph.jsx` — react-force-graph-2d canvas: `nodeCanvasObject` custom draw
+  (large country node, entity initials, IG proof thumbnail bubbles, evidence-count
+  badges), directional particles speed/count-scaled to recency, hover lights
+  node+neighbors & dims rest to 15%, new-edge pulse (diff), search→zoom,
+  zoomToFit via `getGraphBbox` polling (onEngineStop unreliable), drag physics.
+- `CorrelationEngine.jsx` — container: relationship chips, time-range + min-weight
+  sliders, labels/physics toggles, date scrubber over ALL run versions, Connected
+  Dots panel (streamed), hover popover (claim+source+date+snippet+IG thumbs →
+  click = lightbox w/ verified handle + outbound links), evidence drawer with
+  'Send to chat' (`oda:compose` event → main composer prefill), Regenerate-now
+  with bilingual EN/AR loader, PNG export (canvas composite) + evidence-JSON download.
+- `EChartsPanels.jsx` — evidence volume over time, stance strip, platform split;
+  every click cross-filters the graph.
+- `BespokeViz.jsx` — **Signal Loom**, the invented D3 weave (see INNOVATION_LOG.md).
+- `QuickQuery.jsx` — ⚡ floating card: EN/AR context chips, micro prompt, streaming
+  answer, latency+TTFT stamps, 'Continue in chat →' handoff.
+- Mounted in `src/intel/CountryPage.jsx` as the `Correlation Engine` tab.
