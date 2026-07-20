@@ -161,8 +161,15 @@ textarea, input { font-family: inherit; }
 .composer:focus-within { border-color: var(--gold); }
 .composer textarea {
   flex: 1; border: none; outline: none; resize: none;
-  font-size: 14.5px; line-height: 1.5; padding: 8px 0;
+  font-size: 14px; line-height: 20px; padding: 8px 0;
+  min-height: 36px;
   max-height: 200px; background: transparent; color: var(--ink);
+}
+/* 2026-07-20 QA fix: long placeholder was wrapping/clipping to a second line
+   inside the pill — force single-line ellipsis on the placeholder only. */
+.composer textarea::placeholder {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--ink-35);
 }
 .composer .iconbtn {
   width: 36px; height: 36px; border-radius: 10px;
@@ -1435,7 +1442,7 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
 .ce2-cluster { border: 1px solid #d9ece5; background: #f4fbf8; color: #0f766e; border-radius: 999px;
   padding: 4px 12px; font: 600 11px var(--font); cursor: pointer; transition: all 0.25s ease; }
 .ce2-cluster:hover { background: #e6f6f0; }
-.ce2-cluster--closed { background: #159a7a; color: #fff; border-color: #159a7a; }
+.ce2-cluster--closed { background: var(--btn-primary-bg); color: var(--btn-primary-fg); border-color: var(--btn-primary-bg); }
 
 /* (5)(6) inspectors */
 .ce2-inspector { position: fixed; right: 0; top: 0; bottom: 0; width: 372px; z-index: 1001; background: #fff;
@@ -1808,3 +1815,8 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
 .send:focus-visible { outline: none; box-shadow: var(--btn-focus-ring); }
 .exportbar button { border-radius: 8px; font-family: var(--font); }
 .exportbar button:hover { background: var(--btn-secondary-bg-hover); }
+
+
+/* ─── 2026-07-20 QA fix: country metric grid — explicit empty state (no stray dashes) ─── */
+.ig-score__val--nodata { font-size: 11px; color: var(--ink-35); font-weight: 500; letter-spacing: 0; }
+.ig-score__bar--empty { opacity: .35; }

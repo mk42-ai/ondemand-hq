@@ -19,7 +19,7 @@ function XChart({ title, option, baseHeight, onEvents }) {
   );
 }
 
-const FONT = { fontFamily: 'Montserrat, sans-serif' };
+const FONT = { fontFamily: 'Inter, sans-serif' };
 
 /**
  * ECharts side panels — all fed from the REAL run payload, all cross-filtering
