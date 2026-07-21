@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Download, Image as ImageIcon, Search, Zap, X, ExternalLink, BadgeCheck, Send, ChevronDown, Maximize2, Loader2, RotateCw, Sparkles, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Download, Image as ImageIcon, Search, Zap, X, ExternalLink, BadgeCheck, Send, ChevronDown, Maximize2, Loader2, RotateCw, Sparkles, AlertTriangle, Play } from 'lucide-react';
 import CorrelationGraph from './CorrelationGraph.jsx';
 import { EntityInspector, RelationshipInspector, EvidenceBreakdown } from './V2Panels.jsx';
 import EChartsPanels from './EChartsPanels.jsx';
@@ -9,7 +9,7 @@ import QuickQuery from './QuickQuery.jsx';
 import BilingualLoader from '../components/BilingualLoader.jsx';
 import {
   getRuns, getRun, regenerate, pipelineStatus, streamNarrative,
-  runDownloadUrl,
+  runDownloadUrl, startEngine, getLatest,
 } from './api.js';
 import {
   runToGraph, edgeToMiniArtifact, nodeToMiniArtifact, nodeEvidenceBreakdown,
@@ -149,7 +149,8 @@ export default function CorrelationEngine({ iso, countryName }) {
   const [searchNodeId, setSearchNodeId] = useState(null);
   const [size, setSize] = useState({ w: 860, h: 560 });
   // ---- Expand Intelligence View (full-screen) + inspectors (2026-07-19 fix) ----
-  const [expanded, setExpanded] = useState(false);
+  // expand mode ON by default (2026-07-20) — correlation results open in the full Intelligence View
+  const [expanded, setExpanded] = useState(true);
   const [inspector, setInspector] = useState(null); // {kind:'node'|'edge', node|link}
   const [breakdown, setBreakdown] = useState(null);  // {node, data} — badge click (UX overhaul)
   const graphWrapRef = useRef();
@@ -157,14 +158,17 @@ export default function CorrelationEngine({ iso, countryName }) {
   const graphInstRef = useRef(null);
   const runRef = useRef(null);
 
-  // ESC closes expand mode; lock body scroll while expanded
+  // ESC closes expand mode; lock body scroll while expanded.
+  // Guard (2026-07-20): expanded now starts true BEFORE any run is loaded, and the
+  // overlay itself only renders when `expanded && run` — so bail out (and don't
+  // lock body scroll) until a run actually exists.
   useEffect(() => {
-    if (!expanded) return;
+    if (!expanded || !run) return;
     const kd = (e) => { if (e.key === 'Escape') setExpanded(false); };
     window.addEventListener('keydown', kd);
     document.body.style.overflow = 'hidden';
     return () => { window.removeEventListener('keydown', kd); document.body.style.overflow = ''; };
-  }, [expanded]);
+  }, [expanded, run]);
 
   // SHARED click handlers — identical logic in normal AND expand mode (bug fix:
   // expand mode previously had no inspector wiring; clicks opened nothing).
@@ -209,12 +213,22 @@ export default function CorrelationEngine({ iso, countryName }) {
   useEffect(() => {
     (async () => {
       const list = await loadRuns();
-      if (list.length) await loadRun(list.length - 1, list); // latest run first
+      if (!list.length) return;
+      // prefer the authoritative latest pointer; fall back to last-in-list on 404/failure
+      try {
+        const d = await getLatest(iso);
+        const idx = list.findIndex((r) => r.runId === d.run?.runId);
+        await loadRun(idx >= 0 ? idx : list.length - 1, list);
+      } catch {
+        await loadRun(list.length - 1, list); // fallback: latest run first
+      }
     })();
     return () => clearInterval(pollRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [iso]);
 
+  // completion logic: once a run finishes, the LATEST correlation result is
+  // always persisted server-side and displayed here by default
   const startPoll = () => {
     clearInterval(pollRef.current);
     pollRef.current = setInterval(async () => {
@@ -230,8 +244,10 @@ export default function CorrelationEngine({ iso, countryName }) {
     }, 4000);
   };
 
-  const onRegenerate = async () => {
-    try { setErr(null); const { job: j } = await regenerate(iso); setJob(j); startPoll(); }
+  // Start Correlation Engine → deep pipeline with HARD-FORCED ≥100 data points
+  // (server-side reject+retry, Cerebras-first)
+  const onStartEngine = async () => {
+    try { setErr(null); const { job: j } = await startEngine(iso); setJob(j); startPoll(); }
     catch (e) { setErr(e.message); }
   };
 
@@ -342,6 +358,7 @@ export default function CorrelationEngine({ iso, countryName }) {
             {run.stats.evidenceCount} evidence · {run.stats.edgeCount} edges · {run.stats.igMediaCount} IG proofs
             · {run.model.analysis} · run {run.runId}
             {run.stats.droppedNoEvidence > 0 && ` · ${run.stats.droppedNoEvidence} edges dropped (no evidence)`}
+            {runIdx === runs.length - 1 && <span className="ce-head__latest"> · latest</span>}
           </span>}
         </div>
         <div className="ce-head__actions">
@@ -349,8 +366,8 @@ export default function CorrelationEngine({ iso, countryName }) {
           <button className="ce-btn" onClick={() => setDrawerOpen(true)} disabled={!run}>Evidence</button>
           <button className="ce-btn" onClick={exportPng} disabled={!run}><ImageIcon size={12} /> PNG</button>
           <a className="ce-btn" href={run ? runDownloadUrl(iso, run.runId) : '#'} download disabled={!run}><Download size={12} /> JSON</a>
-          <button className="ce-btn ce-btn--primary" onClick={onRegenerate} disabled={Boolean(job)}>
-            <RefreshCw size={12} className={job ? 'ce-spin' : ''} /> {job ? `Running… ${job.stage}` : 'Regenerate now'}
+          <button className="ce-btn ce-btn--primary" onClick={onStartEngine} disabled={Boolean(job)}>
+            {job ? <RefreshCw size={12} className="ce-spin" /> : <Play size={12} />} {job ? `Running… ${job.stage}` : 'Start Correlation Engine'}
           </button>
         </div>
       </div>
@@ -369,7 +386,7 @@ export default function CorrelationEngine({ iso, countryName }) {
       )}
 
       {!run && !job && (
-        <div className="ig-empty">No correlation runs for {countryName} yet. <button className="ce-btn ce-btn--primary" onClick={onRegenerate}>Run the first correlation</button></div>
+        <div className="ig-empty">No correlation runs for {countryName} yet. <button className="ce-btn ce-btn--primary" onClick={onStartEngine}>Start Correlation Engine</button></div>
       )}
 
       {run && (

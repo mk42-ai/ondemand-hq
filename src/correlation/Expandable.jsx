@@ -7,9 +7,12 @@ import { Maximize2, X } from 'lucide-react';
  * re-size/re-fit. Fullscreen = fixed overlay; ESC or the close button restores.
  * onToggle(expanded) fires AFTER the DOM switches, letting callers re-fit/resize.
  * Reduced-motion safe (no animation), RTL-safe (logical positioning via CSS).
+ * Expand-on-mount is supported via `defaultExpanded` (defaults to false so
+ * existing callers like EChartsPanels are unaffected); the correlation results
+ * view opts in and defaults ON.
  */
-export default function Expandable({ title, className = '', onToggle, children }) {
-  const [expanded, setExpanded] = useState(false);
+export default function Expandable({ title, className = '', onToggle, children, defaultExpanded = false }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [dims, setDims] = useState({ w: window.innerWidth, h: window.innerHeight });
 
   const toggle = useCallback((next) => {

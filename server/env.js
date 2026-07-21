@@ -72,6 +72,13 @@ export const ANALYSIS_REASONING_EFFORT = validEffort(process.env.ANALYSIS_REASON
 // endpoint. ON by default at start; set STREAM_DEBUG=false to turn off (STREAM_DEBUG=true = explicit-on).
 export const STREAM_DEBUG = String(process.env.STREAM_DEBUG ?? 'true').toLowerCase() !== 'false';
 
+// ---------- Hard-force data-fetch policy (2026-07-20) ----------
+export const CEREBRAS_ENDPOINT_ID = process.env.CE_DATAFETCH_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;  // GLM 4.7 on Cerebras — ultimate speed
+export const CE_DATAFETCH_REASONING_EFFORT = validEffort(process.env.CE_DATAFETCH_REASONING_EFFORT, 'low');  // low = fastest on Cerebras for high-volume JSON extraction
+export const FABLE_FALLBACK_ENDPOINT_ID = process.env.CE_FALLBACK_ENDPOINT_ID || 'predefined-claude-fable-5';  // fable 5 — fallback when Cerebras under-delivers
+export const FABLE_FALLBACK_REASONING_EFFORT = validEffort(process.env.CE_FALLBACK_REASONING_EFFORT, 'medium');
+export const CE_MIN_DATA_POINTS = Math.max(100, parseInt(process.env.CE_MIN_DATA_POINTS || '100', 10) || 100);  // strict floor — clamped, can never be configured below 100
+
 if (!ONDEMAND_API_KEY) {
   console.error('[FAIL] [FATAL-CONFIG] ONDEMAND_API_KEY is not set. Create .env from .env.example. Refusing to start with a hardcoded or missing key.');
 } else {
