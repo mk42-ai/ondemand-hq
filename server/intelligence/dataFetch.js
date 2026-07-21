@@ -214,11 +214,10 @@ export function mergePasses(...passes) {
 
 /**
  * THE adaptive smart run. ONE run, quality-gated:
- *   PASS 1 (primary):  Cerebras GLM 4.7, single extraction (fast path).
+ *   PASS 1 (primary):  fable-5-medium, single extraction (the ONLY population model).
  *   PASS 1b:           if short, ONE chunked retry on the SAME rung (still the same run).
- *   PASS 2 (fallback): if still short, KEEP pass-1 artifacts and delta-fetch the
- *                      remainder on fable-5-medium (prompt excludes captured claims).
- *   PASS 2b:           one chunked delta retry on the fallback rung if needed.
+ *   PASS 2 (fallback): optional second rung in delta mode — none by default in the
+ *                      2026-07-21 policy (Cerebras runs as a BACKGROUND job instead).
  *   MERGE:             all passes merged + deduped; gate re-evaluated on the merge.
  *   BACKFILL:          last-resort corpus top-up (real data only) so the pipeline
  *                      never blocks. Throws only if even backfill cannot reach the floor.
@@ -229,8 +228,11 @@ export async function hardForceDataPoints({
   // PRIMARY path (speed-first, env-overridable via CE_DATAFETCH_ENDPOINT_ID);
   // fable-5-medium is the verified FALLBACK rung, invoked in DELTA mode only
   // when the primary pass misses the 100+ quality gate.
+  // 2026-07-21 policy: fable-5-medium is the ONLY synchronous population model.
+  // No second sync rung — a short fable pass KEEPS its artifacts, corpus-backfills
+  // to clear the floor now, and the caller schedules a Cerebras BACKGROUND job
+  // (cerebrasDeltaFetch) that merges in real model points and auto-refreshes the UI.
   endpointLadder = [
-    { endpointId: CEREBRAS_ENDPOINT_ID, effort: CE_DATAFETCH_REASONING_EFFORT, label: 'cerebras-glm-4.7' },
     { endpointId: FABLE_FALLBACK_ENDPOINT_ID, effort: FABLE_FALLBACK_REASONING_EFFORT, label: 'fable-5-medium' },
   ],
   onAttempt = () => {},
@@ -374,4 +376,29 @@ export async function hardForceDataPoints({
   passLog.push({ pass: 'corpus-backfill', label: 'corpus', endpointId: null, count: backfilled.length, gate: 'pass' });
   log.error('datafetch.corpus_backfill', { n: backfilled.length, total: combined.length });
   return finalize(combined, backfilled.length);
+}
+
+
+/**
+ * cerebrasDeltaFetch — BACKGROUND backfill pass (2026-07-21).
+ * Runs the Cerebras GLM 4.7 engine in DELTA mode against the already-captured
+ * fable records (exclusion prompt), returning ONLY new validated model points.
+ * Called server-side by the background backfill job when a fable population
+ * pass came back short of the floor; the caller merges (mergePasses), dedupes,
+ * re-persists the run, and the UI auto-refreshes via the existing status poll.
+ */
+export async function cerebrasDeltaFetch({ iso, countryName, phrase, material, captured, sessionTag }) {
+  void iso;
+  const t0 = Date.now();
+  const need = Math.max(4, MIN_DATA_POINTS - (captured?.length || 0) + 10);
+  const sid = await createOdSession(`${sessionTag}-bgc`, []);
+  const prompt = buildExtractionPrompt({ countryName, phrase, material, min: need, target: need + 20 })
+    + buildDeltaExclusion(captured || []);
+  const raw = await syncQuery({ odSessionId: sid, query: prompt, systemPrompt: EXTRACTION_SYSTEM, endpointId: CEREBRAS_ENDPOINT_ID, reasoningEffort: CE_DATAFETCH_REASONING_EFFORT });
+  const parsed = (function () { try { return extractJson(raw); } catch { return null; } })();
+  const batch = validateBatch(Array.isArray(parsed) ? parsed : []);
+  const capturedKeys = new Set((captured || []).map(claimKey));
+  const fresh = batch.points.filter(p => !capturedKeys.has(claimKey(p))).map(p => ({ ...p, origin: 'cerebras-backfill' }));
+  log.info('datafetch.cerebras_bg_delta', { sessionTag, returned: batch.count, fresh: fresh.length, latencyMs: Date.now() - t0 });
+  return fresh;
 }

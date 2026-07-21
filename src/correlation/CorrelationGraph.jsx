@@ -200,7 +200,7 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
     const label = n.kind === 'country' ? n.label.slice(0, 2).toUpperCase()
       : n.label.split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase();
     ctx.fillStyle = n.kind === 'country' ? '#0c1015' : '#d7dee8';
-    ctx.font = `600 ${Math.max(4, r * 0.72)}px Montserrat, sans-serif`;
+    ctx.font = `600 ${Math.max(4, r * 0.72)}px Inter, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(label, n.x, n.y);
 
@@ -208,7 +208,7 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
     // edge are re-anchored inward so they never clip (e.g. 'Relief Beneficiaries').
     if (showLabels && (globalScale > 1.05 || n.kind === 'country' || (hover?.kind === 'node' && hover.id === n.id))) {
       const fpx = 11 / globalScale;
-      ctx.font = `500 ${fpx}px Montserrat, sans-serif`;
+      ctx.font = `500 ${fpx}px Inter, sans-serif`;
       ctx.fillStyle = dim ? 'rgba(139,152,169,0.35)' : '#9db0c4';
       ctx.textBaseline = 'top';
       const tw = ctx.measureText(n.label).width;
@@ -245,7 +245,7 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
        n.kind === 'country' || n.alwaysLabel || (n.pagerank ?? 0) > 0.06);
     if (badgeVisible) {
       const txt = String(badgeN);
-      ctx.font = '700 7.5px Montserrat, sans-serif';
+      ctx.font = '700 7.5px Inter, sans-serif';
       const tw2 = ctx.measureText(txt).width;
       const bw = Math.max(13, tw2 + 9), bh = 12;
       // candidate anchors: NE, NW, SE, SW, E — pick first that avoids other nodes
@@ -322,7 +322,7 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
       ctx.closePath();
       ctx.fillStyle = '#f59e0b'; ctx.fill();
       ctx.strokeStyle = '#0c1015'; ctx.lineWidth = 0.8; ctx.stroke();
-      ctx.fillStyle = '#78350f'; ctx.font = '700 5px Montserrat, sans-serif';
+      ctx.fillStyle = '#78350f'; ctx.font = '700 5px Inter, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('!', mx, ty + 1.2);
     }

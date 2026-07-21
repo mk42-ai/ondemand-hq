@@ -1,3 +1,30 @@
+## 2026-07-21 — Kimi K3 correlating model + fable-only population w/ Cerebras background backfill + brand-consistency pass
+
+- **feat(model): Kimi K3 MEDIUM is THE correlating model** — `predefined-kimi-k3`
+  (ACTIVE in live registry 2026-07-21T01:30Z, efforts [low,medium,max], 1M ctx) fully
+  replaces GLM 4.7 (byoi-6e314690) across every correlation surface: deep pipeline
+  (`DEEP_ENDPOINT_ID`), analysis/extraction/narrative (`CE_ANALYSIS_*`), plugin gathering
+  (`CE_PLUGIN_*`), and streamed CE surfaces (quick-query/summarize/story). GLM is no
+  longer a correlation model anywhere; runs now stamp `model.all=predefined-kimi-k3+medium`.
+- **feat(datafetch): fable-5-medium is the ONLY synchronous population model** — the
+  sync ladder is single-rung. A short fable pass KEEPS its artifacts, corpus-backfills
+  to clear the ≥100 floor immediately, and `runDeepJob` fires a SERVER-SIDE Cerebras
+  background job (`cerebrasDeltaFetch`, delta-exclusion prompt) that merges + dedupes
+  real model points into the persisted run; the UI auto-refreshes via a 5s
+  backgroundBackfill poll — no user action. Hard ≥100 gate + expand-mode default ON kept.
+- **Live 3-country verification (2026-07-21, start 01:40:16Z)**: KE **124** pts
+  (PASS, 02:30:22Z) · BD **128** pts (PASS, 02:25:25Z) · EG **126** pts (PASS,
+  02:26:44Z) — fable primary cleared the gate solo in all 3 (0 corpus backfill,
+  no background job needed); run JSON contains 0 GLM/BYOI references.
+- **style(brand): correlation engine fully on-brand** — Inter everywhere including
+  canvas/D3-rendered text (7 Montserrat stragglers removed from CorrelationGraph +
+  SignalLoom), ECharts card text re-tokened for the dark theme, lucide-only icon audit
+  (all CE icons verified lucide), B&W lucide ODA Intelligence mark (Globe2) on the CE
+  header, and reference-screenshot alignment: colored category-pill borders w/ muted
+  interiors, cyan slider accents, green checkbox accents, dark entity-search field,
+  teal-glow Expand Intelligence View button, bordered legend overlay, luminous panel
+  cards. RunOpsPanel gains a BG·CEREBRAS stage chip (running/done/+N) and Kimi K3 label.
+
 ## 2026-07-21 — Adaptive smart run + Palantir dark UI overhaul
 
 - **feat(datafetch): adaptive-retry smart run** — `hardForceDataPoints` rewritten from the

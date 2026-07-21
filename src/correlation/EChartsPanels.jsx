@@ -39,10 +39,10 @@ export default function EChartsPanels({ run, onPickDate, onPickStance, onPickPla
     const days = [...byDay.keys()].sort();
     const volumeOption = {
       grid: { left: 30, right: 8, top: 22, bottom: 20 },
-      title: { text: 'Evidence volume over time', textStyle: { ...FONT, fontSize: 11, fontWeight: 600, color: '#374151' } },
+      title: { text: 'Evidence volume over time', textStyle: { ...FONT, fontSize: 11, fontWeight: 600, color: '#9db0c4', textTransform: 'uppercase' } },
       tooltip: { trigger: 'axis', textStyle: FONT },
-      xAxis: { type: 'category', data: days, axisLabel: { ...FONT, fontSize: 9, rotate: 38, color: '#6b7280' } },
-      yAxis: { type: 'value', minInterval: 1, axisLabel: { ...FONT, fontSize: 9, color: '#6b7280' }, splitLine: { lineStyle: { color: '#f3f4f6' } } },
+      xAxis: { type: 'category', data: days, axisLabel: { ...FONT, fontSize: 9, rotate: 38, color: '#8b98a9' } },
+      yAxis: { type: 'value', minInterval: 1, axisLabel: { ...FONT, fontSize: 9, color: '#8b98a9' }, splitLine: { lineStyle: { color: 'rgba(139,152,169,0.15)' } } },
       series: [{
         type: 'bar', data: days.map(d => ({
           value: byDay.get(d),
@@ -58,7 +58,7 @@ export default function EChartsPanels({ run, onPickDate, onPickStance, onPickPla
     for (const e of run.edges) byStance[e.stance || 'neutral'] = (byStance[e.stance || 'neutral'] || 0) + 1;
     const stanceOption = {
       grid: { left: 8, right: 8, top: 24, bottom: 4 },
-      title: { text: 'Stance strip (edges)', textStyle: { ...FONT, fontSize: 11, fontWeight: 600, color: '#374151' } },
+      title: { text: 'Stance strip (edges)', textStyle: { ...FONT, fontSize: 11, fontWeight: 600, color: '#9db0c4', textTransform: 'uppercase' } },
       tooltip: { textStyle: FONT },
       xAxis: { type: 'value', show: false, max: Math.max(1, run.edges.length) },
       yAxis: { type: 'category', data: [''], show: false },
@@ -74,12 +74,12 @@ export default function EChartsPanels({ run, onPickDate, onPickStance, onPickPla
     const byPlatform = new Map();
     for (const ev of run.evidence) byPlatform.set(ev.platform, (byPlatform.get(ev.platform) || 0) + 1);
     const platformOption = {
-      title: { text: 'Platform split', textStyle: { ...FONT, fontSize: 11, fontWeight: 600, color: '#374151' } },
+      title: { text: 'Platform split', textStyle: { ...FONT, fontSize: 11, fontWeight: 600, color: '#9db0c4', textTransform: 'uppercase' } },
       tooltip: { textStyle: FONT },
-      legend: { bottom: 0, textStyle: { ...FONT, fontSize: 9, color: '#6b7280' }, itemWidth: 10, itemHeight: 10 },
+      legend: { bottom: 0, textStyle: { ...FONT, fontSize: 9, color: '#8b98a9' }, itemWidth: 10, itemHeight: 10 },
       series: [{
         type: 'pie', radius: ['42%', '68%'], center: ['50%', '46%'],
-        label: { ...FONT, fontSize: 9, color: '#374151' },
+        label: { ...FONT, fontSize: 9, color: '#9db0c4' },
         data: [...byPlatform.entries()].map(([p, v]) => ({
           name: p, value: v,
           itemStyle: { color: PLATFORM_COLORS[p] || '#9ca3af', opacity: !activePlatform || activePlatform === p ? 1 : 0.25 },

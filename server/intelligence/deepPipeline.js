@@ -15,7 +15,7 @@
 // Model policy (2026-07-20 GLM switch): ALL model calls = GLM 4.7 Cerebras BYOI + validated reasoningEffort,
 // streamed where the platform supports it (streamQuery), sync JSON extraction otherwise.
 
-import { GLM_BYOI_ENDPOINT_ID, validEffort } from '../env.js';
+import { KIMI_K3_ENDPOINT_ID, KIMI_K3_REASONING_EFFORT, validEffort } from '../env.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,8 +35,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // GLM 4.7 BYOI everywhere (decomposed form — suffixed id returns HTTP 400; Phase-1 verified).
 // ONLY the ACTIVE BYOI id — predefined-glm-4.7/-flash are inactive registry entries.
-export const DEEP_ENDPOINT_ID = process.env.DEEP_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;
-export const DEEP_REASONING_EFFORT = validEffort(process.env.DEEP_REASONING_EFFORT, 'medium'); // validated low|medium|max — decomposed form only (suffixed ids = HTTP 400)
+export const DEEP_ENDPOINT_ID = process.env.DEEP_ENDPOINT_ID || KIMI_K3_ENDPOINT_ID; // Kimi K3 — THE correlating model (2026-07-21; GLM removed from correlation)
+export const DEEP_REASONING_EFFORT = validEffort(process.env.DEEP_REASONING_EFFORT, KIMI_K3_REASONING_EFFORT); // MEDIUM — validated low|medium|max, decomposed form only (suffixed ids = HTTP 400)
 
 // Edge styling contract persisted for the frontend (brand tokens).
 export const EDGE_STYLE = {

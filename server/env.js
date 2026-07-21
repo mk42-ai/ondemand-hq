@@ -72,11 +72,25 @@ export const ANALYSIS_REASONING_EFFORT = validEffort(process.env.ANALYSIS_REASON
 // endpoint. ON by default at start; set STREAM_DEBUG=false to turn off (STREAM_DEBUG=true = explicit-on).
 export const STREAM_DEBUG = String(process.env.STREAM_DEBUG ?? 'true').toLowerCase() !== 'false';
 
-// ---------- Hard-force data-fetch policy (2026-07-20) ----------
-export const CEREBRAS_ENDPOINT_ID = process.env.CE_DATAFETCH_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;  // GLM 4.7 on Cerebras — ultimate speed
-export const CE_DATAFETCH_REASONING_EFFORT = validEffort(process.env.CE_DATAFETCH_REASONING_EFFORT, 'low');  // low = fastest on Cerebras for high-volume JSON extraction
-export const FABLE_FALLBACK_ENDPOINT_ID = process.env.CE_FALLBACK_ENDPOINT_ID || 'predefined-claude-fable-5';  // fable 5 — fallback when Cerebras under-delivers
-export const FABLE_FALLBACK_REASONING_EFFORT = validEffort(process.env.CE_FALLBACK_REASONING_EFFORT, 'medium');
+// ---------- Correlating model (2026-07-21 switch): Kimi K3 MEDIUM ----------
+// predefined-kimi-k3 is ACTIVE in the live registry (verified 2026-07-21T01:30Z:
+// status active, reasoning_efforts [low,medium,max], 1M ctx, streaming). It fully
+// REPLACES GLM 4.7 (byoi-6e314690 / zai-glm-4.7) as the correlation model — GLM
+// is NO LONGER a correlation model anywhere in the pipeline (it remains only as
+// the non-correlation main-chat default and the Cerebras BACKGROUND backfill
+// engine for data population shortfalls).
+export const KIMI_K3_ENDPOINT_ID = process.env.CE_CORRELATION_ENDPOINT_ID || 'predefined-kimi-k3';
+export const KIMI_K3_REASONING_EFFORT = validEffort(process.env.CE_CORRELATION_REASONING_EFFORT, 'medium');
+
+// ---------- Hard-force data-fetch policy (2026-07-20; 2026-07-21 fable-only rewrite) ----------
+// fable-5-medium is the ONLY synchronous data-population model (2026-07-21).
+// Cerebras GLM 4.7 no longer sits in the synchronous ladder — it is retained
+// SOLELY as the server-side BACKGROUND backfill engine that tops up a short
+// fable pass (merge+dedupe, UI auto-refresh; see dataFetch.js cerebrasDeltaFetch).
+export const FABLE_FALLBACK_ENDPOINT_ID = process.env.CE_DATAFETCH_ENDPOINT_ID || 'predefined-claude-fable-5';
+export const FABLE_FALLBACK_REASONING_EFFORT = validEffort(process.env.CE_DATAFETCH_REASONING_EFFORT_FABLE, 'medium');
+export const CEREBRAS_ENDPOINT_ID = process.env.CE_BACKFILL_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;  // background backfill ONLY — never the primary population path
+export const CE_DATAFETCH_REASONING_EFFORT = validEffort(process.env.CE_BACKFILL_REASONING_EFFORT, 'low');
 export const CE_MIN_DATA_POINTS = Math.max(100, parseInt(process.env.CE_MIN_DATA_POINTS || '100', 10) || 100);  // strict floor — clamped, can never be configured below 100
 
 if (!ONDEMAND_API_KEY) {
@@ -89,15 +103,15 @@ if (!ONDEMAND_API_KEY) {
 // Plugin/evidence-gathering calls: Claude endpoints REJECT plugin attachment on this
 // platform (HTTP 400 "agents are invalid", live-logged 2026-07-19 in PLUGIN_TESTS.md),
 // so plugins run on the proven fulfillment model. Overridable via env.
-export const CE_PLUGIN_ENDPOINT_ID = process.env.CE_PLUGIN_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID; // GLM 4.7 BYOI (2026-07-20 switch; agent attach 200-probed)
+export const CE_PLUGIN_ENDPOINT_ID = process.env.CE_PLUGIN_ENDPOINT_ID || KIMI_K3_ENDPOINT_ID; // Kimi K3 (2026-07-21 switch — GLM removed from correlation)
 // Analysis/extraction/narrative: PRODUCTION default claude-fable-5 + medium reasoning.
 // Build/test override: CE_ANALYSIS_ENDPOINT_ID=predefined-claude-sonnet-5 (both 200-verified
 // 2026-07-19). Set in config here — never hardcoded at call sites.
-export const CE_ANALYSIS_ENDPOINT_ID = process.env.CE_ANALYSIS_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID; // GLM 4.7 BYOI (2026-07-20 switch; was claude-fable-5)
-export const CE_ANALYSIS_REASONING_EFFORT = validEffort(process.env.CE_ANALYSIS_REASONING_EFFORT, 'medium');
-// Quick Query: GLM 4.7 Cerebras BYOI only (200-proven 2026-07-19, ~1.28s). No documented
-// max-tokens param → hard stop enforced client-side at QUICK_QUERY_MAX_TOKENS.
-export const GLM_ENDPOINT_ID = GLM_BYOI_ENDPOINT_ID;
+export const CE_ANALYSIS_ENDPOINT_ID = process.env.CE_ANALYSIS_ENDPOINT_ID || KIMI_K3_ENDPOINT_ID; // Kimi K3 MEDIUM — THE correlating model (2026-07-21; GLM removed from correlation)
+export const CE_ANALYSIS_REASONING_EFFORT = validEffort(process.env.CE_ANALYSIS_REASONING_EFFORT, KIMI_K3_REASONING_EFFORT);
+// Quick Query + streamed CE surfaces: Kimi K3 (2026-07-21 — correlation surfaces are
+// GLM-free). Var name kept for low-risk call-site compatibility; value is Kimi K3.
+export const GLM_ENDPOINT_ID = KIMI_K3_ENDPOINT_ID;
 // Streamed CE surfaces (quick-query/summarize/story) — validated, env-overridable.
 export const CE_STREAM_REASONING_EFFORT = validEffort(process.env.CE_STREAM_REASONING_EFFORT, 'max');
 export const QUICK_QUERY_MAX_TOKENS = 150;

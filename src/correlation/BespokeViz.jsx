@@ -37,7 +37,7 @@ export default function SignalLoom({ run, onPickEvidence }) {
     svg.append('g').selectAll('text.col').data(REL_TYPES).join('text')
       .attr('x', d => x(d)).attr('y', padT - 12)
       .attr('text-anchor', 'middle').attr('font-size', 9.5).attr('font-weight', 600)
-      .attr('font-family', 'Montserrat, sans-serif').attr('fill', d => REL_TYPE_COLORS[d])
+      .attr('font-family', 'Inter, sans-serif').attr('fill', d => REL_TYPE_COLORS[d])
       .text(d => d.replace('-Humanitarian', ''));
     // column guides
     svg.append('g').selectAll('line.guide').data(REL_TYPES).join('line')
@@ -53,8 +53,8 @@ export default function SignalLoom({ run, onPickEvidence }) {
         const g = d3.select(this);
         g.append('circle').attr('cx', padL - 22).attr('r', 5).attr('fill', PLATFORM_COLORS[p] || '#9ca3af');
         g.append('text').attr('x', padL - 34).attr('text-anchor', 'end').attr('dy', '0.35em')
-          .attr('font-size', 10).attr('font-weight', 600).attr('font-family', 'Montserrat, sans-serif')
-          .attr('fill', '#374151').text(p);
+          .attr('font-size', 10).attr('font-weight', 600).attr('font-family', 'Inter, sans-serif')
+          .attr('fill', '#9db0c4').text(p);
       });
 
     // threads: edge × evidence
@@ -101,7 +101,7 @@ export default function SignalLoom({ run, onPickEvidence }) {
 
     // legend
     const lg = svg.append('g').attr('transform', `translate(${padL},${H - 8})`);
-    lg.append('text').attr('font-size', 8.5).attr('fill', '#9ca3af').attr('font-family', 'Montserrat, sans-serif')
+    lg.append('text').attr('font-size', 8.5).attr('fill', '#9ca3af').attr('font-family', 'Inter, sans-serif')
       .text(`Signal Loom — ${threads.length} woven threads (edge × evidence) · thickness = confidence · opacity = recency · dashes = contradiction · click a thread for evidence`);
   }, [run, onPickEvidence, xp]);
 

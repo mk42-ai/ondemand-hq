@@ -12,7 +12,8 @@ import { ChevronDown, ChevronRight, Cpu, GitMerge, Database, Zap } from 'lucide-
  * Renders nothing for legacy runs without dataFetch stats.
  */
 const EP_LABELS = [
-  [/byoi|cerebras|glm/i, 'CEREBRAS·GLM-4.7'],
+  [/kimi/i, 'KIMI-K3·MED'],
+  [/byoi|cerebras|glm/i, 'CEREBRAS·BG'],
   [/fable/i, 'FABLE-5·MED'],
   [/sonnet/i, 'SONNET-5'],
 ];
@@ -80,6 +81,17 @@ export default function RunOpsPanel({ run }) {
               <Database size={11} aria-hidden />
               <b>BACKFILL</b>
               <code className="rop-n">+{df.corpusBackfilled ?? backfill?.count ?? 0}</code>
+            </span>
+          </>
+        )}
+
+        {df.backgroundBackfill && (
+          <>
+            <span className="rop-arrow" aria-hidden>→</span>
+            <span className="rop-stage" title="Server-side Cerebras background backfill — merges automatically, UI refreshes itself">
+              <Led state={df.backgroundBackfill.status === 'done' ? 'pass' : (df.backgroundBackfill.status === 'running' ? 'live' : 'short')} />
+              <b>BG·CEREBRAS</b>
+              <code className="rop-n">{df.backgroundBackfill.status === 'done' ? `+${df.backgroundBackfill.added ?? 0}` : df.backgroundBackfill.status}</code>
             </span>
           </>
         )}

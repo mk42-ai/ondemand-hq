@@ -46,7 +46,7 @@ import { runDeepPipeline, RESEARCH_WINDOWS, DEFAULT_WINDOW } from './intelligenc
 // Data-fetch layer (2026-07-20): hard-forced minimum evidence data points per run
 // (see intelligence/dataFetch.js — Cerebras GLM 4.7 BYOI with claude-fable-5-medium
 // fallback); enforced again as a run-level backstop in runDeepJob below.
-import { MIN_DATA_POINTS } from './intelligence/dataFetch.js';
+import { MIN_DATA_POINTS, cerebrasDeltaFetch, buildExtractionMaterial } from './intelligence/dataFetch.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_ROOT = path.join(__dirname, 'data', 'correlation');
@@ -659,6 +659,51 @@ export async function runDeepJob(iso, countryName, { window: windowId, offline =
       job.status = 'done'; job.stage = 'complete'; job.finishedAt = new Date().toISOString();
       job.run = { runId: run.runId, evidence: run.stats.evidenceCount, edges: run.stats.edgeCount, emptyUpstream: run.stats.emptyUpstream, dataFetch: run.stats?.dataFetch || null };
       log.info('correlation.deep_run_done', { iso, runId: run.runId, ...run.stats });
+      // ---------- BACKGROUND Cerebras backfill (2026-07-21) ----------
+      // fable-5-medium is the ONLY sync population model. If its pass came back
+      // short (corpusBackfilled > 0 marks the shortfall), the fable artifacts are
+      // KEPT and already persisted above; now a server-side Cerebras job fetches
+      // ONLY the missing delta (exclusion prompt), merges + dedupes into the run,
+      // re-persists, and the UI auto-refreshes via its backfill poll — no user
+      // action needed. Fire-and-forget: never blocks or fails the main job.
+      if (!offline && (run.stats?.dataFetch?.corpusBackfilled ?? 0) > 0) {
+        run.stats.dataFetch.backgroundBackfill = { status: 'running', startedAt: new Date().toISOString() };
+        writeJson(path.join(countryDir(iso), `run-${run.runId}.json`), run);
+        persistLatestPointer(iso, run);
+        (async () => {
+          try {
+            const captured = run.evidence.filter(e => e.origin !== 'corpus-backfill');
+            const material = buildExtractionMaterial({ iso, countryName });
+            const fresh = await cerebrasDeltaFetch({
+              iso, countryName, phrase: 'the last 2 years', material,
+              captured, sessionTag: `bgfill-${iso}-${run.runId}`,
+            });
+            if (fresh.length) {
+              const seen = new Set(run.evidence.map(e => (e.claim || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 120)));
+              let nextIdx = run.evidence.length;
+              for (const f of fresh) {
+                const key = (f.claim || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 120);
+                if (!key || seen.has(key)) continue;
+                seen.add(key);
+                nextIdx += 1;
+                run.evidence.push({ ...f, id: `E${nextIdx}` });
+              }
+              run.stats.evidenceCount = run.evidence.length;
+            }
+            run.stats.dataFetch.backgroundBackfill = {
+              status: 'done', added: fresh.length, completedAt: new Date().toISOString(),
+              endpoint: 'cerebras-glm-4.7', mergedTotal: run.evidence.length,
+            };
+            writeJson(path.join(countryDir(iso), `run-${run.runId}.json`), run);
+            persistLatestPointer(iso, run);
+            log.info('correlation.bg_backfill_done', { iso, runId: run.runId, added: fresh.length, total: run.evidence.length });
+          } catch (e) {
+            run.stats.dataFetch.backgroundBackfill = { status: 'error', error: String(e?.message || e).slice(0, 200), completedAt: new Date().toISOString() };
+            try { writeJson(path.join(countryDir(iso), `run-${run.runId}.json`), run); persistLatestPointer(iso, run); } catch { /* best-effort */ }
+            log.error('correlation.bg_backfill_failed', { iso, runId: run.runId, error: String(e?.message || e).slice(0, 200) });
+          }
+        })();
+      }
       return run;
     } catch (e) {
       job.status = 'error'; job.error = e.message;

@@ -1991,3 +1991,44 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
 .ce--dark .qq-form input { background: var(--pl-bg-3); border: 1px solid var(--pl-border-2); color: var(--pl-ink); }
 .ce--dark .ce2-fab { background: rgba(17, 22, 29, 0.92); border: 1px solid var(--pl-border-2); color: var(--pl-ink-dim); font-family: var(--pl-mono); font-size: 10.5px; letter-spacing: 0.05em; }
 .ce--dark .ce2-fab:hover { color: var(--pl-accent); border-color: var(--pl-accent); }
+
+/* ===== 2026-07-21 brand-consistency pass (reference-screenshot alignment) ===== */
+.ce--dark .ce-mark { display: inline-flex; vertical-align: -2px; margin-right: 7px; color: #f2f6fb; }
+/* Category filter pills: colored border + muted interior + technical type (ref A) */
+.ce--dark .ce-chip {
+  font-family: var(--pl-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  border: 1px solid color-mix(in srgb, var(--chip-color) 55%, transparent);
+  background: color-mix(in srgb, var(--chip-color) 10%, #10161d);
+  color: color-mix(in srgb, var(--chip-color) 85%, #ffffff);
+  border-radius: 999px; padding: 4px 11px;
+}
+.ce--dark .ce-chip:not(.on) { opacity: 0.38; border-style: dashed; }
+.ce--dark .ce-chip.on:hover { box-shadow: 0 0 8px color-mix(in srgb, var(--chip-color) 40%, transparent); }
+/* Sliders: bright cyan knob + track (ref) */
+.ce--dark .ce-slider input[type="range"] { accent-color: #35d0e0; }
+.ce--dark .ce-slider span { font-family: var(--pl-mono); color: #35d0e0; font-size: 10.5px; }
+.ce--dark .ce-slider { color: #8b98a9; font-size: 11px; }
+/* labels/physics checkboxes: green check (ref) */
+.ce--dark .ce-toggle input[type="checkbox"] { accent-color: #3fd68f; }
+.ce--dark .ce-toggle { color: #8b98a9; font-size: 11px; }
+/* entity search: dark field w/ lucide magnifier already in markup */
+.ce--dark .ce-search { border: 1px solid #232b36; background: #10161d; border-radius: 8px; padding: 4px 9px; color: #8b98a9; }
+.ce--dark .ce-search input { background: transparent; border: none; color: #d7dee8; font-family: var(--pl-mono); font-size: 11px; outline: none; }
+.ce--dark .ce-search input::placeholder { color: #5c6875; }
+/* Expand Intelligence View button: dark rounded w/ subtle teal glow (ref) */
+.ce--dark .ce2-fab {
+  background: #10161d; border: 1px solid rgba(21, 154, 122, 0.55); color: #d7dee8;
+  border-radius: 10px; font: 600 11px var(--font);
+  box-shadow: 0 0 10px rgba(21, 154, 122, 0.25);
+}
+.ce--dark .ce2-fab:hover { box-shadow: 0 0 14px rgba(21, 154, 122, 0.45); border-color: #159a7a; }
+/* Legend overlay: bordered dark box (ref) */
+.ce--dark .ce-lgstrip {
+  background: rgba(12, 16, 21, 0.88); border: 1px solid #232b36; border-radius: 8px;
+  color: #8b98a9; font-size: 9.5px; backdrop-filter: blur(3px);
+}
+.ce--dark .ce-lgstrip .ce-lg { color: #8b98a9; }
+/* Panel cards: rounded, thin luminous borders (ref) */
+.ce--dark .ce-panels .xp-host--chart, .ce--dark .ce-panels > div {
+  background: #0f141b; border: 1px solid #232b36; border-radius: 10px;
+}

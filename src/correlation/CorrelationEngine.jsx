@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Download, Image as ImageIcon, Search, Zap, X, ExternalLink, BadgeCheck, Send, ChevronDown, Maximize2, Loader2, RotateCw, Sparkles, AlertTriangle, Play } from 'lucide-react';
+import { RefreshCw, Download, Image as ImageIcon, Search, Zap, X, ExternalLink, BadgeCheck, Send, ChevronDown, Maximize2, Loader2, RotateCw, Sparkles, AlertTriangle, Play, Globe2 } from 'lucide-react';
 import CorrelationGraph from './CorrelationGraph.jsx';
 import { EntityInspector, RelationshipInspector, EvidenceBreakdown } from './V2Panels.jsx';
 import EChartsPanels from './EChartsPanels.jsx';
@@ -245,6 +245,27 @@ export default function CorrelationEngine({ iso, countryName }) {
     }, 4000);
   };
 
+  // ---------- background-backfill auto-refresh (2026-07-21) ----------
+  // While the loaded run reports dataFetch.backgroundBackfill.status === 'running',
+  // poll the latest pointer every 5s; when the server-side Cerebras job merges its
+  // delta and re-persists, reload the run automatically — NO user action needed.
+  useEffect(() => {
+    const bb = run?.stats?.dataFetch?.backgroundBackfill;
+    if (!bb || bb.status !== 'running') return;
+    const t = setInterval(async () => {
+      try {
+        const d = await getLatest(iso);
+        const nb = d.run?.stats?.dataFetch?.backgroundBackfill;
+        if (d.run?.runId === run.runId && nb && nb.status !== 'running') {
+          const full = await getRun(iso, run.runId);
+          setRun(full);
+          runRef.current = full;
+        }
+      } catch { /* transient */ }
+    }, 5000);
+    return () => clearInterval(t);
+  }, [run, iso]);
+
   // Start Correlation Engine → deep pipeline with HARD-FORCED ≥100 data points
   // (server-side reject+retry, Cerebras-first)
   const onStartEngine = async () => {
@@ -354,7 +375,7 @@ export default function CorrelationEngine({ iso, countryName }) {
       {/* header row */}
       <div className="ce-head">
         <div className="ce-head__title">
-          <h2>Correlation Engine</h2>
+          <h2><span className="ce-mark" aria-hidden><Globe2 size={15} strokeWidth={1.9} /></span>ODA Intelligence — Correlation Engine</h2>
           {run && <span className="ce-head__meta ce-mono">
             <span className="ce-kpi"><b>{run.stats.evidenceCount}</b> data points</span>
             <span className="ce-kpi"><b>{run.stats.edgeCount}</b> edges</span>
