@@ -1,7 +1,19 @@
 import React, { useMemo, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
+import * as echarts from 'echarts';
 import { PLATFORM_COLORS, evidenceAgeDays } from './adapter.js';
 import Expandable from './Expandable.jsx';
+
+/* ODA monochrome ECharts theme (TYPOGRAPHY.md): grayscale-only series ramp,
+   Inter everywhere, titles #ffffff (primary), y ticks #e5e7eb (secondary),
+   x/date + legend labels #9ca3af (muted), subtle gray gridlines. */
+echarts.registerTheme('oda-mono', {
+  color: ['#f0f0f0', '#c8c8c8', '#a0a0a0', '#787878', '#505050'],
+  backgroundColor: 'transparent',
+  textStyle: { fontFamily: 'Inter, sans-serif' },
+  categoryAxis: { axisLine: { lineStyle: { color: '#404040' } }, axisTick: { lineStyle: { color: '#404040' } } },
+  valueAxis: { axisLine: { show: false }, splitLine: { lineStyle: { color: 'rgba(160,160,160,0.14)' } } },
+});
 
 /** One chart with an expand/fullscreen toggle (2026-07-20): after expand or
  *  restore, the ECharts instance is resized to the new container. */
@@ -11,7 +23,7 @@ function XChart({ title, option, baseHeight, onEvents }) {
   return (
     <Expandable title={title} className="xp-host--chart" onToggle={resize}>
       {({ expanded, height }) => (
-        <ReactECharts ref={ecRef} option={option} notMerge
+        <ReactECharts ref={ecRef} option={option} notMerge theme="oda-mono"
           style={{ height: expanded ? (height || 560) : baseHeight, width: '100%' }}
           onEvents={onEvents} />
       )}
@@ -20,6 +32,9 @@ function XChart({ title, option, baseHeight, onEvents }) {
 }
 
 const FONT = { fontFamily: 'Inter, sans-serif' };
+// Pinned chart title — TITLE tier (uppercase, 600, #ffffff primary ink); grids below
+// reserve explicit top padding so the title NEVER overlaps plot content.
+const TITLE = (text) => ({ text, left: 4, top: 4, textStyle: { ...FONT, fontSize: 11, fontWeight: 600, color: '#ffffff' } });
 
 /**
  * ECharts side panels — all fed from the REAL run payload, all cross-filtering
@@ -38,12 +53,11 @@ export default function EChartsPanels({ run, onPickDate, onPickStance, onPickPla
     }
     const days = [...byDay.keys()].sort();
     const volumeOption = {
-      grid: { left: 30, right: 8, top: 22, bottom: 20 },
-      title: { text: 'EVIDENCE VOLUME OVER TIME', left: 4, top: 2, textStyle: { ...FONT, fontSize: 10.5, fontWeight: 600, color: '#e5e7eb' } },
-      grid: { top: 30, left: 34, right: 8, bottom: 44 },
-      tooltip: { trigger: 'axis', textStyle: FONT },
-      xAxis: { type: 'category', data: days, axisLabel: { ...FONT, fontSize: 9, rotate: 38, color: '#909090' } },
-      yAxis: { type: 'value', minInterval: 1, axisLabel: { ...FONT, fontSize: 9, color: '#909090' }, splitLine: { lineStyle: { color: 'rgba(150,150,150,0.15)' } } },
+      title: TITLE('EVIDENCE VOLUME OVER TIME'),
+      grid: { top: 34, left: 36, right: 10, bottom: 48 },
+      tooltip: { trigger: 'axis', textStyle: { ...FONT, fontSize: 10 } },
+      xAxis: { type: 'category', data: days, axisLabel: { ...FONT, fontSize: 9, rotate: 38, color: '#9ca3af' } },
+      yAxis: { type: 'value', minInterval: 1, axisLabel: { ...FONT, fontSize: 9, color: '#e5e7eb' }, splitLine: { lineStyle: { color: 'rgba(160,160,160,0.14)' } } },
       series: [{
         type: 'bar', data: days.map(d => ({
           value: byDay.get(d),
@@ -58,9 +72,8 @@ export default function EChartsPanels({ run, onPickDate, onPickStance, onPickPla
     const byStance = Object.fromEntries(stances.map(s => [s, 0]));
     for (const e of run.edges) byStance[e.stance || 'neutral'] = (byStance[e.stance || 'neutral'] || 0) + 1;
     const stanceOption = {
-      grid: { left: 8, right: 8, top: 24, bottom: 4 },
-      title: { text: 'STANCE STRIP (EDGES)', left: 4, top: 2, textStyle: { ...FONT, fontSize: 10.5, fontWeight: 600, color: '#e5e7eb' } },
-      grid: { top: 26, left: 8, right: 8, bottom: 8 },
+      title: TITLE('STANCE STRIP (EDGES)'),
+      grid: { top: 30, left: 10, right: 10, bottom: 10 },
       tooltip: { textStyle: FONT },
       xAxis: { type: 'value', show: false, max: Math.max(1, run.edges.length) },
       yAxis: { type: 'category', data: [''], show: false },
@@ -76,12 +89,13 @@ export default function EChartsPanels({ run, onPickDate, onPickStance, onPickPla
     const byPlatform = new Map();
     for (const ev of run.evidence) byPlatform.set(ev.platform, (byPlatform.get(ev.platform) || 0) + 1);
     const platformOption = {
-      title: { text: 'PLATFORM SPLIT', left: 4, top: 2, textStyle: { ...FONT, fontSize: 10.5, fontWeight: 600, color: '#e5e7eb' } },
-      tooltip: { textStyle: FONT },
-      legend: { bottom: 0, textStyle: { ...FONT, fontSize: 9, color: '#909090' }, itemWidth: 10, itemHeight: 10 },
+      title: TITLE('PLATFORM SPLIT'),
+      tooltip: { textStyle: { ...FONT, fontSize: 10 } },
+      legend: { bottom: 0, icon: 'circle', textStyle: { ...FONT, fontSize: 9, color: '#9ca3af' }, itemWidth: 9, itemHeight: 9, itemGap: 12 },
       series: [{
-        type: 'pie', radius: ['42%', '68%'], center: ['50%', '46%'],
-        label: { ...FONT, fontSize: 9, color: '#a8a8a8' },
+        type: 'pie', radius: ['40%', '64%'], center: ['50%', '52%'],
+        label: { show: true, formatter: '{b}  {c} ({d}%)', ...FONT, fontSize: 9, color: '#e5e7eb' },
+        labelLine: { lineStyle: { color: '#505050' } },
         data: [...byPlatform.entries()].map(([p, v]) => ({
           name: p, value: v,
           itemStyle: { color: PLATFORM_COLORS[p] || '#a3a3a3', opacity: !activePlatform || activePlatform === p ? 1 : 0.25 },
