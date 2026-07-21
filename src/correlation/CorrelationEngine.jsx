@@ -353,7 +353,7 @@ export default function CorrelationEngine({ iso, countryName }) {
     const out = document.createElement('canvas');
     out.width = c0.width; out.height = c0.height;
     const ctx = out.getContext('2d');
-    ctx.fillStyle = '#0c1015'; ctx.fillRect(0, 0, out.width, out.height);
+    ctx.fillStyle = '#0d0d0d'; ctx.fillRect(0, 0, out.width, out.height);
     canvases.forEach(c => ctx.drawImage(c, 0, 0));
     const a = document.createElement('a');
     a.href = out.toDataURL('image/png');
@@ -514,7 +514,7 @@ export default function CorrelationEngine({ iso, countryName }) {
               <div className="ce-lgstrip" aria-label="Graph legend">
                 <span className="ce-lg"><i className="ce-lg__halo" />halo tint = community cluster</span>
                 <span className="ce-lg"><i className="ce-lg__badge">2</i>badge = distinct evidence records on this node's edges (click for breakdown)</span>
-                <span className="ce-lg"><i className="ce-lg__dot" style={{ background: '#111827' }} />dark disc = country node</span>
+                <span className="ce-lg"><i className="ce-lg__dot" style={{ background: '#141414' }} />dark disc = country node</span>
                 <span className="ce-lg">size = weight · width = strength · color = type</span>
                 {/* verification-tier legend (QA fix 2026-07-20): edge tiers were styled
                     but never explained on-canvas — Verified solid / Likely solid /

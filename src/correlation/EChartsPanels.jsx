@@ -42,8 +42,8 @@ export default function EChartsPanels({ run, onPickDate, onPickStance, onPickPla
       title: { text: 'EVIDENCE VOLUME OVER TIME', left: 4, top: 2, textStyle: { ...FONT, fontSize: 10.5, fontWeight: 600, color: '#a0a0a0' } },
       grid: { top: 30, left: 34, right: 8, bottom: 44 },
       tooltip: { trigger: 'axis', textStyle: FONT },
-      xAxis: { type: 'category', data: days, axisLabel: { ...FONT, fontSize: 9, rotate: 38, color: '#8b98a9' } },
-      yAxis: { type: 'value', minInterval: 1, axisLabel: { ...FONT, fontSize: 9, color: '#8b98a9' }, splitLine: { lineStyle: { color: 'rgba(139,152,169,0.15)' } } },
+      xAxis: { type: 'category', data: days, axisLabel: { ...FONT, fontSize: 9, rotate: 38, color: '#909090' } },
+      yAxis: { type: 'value', minInterval: 1, axisLabel: { ...FONT, fontSize: 9, color: '#909090' }, splitLine: { lineStyle: { color: 'rgba(150,150,150,0.15)' } } },
       series: [{
         type: 'bar', data: days.map(d => ({
           value: byDay.get(d),
@@ -78,13 +78,13 @@ export default function EChartsPanels({ run, onPickDate, onPickStance, onPickPla
     const platformOption = {
       title: { text: 'PLATFORM SPLIT', left: 4, top: 2, textStyle: { ...FONT, fontSize: 10.5, fontWeight: 600, color: '#a0a0a0' } },
       tooltip: { textStyle: FONT },
-      legend: { bottom: 0, textStyle: { ...FONT, fontSize: 9, color: '#8b98a9' }, itemWidth: 10, itemHeight: 10 },
+      legend: { bottom: 0, textStyle: { ...FONT, fontSize: 9, color: '#909090' }, itemWidth: 10, itemHeight: 10 },
       series: [{
         type: 'pie', radius: ['42%', '68%'], center: ['50%', '46%'],
-        label: { ...FONT, fontSize: 9, color: '#9db0c4' },
+        label: { ...FONT, fontSize: 9, color: '#a8a8a8' },
         data: [...byPlatform.entries()].map(([p, v]) => ({
           name: p, value: v,
-          itemStyle: { color: PLATFORM_COLORS[p] || '#9ca3af', opacity: !activePlatform || activePlatform === p ? 1 : 0.25 },
+          itemStyle: { color: PLATFORM_COLORS[p] || '#a3a3a3', opacity: !activePlatform || activePlatform === p ? 1 : 0.25 },
         })),
       }],
     };

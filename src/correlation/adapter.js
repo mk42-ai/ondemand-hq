@@ -81,7 +81,7 @@ export function runToGraph(run, filters = {}) {
   const links = run.edges.filter(keepEdge).map(e => ({
     id: e.id, source: e.entity_a, target: e.entity_b,
     type: e.relationship_type, direction: e.direction,
-    color: REL_TYPE_COLORS[e.relationship_type] || '#64748b',
+    color: REL_TYPE_COLORS[e.relationship_type] || '#6e6e6e',
     width: 0.6 + (e.weight ?? 0) * 5.2,                    // weight → width
     opacity: 0.25 + (e.recency ?? 0.5) * 0.75,             // recency → opacity
     weight: e.weight ?? 0, recency: e.recency ?? 0.5,
