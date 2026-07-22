@@ -1,3 +1,30 @@
+## 2026-07-22 — Correlation-engine fixes checkpoint branch (checkpoint/correlation-engine-fixes) — TASK COMPLETE
+
+Five build-verified checkpoint commits (each: check-syntax 51/51+31/31, node:test suites green, vite build OK):
+
+1. **bb8a85e — gpt-5.6-sol purged from the CE backend**: every route/model/config/call-site
+   reference to gpt-5.6-sol / gpt-5.6-sol-medium / predefined-gpt-5.6-sol deleted across
+   env.js, correlation.js, ondemand.js, index.js, voice.js + UI strings; stale tier-style
+   regression test fixed to the shipped oda-mono palette.
+2. **8af67aa — Cerebras restricted to light surfaces**: removed from population/enrichment
+   entirely (no primary rung, no fallback, cerebrasDeltaFetch + background backfill job
+   DELETED); kept wired ONLY for Quick Query (~150-token) and per-evidence quick summary
+   via the new CEREBRAS_LIGHT_* env policy; Story Mode moved to the analysis model.
+3. **2410fb8 — 'Fable 5 MAX' is THE enrichment model + platform prefilled NOW**:
+   FABLE_ENRICHMENT_ENDPOINT_ID (predefined-claude-fable-5) + effort 'max' as the only
+   population rung; prefill decomposed into 3 country groups fetched CONCURRENTLY by 3
+   parallel plugin sessions (EG/JO/PK/KE/MA · ID/BD/SD/SO/ET · LB/SY/YE/UG/TZ/RW) — 160
+   merged evidence records rendered through runDeepPipeline into 16 schema-valid deep-v2
+   seed runs; every monitored country now serves a correlation result on first load.
+4. **dd5329f — enrichment uncapped + incremental Run**: 100-point floor stays a MINIMUM
+   but the 120 target cap is gone (CE_TARGET_DATA_POINTS default 400; corpus backfill
+   UNCAPPED via corpusBackfillPoints — 502 unique records preloadable); 'Run' now diffs
+   against the stored latest run (priorEvidence delta-exclusion prompts, prior+new gate,
+   0 re-fetch of stored records, incremental audit persisted + INCR·Δ RunOps badge).
+5. **376c975 — drag-to-pin chart UX**: dragging a node/data point anchors it EXACTLY at
+   the release position (fx/fy), persisted per country in localStorage across run
+   switches and reloads; pin glyph + right-click unpin; 5 new node:test cases.
+
 ## 2026-07-21 — Kimi K3 correlating model + fable-only population w/ Cerebras background backfill + brand-consistency pass
 
 - **feat(model): Kimi K3 MEDIUM is THE correlating model** — `predefined-kimi-k3`
