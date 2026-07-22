@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import ForceGraph2D from 'react-force-graph-2d';
 import { PLATFORM_COLORS } from './adapter.js';
 import { attachGestures } from './gestures.js';
+import { loadPins, savePins, pinNode, unpinNode, applyPins, isPinned } from './pinning.js';
 
 /**
  * CorrelationGraph — react-force-graph-2d canvas, Obsidian-futuristic on white.
@@ -11,9 +12,13 @@ import { attachGestures } from './gestures.js';
  * - hover lights node+neighbors, dims rest ~15%; new-edge pulse from daily diff
  * - search→zoom-to-node; zoomToFit on load (getGraphBbox polling — onEngineStop
  *   is unreliable under changing data); drag physics; 60fps (particle counts bounded)
+ * - DRAG-TO-PIN (2026-07-22): dragging a node anchors it EXACTLY where it is
+ *   released (fx/fy at drop coords), a pin glyph marks it, the position is
+ *   persisted per country (localStorage) across runs/reloads; right-click a
+ *   pinned node to release it back to the simulation.
  */
 export default function CorrelationGraph({ graph, width, height, showLabels, physics,
-  onHoverLink, onHoverNode, onClickLink, onClickNode, onBadgeClick, searchNodeId, pulseKeys }) {
+  onHoverLink, onHoverNode, onClickLink, onClickNode, onBadgeClick, searchNodeId, pulseKeys, iso }) {
   const fgRef = useRef();
   const wrapRef = useRef();
   const [hover, setHover] = useState(null); // {kind:'node'|'link', id}
@@ -28,6 +33,33 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
   useEffect(() => {
     try { window.__ceFg = { fg: fgRef.current, graph, wrap: wrapRef.current }; } catch { /* noop */ }
   }, [graph]);
+
+  // ---------- DRAG-TO-PIN (2026-07-22) ----------
+  // pinsRef holds {nodeId:{x,y}} per country; re-applied whenever graph data
+  // changes so pinned nodes stay anchored across filter changes/run switches.
+  const pinsRef = useRef({});
+  useEffect(() => { pinsRef.current = loadPins(iso); }, [iso]);
+  useEffect(() => {
+    if (graph?.nodes?.length) applyPins(graph.nodes, pinsRef.current);
+  }, [graph, iso]);
+
+  const handleNodeDragEnd = useCallback((n) => {
+    if (!n) return;
+    // Anchor EXACTLY at the release position: fix the d3 node where dropped…
+    n.fx = n.x; n.fy = n.y;
+    // …and persist so the pin survives run switches and reloads.
+    pinsRef.current = pinNode(pinsRef.current, n.id, n.x, n.y);
+    savePins(iso, pinsRef.current);
+  }, [iso]);
+
+  const handleNodeRightClick = useCallback((n, evt) => {
+    evt?.preventDefault?.();
+    if (!n || !isPinned(n)) return;
+    delete n.fx; delete n.fy; // release back to the simulation
+    pinsRef.current = unpinNode(pinsRef.current, n.id);
+    savePins(iso, pinsRef.current);
+    fgRef.current?.d3ReheatSimulation?.();
+  }, [iso]);
 
   // Gesture UX package (2026-07-19): pinch-zoom / swipe-pan / double-tap-center
   useEffect(() => {
@@ -329,6 +361,21 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('!', mx, ty + 1.2);
     }
+
+    // DRAG-TO-PIN glyph (2026-07-22): pinned (fx/fy-anchored) nodes carry a
+    // small pin marker at the top-right so the anchored state is visible;
+    // right-click releases the pin.
+    if (isPinned(n)) {
+      const px = n.x + r * 0.85, py = n.y - r * 0.85;
+      ctx.beginPath();
+      ctx.arc(px, py, 2.6, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = '#0d0d0d'; ctx.lineWidth = 0.7; ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(px, py + 2.2); ctx.lineTo(px, py + 5.4);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.1; ctx.stroke();
+    }
     ctx.restore();
   }, [hover, pulseKeys]);
 
@@ -377,6 +424,8 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
         onLinkClick={(l) => onClickLink?.(l)}
         onBackgroundClick={() => { onClickNode?.(null); onClickLink?.(null); }}
         enableNodeDrag
+        onNodeDragEnd={handleNodeDragEnd}
+        onNodeRightClick={handleNodeRightClick}
         cooldownTime={physics ? 4000 : 0}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.32}

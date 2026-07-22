@@ -494,7 +494,7 @@ export default function CorrelationEngine({ iso, countryName }) {
           <div className="ce-main">
             <div className="ce-graphwrap" ref={graphWrapRef}>
               <CorrelationGraph
-                graph={graph} width={size.w - 270} height={size.h}
+                graph={graph} width={size.w - 270} height={size.h} iso={iso}
                 showLabels={showLabels} physics={physics}
                 onHoverLink={onHoverLink}
                 onHoverNode={() => { if (!pinPop) setPop(null); }}
@@ -516,6 +516,8 @@ export default function CorrelationEngine({ iso, countryName }) {
                 <span className="ce-lg"><i className="ce-lg__badge">2</i>badge = distinct evidence records on this node's edges (click for breakdown)</span>
                 <span className="ce-lg"><i className="ce-lg__dot" style={{ background: '#141414' }} />dark disc = country node</span>
                 <span className="ce-lg">size = weight · width = strength · color = type</span>
+                {/* drag-to-pin (2026-07-22): released nodes stick where dropped; persisted per country */}
+                <span className="ce-lg"><i className="ce-lg__dot" style={{ background: '#ffffff' }} />drag a point → it pins where you release (right-click to unpin)</span>
                 {/* verification-tier legend (QA fix 2026-07-20): edge tiers were styled
                     but never explained on-canvas — Verified solid / Likely solid /
                     Possible dashed / Predicted dotted */}
@@ -554,7 +556,7 @@ export default function CorrelationEngine({ iso, countryName }) {
       {expanded && run && (
         <div className="ce2-fullscreen" data-testid="ce-fullscreen">
           <CorrelationGraph
-            graph={graph} width={size.w} height={size.h}
+            graph={graph} width={size.w} height={size.h} iso={iso}
             showLabels={showLabels} physics={physics}
             onHoverLink={() => {}}
             onHoverNode={() => {}}
