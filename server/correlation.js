@@ -38,7 +38,7 @@ import { createOdSession, syncQuery, streamQuery } from './ondemand.js';
 import {
   CE_PLUGIN_ENDPOINT_ID, CE_ANALYSIS_ENDPOINT_ID, CE_ANALYSIS_REASONING_EFFORT, CE_STREAM_REASONING_EFFORT,
   GLM_ENDPOINT_ID, QUICK_QUERY_MAX_TOKENS,
-  CEREBRAS_QUICK_ENDPOINT_ID, CEREBRAS_QUICK_REASONING_EFFORT,
+  GLM_47_QUICK_ENDPOINT_ID, GLM_47_QUICK_REASONING_EFFORT, GLM_47_QUICK_LABEL,
 } from './env.js';
 import * as log from './log.js';
 // DEEP PIPELINE v2 (2026-07-19 rewrite): windows / weighting / 16-source retrieval /
@@ -593,7 +593,7 @@ export async function quickQuery({ context, question }, res) {
   try {
     await streamQuery({
       odSessionId: sid, query: q, pluginIds: [], systemPrompt,
-      endpointId: CEREBRAS_QUICK_ENDPOINT_ID, reasoningEffort: CEREBRAS_QUICK_REASONING_EFFORT, fulfillmentOnly: true, // Cerebras — quick-query surface (permitted; 2026-07-21 v3)
+      endpointId: GLM_47_QUICK_ENDPOINT_ID, reasoningEffort: GLM_47_QUICK_REASONING_EFFORT, fulfillmentOnly: true, // GLM 4.7 — quick-query surface (2026-07-22 model fix)
       signal: controller.signal,
       onRaw: (event, data) => {
         if (event === 'message' || event === 'thinking') res.write(`event: ${event}\ndata: ${data}\n\n`);
@@ -615,7 +615,8 @@ export async function quickQuery({ context, question }, res) {
     if (m && m[0].length > 40) answer = m[0];
   }
   const latencyMs = Date.now() - t0;
-  return { answer: answer.trim(), latencyMs, ttftMs, approxTokens: Math.ceil(answer.length / 4), stoppedEarly, model: CEREBRAS_QUICK_ENDPOINT_ID };
+  log.info('quickquery.done', { model: GLM_47_QUICK_LABEL, endpointId: GLM_47_QUICK_ENDPOINT_ID, latencyMs, ttftMs });
+  return { answer: answer.trim(), latencyMs, ttftMs, approxTokens: Math.ceil(answer.length / 4), stoppedEarly, model: GLM_47_QUICK_ENDPOINT_ID, modelLabel: GLM_47_QUICK_LABEL };
 }
 
 // ---------- routes ----------
@@ -847,9 +848,12 @@ export function registerCorrelationRoutes(app, { countries }) {
       const ev = run?.evidence.find(v => v.id === evidenceId);
       if (!ev) throw new Error('Evidence record not found');
       const sid = await createOdSession(`ce-sum-${iso}-${evidenceId}`, []);
+      // model-name proof (2026-07-22): first SSE frame declares the quick-summary model
+      res.write(`event: model\ndata: ${JSON.stringify({ model: GLM_47_QUICK_LABEL, endpointId: GLM_47_QUICK_ENDPOINT_ID })}\n\n`);
+      log.info('quicksummary.model', { model: GLM_47_QUICK_LABEL, endpointId: GLM_47_QUICK_ENDPOINT_ID, iso, evidenceId });
       await streamQuery({
         odSessionId: sid,
-        endpointId: CEREBRAS_QUICK_ENDPOINT_ID, reasoningEffort: CEREBRAS_QUICK_REASONING_EFFORT, // Cerebras — quick-summary surface (permitted; 2026-07-21 v3)
+        endpointId: GLM_47_QUICK_ENDPOINT_ID, reasoningEffort: GLM_47_QUICK_REASONING_EFFORT, // GLM 4.7 — quick-summary surface (2026-07-22 model fix)
         query: `Evidence record from the ODA Correlation Engine run on ${run.country} (${run.generated_at}):
 CLAIM: ${ev.claim}
 SOURCE: ${ev.source} (${ev.platform || ev.source_type || 'unknown'})${ev.publish_date ? ' · ' + ev.publish_date : ''}${ev.url ? '\nURL: ' + ev.url : ''}

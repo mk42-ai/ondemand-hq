@@ -63,7 +63,7 @@ export function quickQuery({ context, question, onToken, onMetrics, onError }) {
 }
 
 // ---- V2 inspector support (restored 2026-07-19) ----
-/** Stream a structured article summary for one evidence record (Fable 5 MAX). */
+/** Stream a structured article summary for one evidence record (GLM 4.7 quick-summary surface, 2026-07-22). */
 export function summarizeEvidence({ iso, runId, evidenceId, onToken, onDone, onError }) {
   const ctrl = new AbortController();
   fetch('/api/correlation/summarize', {

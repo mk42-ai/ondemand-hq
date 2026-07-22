@@ -98,8 +98,16 @@ export const FABLE_FALLBACK_REASONING_EFFORT = validEffort(process.env.CE_DATAFE
 // It is fully REMOVED from the correlation engine backend: no data-fetch pass,
 // no background backfill, no analysis/narrative/story call may use it. The
 // background delta backfill now runs on Fable (see dataFetch.js backgroundDeltaFetch).
-export const CEREBRAS_QUICK_ENDPOINT_ID = process.env.CEREBRAS_QUICK_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID; // quick summaries + quick queries ONLY
-export const CEREBRAS_QUICK_REASONING_EFFORT = validEffort(process.env.CEREBRAS_QUICK_REASONING_EFFORT, 'low');
+// (2026-07-22 model fix) Quick summaries + quick queries run on GLM 4.7 —
+// EXPLICITLY pinned to the GLM 4.7 Cerebras BYOI endpoint (byoi-6e314690 /
+// zai-glm-4.7). Fable 5 MAX stays the correlation model (CE_ANALYSIS_*); the
+// two 24h enrichment workflows keep their fable-medium assembler untouched.
+export const GLM_47_QUICK_ENDPOINT_ID = process.env.GLM_47_QUICK_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID; // GLM 4.7 — quick summaries + quick queries ONLY
+export const GLM_47_QUICK_REASONING_EFFORT = validEffort(process.env.GLM_47_QUICK_REASONING_EFFORT, 'low');
+export const GLM_47_QUICK_LABEL = 'GLM 4.7';
+// Back-compat aliases (previous var names) — same GLM 4.7 values.
+export const CEREBRAS_QUICK_ENDPOINT_ID = GLM_47_QUICK_ENDPOINT_ID;
+export const CEREBRAS_QUICK_REASONING_EFFORT = GLM_47_QUICK_REASONING_EFFORT;
 export const CE_DATAFETCH_REASONING_EFFORT = validEffort(process.env.CE_BACKFILL_REASONING_EFFORT, 'low');
 export const CE_MIN_DATA_POINTS = Math.max(100, parseInt(process.env.CE_MIN_DATA_POINTS || '100', 10) || 100);  // strict floor — clamped, can never be configured below 100
 
