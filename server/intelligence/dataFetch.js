@@ -20,7 +20,7 @@ import { createOdSession, syncQuery } from '../ondemand.js';
 import * as log from '../log.js';
 import { SOURCE_TYPES } from './sources.js';
 import {
-  FABLE_FALLBACK_ENDPOINT_ID, FABLE_FALLBACK_REASONING_EFFORT,
+  FABLE_ENRICHMENT_ENDPOINT_ID, FABLE_ENRICHMENT_REASONING_EFFORT,
   CE_MIN_DATA_POINTS,
 } from '../env.js';
 
@@ -223,12 +223,12 @@ export function mergePasses(...passes) {
  */
 export async function hardForceDataPoints({
   iso, countryName, phrase, material, sessionTag,
-  // LADDER (2026-07-22 Cerebras-free policy): the fable enrichment model is the
-  // ONLY population rung — primary AND retry. A short pass KEEPS its artifacts,
+  // LADDER (2026-07-22 policy): FABLE 5 MAX is THE enrichment model — the ONLY
+  // population rung, primary AND retry. A short pass KEEPS its artifacts,
   // retries chunked on the same rung, then corpus-backfills to clear the floor.
   // There is NO Cerebras rung and NO background Cerebras job anymore.
   endpointLadder = [
-    { endpointId: FABLE_FALLBACK_ENDPOINT_ID, effort: FABLE_FALLBACK_REASONING_EFFORT, label: 'fable-5-medium' },
+    { endpointId: FABLE_ENRICHMENT_ENDPOINT_ID, effort: FABLE_ENRICHMENT_REASONING_EFFORT, label: 'fable-5-max' },
   ],
   onAttempt = () => {},
 } = {}) {
@@ -317,7 +317,7 @@ export async function hardForceDataPoints({
   const primary = endpointLadder[0];
   const fallback = endpointLadder[1] || null;
 
-  // ---- PASS 1: PRIMARY (fable enrichment model) — single extraction ----
+  // ---- PASS 1: PRIMARY (Fable 5 MAX enrichment model) — single extraction ----
   captured = mergePasses(await runSingle(primary, { tagSuffix: 'p1', target: TARGET_DATA_POINTS }));
   // ---- PASS 1b: one chunked retry on the SAME rung if short (same run) ----
   if (captured.length < MIN_DATA_POINTS) {

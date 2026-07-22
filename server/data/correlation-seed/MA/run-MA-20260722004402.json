@@ -1,0 +1,1837 @@
+{
+ "runId": "MA-20260722004402",
+ "iso": "MA",
+ "country": "Morocco",
+ "generated_at": "2026-07-22T00:44:02.236Z",
+ "pipeline": "deep-v2",
+ "window": {
+  "id": "all",
+  "label": "Entire history",
+  "days": null,
+  "boostRecentDays": 30,
+  "boostFactor": 1.5,
+  "phrase": "the entire available history up to 2026-07-22"
+ },
+ "model": {
+  "all": "predefined-claude-fable-5+max (Fable 5 MAX enrichment)",
+  "streaming": false,
+  "dataFetch": "prefill-parallel-3agents-2026-07-22"
+ },
+ "specialists": {},
+ "evidence": [
+  {
+   "id": "E1",
+   "claim": "Morocco and UAE sign a declaration for a multidimensional partnership including high-speed rail financing in December 2023.",
+   "source_type": "perplexity_research",
+   "source": "Morocco World News",
+   "url": null,
+   "publish_date": "2023-12-05",
+   "snippet": "UAE and Morocco signed a massive joint declaration detailing extensive financial and investment support for Morocco's railway projects.",
+   "entities": [
+    "adq"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.95,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  },
+  {
+   "id": "E2",
+   "claim": "Masdar enters consortium to develop the 800 MW Noor Midelt II solar project in Morocco in late 2024.",
+   "source_type": "perplexity_research",
+   "source": "PV Tech",
+   "url": null,
+   "publish_date": "2024-11-19",
+   "snippet": "Masdar secured participation in the consortium managing Morocco's next-phase Noor Midelt II concentrated solar power complex.",
+   "entities": [
+    "masdar"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.92,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  },
+  {
+   "id": "E3",
+   "claim": "AD Ports Group negotiates a management concession for the Nador West Med port terminal in November 2024.",
+   "source_type": "perplexity_research",
+   "source": "Maritime Executive",
+   "url": null,
+   "publish_date": "2024-11-26",
+   "snippet": "AD Ports Group advanced technical discussions to develop and operate terminals at the Nador West Med industrial port complex.",
+   "entities": [
+    "adports"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.88,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  },
+  {
+   "id": "E4",
+   "claim": "ADFD commits $1 billion to co-finance Morocco's infrastructure projects ahead of the 2030 World Cup in January 2025.",
+   "source_type": "perplexity_research",
+   "source": "Maghreb Arabe Presse",
+   "url": null,
+   "publish_date": "2025-01-22",
+   "snippet": "The Abu Dhabi Fund for Development committed $1 billion in sovereign financing to upgrade Moroccan sports, airport, and transit infrastructure.",
+   "entities": [
+    "adfd"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.94,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  },
+  {
+   "id": "E5",
+   "claim": "EDGE Group signs an agreement to supply advanced defense systems to the Royal Moroccan Armed Forces in July 2024.",
+   "source_type": "perplexity_research",
+   "source": "Tactical Report",
+   "url": null,
+   "publish_date": "2024-07-18",
+   "snippet": "EDGE Group finalized a procurement and technology transfer contract to supply Morocco with electronic warfare systems.",
+   "entities": [
+    "edge"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.9,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  },
+  {
+   "id": "E6",
+   "claim": "G42 partners with Moroccan research centers to launch a local Arabic LLM AI model in October 2024.",
+   "source_type": "perplexity_research",
+   "source": "AI Middle East",
+   "url": null,
+   "publish_date": "2024-10-12",
+   "snippet": "G42 announced a collaboration with Morocco's UM6P university to research and deploy custom Arabic large language models.",
+   "entities": [
+    "g42"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.88,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  },
+  {
+   "id": "E7",
+   "claim": "Mubadala explores investments in Morocco's green hydrogen and ammonia production plants in February 2025.",
+   "source_type": "perplexity_research",
+   "source": "H2 View",
+   "url": null,
+   "publish_date": "2025-02-09",
+   "snippet": "Mubadala Energy initiated feasibility studies to develop green hydrogen and clean shipping fuel production facilities in northern Morocco.",
+   "entities": [
+    "mubadala"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.85,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  },
+  {
+   "id": "E8",
+   "claim": "The Morocco-Nigeria gas pipeline project receives $100 million in feasibility study funding from ADFD in mid-2024.",
+   "source_type": "perplexity_research",
+   "source": "Africa Energy Intelligence",
+   "url": null,
+   "publish_date": "2024-08-05",
+   "snippet": "The Abu Dhabi Fund for Development authorized a $100 million grant to support engineering and environmental assessments of the pipeline.",
+   "entities": [
+    "adfd"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.87,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  },
+  {
+   "id": "E9",
+   "claim": "DP World announces plans for a major logistics free zone in Casablanca by late 2025.",
+   "source_type": "perplexity_research",
+   "source": "PortSEurope",
+   "url": null,
+   "publish_date": "2025-06-12",
+   "snippet": "DP World announced intention to construct a smart logistics and warehousing park near Casablanca to streamline import-export flows.",
+   "entities": [
+    "dpworld"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.88,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  },
+  {
+   "id": "E10",
+   "claim": "OCP Group and ADNOC strengthen their sulfur supply agreement to support global fertilizer production in June 2025.",
+   "source_type": "perplexity_research",
+   "source": "Fertilizer Week",
+   "url": null,
+   "publish_date": "2025-06-18",
+   "snippet": "ADNOC extended its long-term sulfur supply partnership with Morocco's OCP, cementing agricultural supply security and trade pipelines.",
+   "entities": [
+    "adnoc"
+   ],
+   "media": [],
+   "origin": "prefill-fable5max-2026-07-22",
+   "confidence": 0.91,
+   "corroborations": 1,
+   "weighting": {
+    "temporalClass": "historical",
+    "baseWeight": 0.2,
+    "multipliers": {
+     "uaeRelevance": 2
+    },
+    "windowBoost": 1,
+    "finalWeight": 0.4
+   }
+  }
+ ],
+ "edges": [
+  {
+   "id": "ED1",
+   "entity_a": "adq",
+   "entity_b": "ma",
+   "relationship_type": "Infrastructure",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "Morocco and UAE sign a declaration for a multidimensional partnership including high-speed rail financing in December 2023.",
+   "evidence_record_ids": [
+    "E1"
+   ],
+   "inference": false,
+   "confidence": 0.95,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  },
+  {
+   "id": "ED2",
+   "entity_a": "masdar",
+   "entity_b": "ma",
+   "relationship_type": "Energy",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "Masdar enters consortium to develop the 800 MW Noor Midelt II solar project in Morocco in late 2024.",
+   "evidence_record_ids": [
+    "E2"
+   ],
+   "inference": false,
+   "confidence": 0.92,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  },
+  {
+   "id": "ED3",
+   "entity_a": "adports",
+   "entity_b": "ma",
+   "relationship_type": "Infrastructure",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "AD Ports Group negotiates a management concession for the Nador West Med port terminal in November 2024.",
+   "evidence_record_ids": [
+    "E3"
+   ],
+   "inference": false,
+   "confidence": 0.88,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  },
+  {
+   "id": "ED4",
+   "entity_a": "adfd",
+   "entity_b": "ma",
+   "relationship_type": "Infrastructure",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "ADFD commits $1 billion to co-finance Morocco's infrastructure projects ahead of the 2030 World Cup in January 2025.",
+   "evidence_record_ids": [
+    "E4"
+   ],
+   "inference": false,
+   "confidence": 0.94,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  },
+  {
+   "id": "ED5",
+   "entity_a": "edge",
+   "entity_b": "ma",
+   "relationship_type": "Security",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "EDGE Group signs an agreement to supply advanced defense systems to the Royal Moroccan Armed Forces in July 2024.",
+   "evidence_record_ids": [
+    "E5"
+   ],
+   "inference": false,
+   "confidence": 0.9,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  },
+  {
+   "id": "ED6",
+   "entity_a": "g42",
+   "entity_b": "ma",
+   "relationship_type": "Technology",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "G42 partners with Moroccan research centers to launch a local Arabic LLM AI model in October 2024.",
+   "evidence_record_ids": [
+    "E6"
+   ],
+   "inference": false,
+   "confidence": 0.88,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  },
+  {
+   "id": "ED7",
+   "entity_a": "mubadala",
+   "entity_b": "ma",
+   "relationship_type": "Energy",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "Mubadala explores investments in Morocco's green hydrogen and ammonia production plants in February 2025.",
+   "evidence_record_ids": [
+    "E7"
+   ],
+   "inference": false,
+   "confidence": 0.85,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  },
+  {
+   "id": "ED8",
+   "entity_a": "adfd",
+   "entity_b": "ma",
+   "relationship_type": "Aid-Humanitarian",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "The Morocco-Nigeria gas pipeline project receives $100 million in feasibility study funding from ADFD in mid-2024.",
+   "evidence_record_ids": [
+    "E8"
+   ],
+   "inference": false,
+   "confidence": 0.87,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  },
+  {
+   "id": "ED9",
+   "entity_a": "dpworld",
+   "entity_b": "ma",
+   "relationship_type": "Infrastructure",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "DP World announces plans for a major logistics free zone in Casablanca by late 2025.",
+   "evidence_record_ids": [
+    "E9"
+   ],
+   "inference": false,
+   "confidence": 0.88,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  },
+  {
+   "id": "ED10",
+   "entity_a": "adnoc",
+   "entity_b": "ma",
+   "relationship_type": "Security",
+   "dimension": null,
+   "direction": "a->b",
+   "claim": "OCP Group and ADNOC strengthen their sulfur supply agreement to support global fertilizer production in June 2025.",
+   "evidence_record_ids": [
+    "E10"
+   ],
+   "inference": false,
+   "confidence": 0.91,
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "stance": "cooperation",
+   "sourceTypes": [
+    "perplexity_research"
+   ],
+   "contradiction": false
+  }
+ ],
+ "nodes": [
+  {
+   "id": "uae",
+   "label": "UAE",
+   "fullName": "United Arab Emirates",
+   "kind": "country"
+  },
+  {
+   "id": "oda",
+   "label": "ODA",
+   "fullName": "Office of Development Affairs",
+   "kind": "entity",
+   "aliases": [
+    "office of development affairs"
+   ]
+  },
+  {
+   "id": "mofa",
+   "label": "MOFA",
+   "fullName": "Ministry of Foreign Affairs",
+   "kind": "entity",
+   "aliases": [
+    "ministry of foreign affairs",
+    "mofaic",
+    "uae foreign ministry"
+   ]
+  },
+  {
+   "id": "adq",
+   "label": "ADQ",
+   "fullName": "ADQ (Abu Dhabi sovereign holding)",
+   "kind": "entity",
+   "aliases": [
+    "adq"
+   ]
+  },
+  {
+   "id": "mubadala",
+   "label": "Mubadala",
+   "fullName": "Mubadala Investment Company",
+   "kind": "entity",
+   "aliases": [
+    "mubadala"
+   ]
+  },
+  {
+   "id": "g42",
+   "label": "G42",
+   "fullName": "G42 (Group 42)",
+   "kind": "entity",
+   "aliases": [
+    "g42",
+    "group 42"
+   ]
+  },
+  {
+   "id": "core42",
+   "label": "Core42",
+   "fullName": "Core42 (G42 cloud/AI)",
+   "kind": "entity",
+   "aliases": [
+    "core42"
+   ]
+  },
+  {
+   "id": "adnoc",
+   "label": "ADNOC",
+   "fullName": "Abu Dhabi National Oil Company",
+   "kind": "entity",
+   "aliases": [
+    "adnoc",
+    "adnoc distribution",
+    "adnoc gas"
+   ]
+  },
+  {
+   "id": "adports",
+   "label": "AD Ports",
+   "fullName": "AD Ports Group",
+   "kind": "entity",
+   "aliases": [
+    "ad ports",
+    "ad ports group",
+    "abu dhabi ports"
+   ]
+  },
+  {
+   "id": "presight",
+   "label": "Presight",
+   "fullName": "Presight AI (G42)",
+   "kind": "entity",
+   "aliases": [
+    "presight"
+   ]
+  },
+  {
+   "id": "adfd",
+   "label": "ADFD",
+   "fullName": "Abu Dhabi Fund for Development",
+   "kind": "entity",
+   "aliases": [
+    "adfd",
+    "abu dhabi fund"
+   ]
+  },
+  {
+   "id": "masdar",
+   "label": "Masdar",
+   "fullName": "Masdar (clean energy)",
+   "kind": "entity",
+   "aliases": [
+    "masdar"
+   ]
+  },
+  {
+   "id": "etihad",
+   "label": "Etihad",
+   "fullName": "Etihad Airways",
+   "kind": "entity",
+   "aliases": [
+    "etihad",
+    "etihad airways"
+   ]
+  },
+  {
+   "id": "dpworld",
+   "label": "DP World",
+   "fullName": "DP World",
+   "kind": "entity",
+   "aliases": [
+    "dp world"
+   ]
+  },
+  {
+   "id": "edge",
+   "label": "EDGE",
+   "fullName": "EDGE Group (defence)",
+   "kind": "entity",
+   "aliases": [
+    "edge group",
+    "edge"
+   ]
+  },
+  {
+   "id": "ma",
+   "label": "Morocco",
+   "fullName": "Morocco",
+   "kind": "country"
+  }
+ ],
+ "predictions": {
+  "likely_announcements": [],
+  "likely_partnerships": [],
+  "potential_risks": [],
+  "potential_opportunities": [],
+  "emerging_conflicts": [],
+  "economic_effects": [],
+  "technology_adoption": [],
+  "investment_likelihood": [],
+  "policy_changes": []
+ },
+ "impact": [
+  {
+   "entity_id": "uae",
+   "overall": "Medium",
+   "overall_reasoning": "Bilateral partner country — impact potential exists but no evidence retrieved this run; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "oda",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "mofa",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "adq",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "mubadala",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "g42",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "core42",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "adnoc",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "adports",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "presight",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "adfd",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "masdar",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "etihad",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "dpworld",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "edge",
+   "overall": "Low",
+   "overall_reasoning": "UAE state-linked entity present in registry; no run evidence links it to activity this window; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  },
+  {
+   "entity_id": "ma",
+   "overall": "Medium",
+   "overall_reasoning": "Bilateral partner country — impact potential exists but no evidence retrieved this run; structural prior only.",
+   "dimensions": {
+    "trade": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "diplomacy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "investment": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "technology": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "food_security": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "energy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "defence": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "climate": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "education": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "healthcare": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "humanitarian_impact": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "national_ai_strategy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "economic_diversification": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    },
+    "foreign_policy": {
+     "level": "None",
+     "reasoning": "No evidence retrieved for this dimension in this run (structural prior)."
+    }
+   },
+   "evidence_based": false
+  }
+ ],
+ "weighting_model": {
+  "base": {
+   "historical": 0.2,
+   "recent": 0.6,
+   "breaking": 1
+  },
+  "multipliers": {
+   "uaeRelevance": 2,
+   "governmentSource": 2,
+   "officialStatement": 3,
+   "multiSource": 2
+  },
+  "windowBoost": 1.5
+ },
+ "stats": {
+  "evidenceCount": 10,
+  "edgeCount": 10,
+  "statedEdges": 10,
+  "inferredEdges": 0,
+  "byVerification": {
+   "Verified": 0,
+   "Likely": 10,
+   "Possible": 0,
+   "Predicted": 0
+  },
+  "contradictions": 0,
+  "predictionItems": 0,
+  "emptyUpstream": false,
+  "dataFetch": null,
+  "durationMs": 1,
+  "prefill": {
+   "agents": 3,
+   "mergedFrom": "parallel plugin sessions",
+   "mergedAt": "2026-07-22T00:44:02.237Z"
+  }
+ },
+ "stageLog": [
+  {
+   "stage": "retrieval:start",
+   "at": "2026-07-22T00:44:02.236Z",
+   "window": "all",
+   "phrase": "the entire available history up to 2026-07-22",
+   "sourceClasses": 16
+  },
+  {
+   "stage": "retrieval:skipped",
+   "at": "2026-07-22T00:44:02.236Z",
+   "reason": "offline mode"
+  },
+  {
+   "stage": "normalize:start",
+   "at": "2026-07-22T00:44:02.236Z"
+  },
+  {
+   "stage": "normalize:done",
+   "at": "2026-07-22T00:44:02.237Z",
+   "evidenceCount": 10,
+   "emptyUpstream": false,
+   "hardForce": null
+  },
+  {
+   "stage": "edges:start",
+   "at": "2026-07-22T00:44:02.237Z"
+  },
+  {
+   "stage": "edges:done",
+   "at": "2026-07-22T00:44:02.237Z",
+   "stated": 10,
+   "droppedNoEvidence": 0
+  },
+  {
+   "stage": "correlation-layer:start",
+   "at": "2026-07-22T00:44:02.237Z"
+  },
+  {
+   "stage": "correlation-layer:done",
+   "at": "2026-07-22T00:44:02.237Z",
+   "inferred": 0
+  },
+  {
+   "stage": "prediction:start",
+   "at": "2026-07-22T00:44:02.237Z"
+  },
+  {
+   "stage": "prediction:done",
+   "at": "2026-07-22T00:44:02.237Z",
+   "categories": 9,
+   "items": 0
+  },
+  {
+   "stage": "impact:start",
+   "at": "2026-07-22T00:44:02.237Z"
+  },
+  {
+   "stage": "impact:done",
+   "at": "2026-07-22T00:44:02.237Z",
+   "scored": 16
+  },
+  {
+   "stage": "complete",
+   "at": "2026-07-22T00:44:02.237Z",
+   "edges": 10,
+   "evidence": 10
+  }
+ ]
+}

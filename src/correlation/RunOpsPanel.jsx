@@ -16,7 +16,7 @@ import { ChevronDown, ChevronRight, Cpu, GitMerge, Database, Zap } from 'lucide-
 const EP_LABELS = [
   [/kimi/i, 'KIMI-K3·MED'],
   [/byoi|cerebras|glm/i, 'CEREBRAS·BG'],
-  [/fable/i, 'FABLE-5·MED'],
+  [/fable/i, 'FABLE-5·MAX'],
   [/sonnet/i, 'SONNET-5'],
 ];
 const epLabel = (id) => {

@@ -14,7 +14,7 @@ import {
   hardForceDataPoints, buildExtractionMaterial, MIN_DATA_POINTS, TARGET_DATA_POINTS,
 } from '../server/intelligence/dataFetch.js';
 import {
-  FABLE_FALLBACK_ENDPOINT_ID, FABLE_FALLBACK_REASONING_EFFORT,
+  FABLE_ENRICHMENT_ENDPOINT_ID, FABLE_ENRICHMENT_REASONING_EFFORT,
   ONDEMAND_API_KEY,
 } from '../server/env.js';
 
@@ -35,7 +35,7 @@ if (!ONDEMAND_API_KEY) {
 }
 
 const LADDERS = {
-  fable: [{ endpointId: FABLE_FALLBACK_ENDPOINT_ID, effort: FABLE_FALLBACK_REASONING_EFFORT, label: 'fable-5-medium' }],
+  fable: [{ endpointId: FABLE_ENRICHMENT_ENDPOINT_ID, effort: FABLE_ENRICHMENT_REASONING_EFFORT, label: 'fable-5-max' }],
 };
 const ladder = LADDERS[endpointArg];
 if (!ladder) { console.error(`[harness] unknown --endpoint '${endpointArg}' (fable)`); process.exit(2); }

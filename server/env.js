@@ -83,13 +83,14 @@ export const STREAM_DEBUG = String(process.env.STREAM_DEBUG ?? 'true').toLowerCa
 export const KIMI_K3_ENDPOINT_ID = process.env.CE_CORRELATION_ENDPOINT_ID || 'predefined-kimi-k3';
 export const KIMI_K3_REASONING_EFFORT = validEffort(process.env.CE_CORRELATION_REASONING_EFFORT, 'medium');
 
-// ---------- Hard-force data-fetch policy (2026-07-20; 2026-07-22 Cerebras-free rewrite) ----------
-// fable is the ONLY data-population model. Cerebras (GLM 4.7 BYOI) is REMOVED
-// from the correlation engine backend/enrichment path entirely — no primary
-// pass, no fallback rung, no background backfill. It survives ONLY as the
-// quick-summary / lightweight-query engine below.
-export const FABLE_FALLBACK_ENDPOINT_ID = process.env.CE_DATAFETCH_ENDPOINT_ID || 'predefined-claude-fable-5';
-export const FABLE_FALLBACK_REASONING_EFFORT = validEffort(process.env.CE_DATAFETCH_REASONING_EFFORT_FABLE, 'medium');
+// ---------- Enrichment model policy (2026-07-22): FABLE 5 MAX ----------
+// 'Fable 5 MAX' (predefined-claude-fable-5 + reasoningEffort 'max') is THE
+// correlation-engine enrichment model — the ONLY data-population/enrichment
+// rung. Cerebras (GLM 4.7 BYOI) is REMOVED from the backend/enrichment path
+// entirely — no primary pass, no fallback rung, no background backfill. It
+// survives ONLY as the quick-summary / lightweight-query engine below.
+export const FABLE_ENRICHMENT_ENDPOINT_ID = process.env.CE_ENRICHMENT_ENDPOINT_ID || process.env.CE_DATAFETCH_ENDPOINT_ID || 'predefined-claude-fable-5';
+export const FABLE_ENRICHMENT_REASONING_EFFORT = validEffort(process.env.CE_ENRICHMENT_REASONING_EFFORT || process.env.CE_DATAFETCH_REASONING_EFFORT_FABLE, 'max');
 // ---------- Cerebras light-surface policy (2026-07-22 restriction) ----------
 // Cerebras GLM 4.7 BYOI is allowed ONLY on interactive light surfaces where its
 // latency profile matters: Quick Query (~150-token capped answers) and the
