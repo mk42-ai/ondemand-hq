@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // test-correlation-hardforce.mjs — verification harness for the HARD-FORCE
-// data-fetch layer (2026-07-20). Runs the extraction N times (default 4,
-// sequential) against ONE pinned endpoint (cerebras default | fable) and
+// data-fetch layer (2026-07-20; Cerebras-free 2026-07-22). Runs the extraction
+// N times (default 4, sequential) against the fable enrichment rung and
 // verifies every run returns ≥ MIN_DATA_POINTS clean, deduped, EVEN-count
 // data points delivered BY THE MODEL (corpus backfill counts as a FAIL for
 // verification purposes). Appends results to CORRELATION_TESTS.md.
 //
-// Usage: node scripts/test-correlation-hardforce.mjs [--endpoint cerebras|fable] [--runs 4] [--iso KE] [--country Kenya]
+// Usage: node scripts/test-correlation-hardforce.mjs [--endpoint fable] [--runs 4] [--iso KE] [--country Kenya]
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +14,6 @@ import {
   hardForceDataPoints, buildExtractionMaterial, MIN_DATA_POINTS, TARGET_DATA_POINTS,
 } from '../server/intelligence/dataFetch.js';
 import {
-  CEREBRAS_ENDPOINT_ID, CE_DATAFETCH_REASONING_EFFORT,
   FABLE_FALLBACK_ENDPOINT_ID, FABLE_FALLBACK_REASONING_EFFORT,
   ONDEMAND_API_KEY,
 } from '../server/env.js';
@@ -25,7 +24,7 @@ const ROOT = path.join(__dirname, '..');
 // ---- args ----
 const args = process.argv.slice(2);
 const argOf = (flag, fb) => { const i = args.indexOf(flag); return i >= 0 && args[i + 1] ? args[i + 1] : fb; };
-const endpointArg = String(argOf('--endpoint', 'cerebras')).toLowerCase();
+const endpointArg = String(argOf('--endpoint', 'fable')).toLowerCase();
 const RUNS = Math.max(1, parseInt(argOf('--runs', '4'), 10) || 4);
 const ISO = argOf('--iso', 'KE');
 const COUNTRY = argOf('--country', 'Kenya');
@@ -36,11 +35,10 @@ if (!ONDEMAND_API_KEY) {
 }
 
 const LADDERS = {
-  cerebras: [{ endpointId: CEREBRAS_ENDPOINT_ID, effort: CE_DATAFETCH_REASONING_EFFORT, label: 'cerebras-glm-4.7' }],
   fable: [{ endpointId: FABLE_FALLBACK_ENDPOINT_ID, effort: FABLE_FALLBACK_REASONING_EFFORT, label: 'fable-5-medium' }],
 };
 const ladder = LADDERS[endpointArg];
-if (!ladder) { console.error(`[harness] unknown --endpoint '${endpointArg}' (cerebras|fable)`); process.exit(2); }
+if (!ladder) { console.error(`[harness] unknown --endpoint '${endpointArg}' (fable)`); process.exit(2); }
 const label = ladder[0].label;
 
 const material = buildExtractionMaterial({ iso: ISO, countryName: COUNTRY });

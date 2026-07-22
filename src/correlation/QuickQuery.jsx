@@ -4,7 +4,8 @@ import { Zap, X, ArrowRight } from 'lucide-react';
 import { quickQuery } from './api.js';
 
 /**
- * Quick Query — ⚡ floating card. GLM 4.7 Cerebras ONLY (server route enforces).
+ * Quick Query — ⚡ floating card. Cerebras LIGHT surface ONLY (server route
+ * enforces; quick summaries + lightweight queries are the only Cerebras uses).
  * Grounded ONLY in the passed mini-artifact JSON; hard ~150-token stop (client-side
  * abort at the server, sentence-truncated); ms latency stamp; EN/AR context-aware
  * question chips + single-line micro prompt; 'Continue in chat →' handoff.
@@ -56,7 +57,7 @@ export default function QuickQuery({ artifact, anchor, onClose, onContinueInChat
         <div className="qq-head">
           <Zap size={13} aria-hidden className="qq-zap" />
           <b>{rtl ? 'استعلام سريع' : 'Quick Query'}</b>
-          <span className="qq-model">GLM 4.7 · Cerebras</span>
+          <span className="qq-model">Cerebras · light</span>
           <button className="qq-x" onClick={onClose} aria-label="Close quick query"><X size={13} /></button>
         </div>
         <div className="qq-chips">

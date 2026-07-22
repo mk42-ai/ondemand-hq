@@ -76,21 +76,27 @@ export const STREAM_DEBUG = String(process.env.STREAM_DEBUG ?? 'true').toLowerCa
 // predefined-kimi-k3 is ACTIVE in the live registry (verified 2026-07-21T01:30Z:
 // status active, reasoning_efforts [low,medium,max], 1M ctx, streaming). It fully
 // REPLACES GLM 4.7 (byoi-6e314690 / zai-glm-4.7) as the correlation model — GLM
-// is NO LONGER a correlation model anywhere in the pipeline (it remains only as
-// the non-correlation main-chat default and the Cerebras BACKGROUND backfill
-// engine for data population shortfalls).
+// is NO LONGER a correlation model anywhere in the pipeline. Cerebras (GLM BYOI)
+// is restricted to QUICK SUMMARIES and LIGHTWEIGHT QUERIES only (see
+// CEREBRAS_LIGHT_ENDPOINT_ID below) — it has NO role in correlation
+// population, enrichment, or backfill.
 export const KIMI_K3_ENDPOINT_ID = process.env.CE_CORRELATION_ENDPOINT_ID || 'predefined-kimi-k3';
 export const KIMI_K3_REASONING_EFFORT = validEffort(process.env.CE_CORRELATION_REASONING_EFFORT, 'medium');
 
-// ---------- Hard-force data-fetch policy (2026-07-20; 2026-07-21 fable-only rewrite) ----------
-// fable-5-medium is the ONLY synchronous data-population model (2026-07-21).
-// Cerebras GLM 4.7 no longer sits in the synchronous ladder — it is retained
-// SOLELY as the server-side BACKGROUND backfill engine that tops up a short
-// fable pass (merge+dedupe, UI auto-refresh; see dataFetch.js cerebrasDeltaFetch).
+// ---------- Hard-force data-fetch policy (2026-07-20; 2026-07-22 Cerebras-free rewrite) ----------
+// fable is the ONLY data-population model. Cerebras (GLM 4.7 BYOI) is REMOVED
+// from the correlation engine backend/enrichment path entirely — no primary
+// pass, no fallback rung, no background backfill. It survives ONLY as the
+// quick-summary / lightweight-query engine below.
 export const FABLE_FALLBACK_ENDPOINT_ID = process.env.CE_DATAFETCH_ENDPOINT_ID || 'predefined-claude-fable-5';
 export const FABLE_FALLBACK_REASONING_EFFORT = validEffort(process.env.CE_DATAFETCH_REASONING_EFFORT_FABLE, 'medium');
-export const CEREBRAS_ENDPOINT_ID = process.env.CE_BACKFILL_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;  // background backfill ONLY — never the primary population path
-export const CE_DATAFETCH_REASONING_EFFORT = validEffort(process.env.CE_BACKFILL_REASONING_EFFORT, 'low');
+// ---------- Cerebras light-surface policy (2026-07-22 restriction) ----------
+// Cerebras GLM 4.7 BYOI is allowed ONLY on interactive light surfaces where its
+// latency profile matters: Quick Query (~150-token capped answers) and the
+// per-evidence quick article summary. Env-overridable; NEVER imported by the
+// correlation population/enrichment layer (dataFetch.js / deepPipeline.js).
+export const CEREBRAS_LIGHT_ENDPOINT_ID = process.env.CE_LIGHT_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;
+export const CEREBRAS_LIGHT_REASONING_EFFORT = validEffort(process.env.CE_LIGHT_REASONING_EFFORT, 'low');
 export const CE_MIN_DATA_POINTS = Math.max(100, parseInt(process.env.CE_MIN_DATA_POINTS || '100', 10) || 100);  // strict floor — clamped, can never be configured below 100
 
 if (!ONDEMAND_API_KEY) {
@@ -109,9 +115,9 @@ export const CE_PLUGIN_ENDPOINT_ID = process.env.CE_PLUGIN_ENDPOINT_ID || KIMI_K
 // 2026-07-19). Set in config here — never hardcoded at call sites.
 export const CE_ANALYSIS_ENDPOINT_ID = process.env.CE_ANALYSIS_ENDPOINT_ID || KIMI_K3_ENDPOINT_ID; // Kimi K3 MEDIUM — THE correlating model (2026-07-21; GLM removed from correlation)
 export const CE_ANALYSIS_REASONING_EFFORT = validEffort(process.env.CE_ANALYSIS_REASONING_EFFORT, KIMI_K3_REASONING_EFFORT);
-// Quick Query + streamed CE surfaces: Kimi K3 (2026-07-21 — correlation surfaces are
-// GLM-free). Var name kept for low-risk call-site compatibility; value is Kimi K3.
-export const GLM_ENDPOINT_ID = KIMI_K3_ENDPOINT_ID;
-// Streamed CE surfaces (quick-query/summarize/story) — validated, env-overridable.
+// Streamed CE surfaces: Quick Query + per-evidence summary run on the Cerebras
+// light endpoint (CEREBRAS_LIGHT_ENDPOINT_ID above); Story Mode and Connected
+// Dots narration are full narrative generations and stay on the analysis model.
+// Streamed CE surfaces effort — validated, env-overridable.
 export const CE_STREAM_REASONING_EFFORT = validEffort(process.env.CE_STREAM_REASONING_EFFORT, 'max');
 export const QUICK_QUERY_MAX_TOKENS = 150;

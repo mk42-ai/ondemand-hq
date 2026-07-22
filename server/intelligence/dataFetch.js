@@ -1,18 +1,18 @@
-// dataFetch.js — ADAPTIVE-RETRY DATA-FETCH LAYER (smart-run rewrite, 2026-07-21).
-// ONE smart run per correlation request — NOT 4 verification passes.
-// PRIMARY PATH: Cerebras GLM 4.7 BYOI (ultimate speed) with a strict quality
-// gate: the run must yield >= MIN_DATA_POINTS (100+) clean, deduped, validated
-// data points. If the GLM 4.7 primary pass fails or comes back short, its
-// artifacts are KEPT (never discarded) and the engine falls back to
-// fable-5-medium with a DELTA PROMPT that excludes every already-captured
-// claim — only the missing remainder is fetched. Both passes are then MERGED
-// (validated + deduped across passes) so the latest correlation is always
-// present in the final dataset, and the merged set must satisfy the 100+
-// gate. As an absolute last-resort guarantee (so the pipeline NEVER blocks
-// the user), any residual shortfall is backfilled from the real, on-disk
-// evidence corpus — never simulated data. The full pass/merge audit trail
-// (primaryCount, deltaAdded, mergedCount, per-attempt log) is recorded on the
-// run stats for UI display.
+// dataFetch.js — ADAPTIVE-RETRY DATA-FETCH LAYER (smart-run rewrite, 2026-07-21;
+// Cerebras-free 2026-07-22). ONE smart run per correlation request.
+// PRIMARY PATH: the fable enrichment model with a strict quality gate: the run
+// must yield >= MIN_DATA_POINTS clean, deduped, validated data points. A short
+// pass KEEPS its artifacts (never discarded) and retries chunked on the same
+// rung with a DELTA PROMPT that excludes every already-captured claim — only
+// the missing remainder is fetched. Passes are MERGED (validated + deduped) so
+// the latest correlation is always present in the final dataset. As an
+// absolute last-resort guarantee (so the pipeline NEVER blocks the user), any
+// residual shortfall is backfilled from the real, on-disk evidence corpus —
+// never simulated data. The full pass/merge audit trail (primaryCount,
+// deltaAdded, mergedCount, per-attempt log) is recorded on the run stats for
+// UI display. CEREBRAS IS BANNED HERE (2026-07-22): the Cerebras GLM BYOI
+// endpoint is restricted to quick-summary/lightweight-query surfaces and is
+// never imported by this population/enrichment layer.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,7 +20,6 @@ import { createOdSession, syncQuery } from '../ondemand.js';
 import * as log from '../log.js';
 import { SOURCE_TYPES } from './sources.js';
 import {
-  CEREBRAS_ENDPOINT_ID, CE_DATAFETCH_REASONING_EFFORT,
   FABLE_FALLBACK_ENDPOINT_ID, FABLE_FALLBACK_REASONING_EFFORT,
   CE_MIN_DATA_POINTS,
 } from '../env.js';
@@ -217,21 +216,17 @@ export function mergePasses(...passes) {
  *   PASS 1 (primary):  fable-5-medium, single extraction (the ONLY population model).
  *   PASS 1b:           if short, ONE chunked retry on the SAME rung (still the same run).
  *   PASS 2 (fallback): optional second rung in delta mode — none by default in the
- *                      2026-07-21 policy (Cerebras runs as a BACKGROUND job instead).
+ *                      2026-07-22 Cerebras-free policy (no second rung at all).
  *   MERGE:             all passes merged + deduped; gate re-evaluated on the merge.
  *   BACKFILL:          last-resort corpus top-up (real data only) so the pipeline
  *                      never blocks. Throws only if even backfill cannot reach the floor.
  */
 export async function hardForceDataPoints({
   iso, countryName, phrase, material, sessionTag,
-  // ADAPTIVE-RETRY LADDER (2026-07-21 smart-run policy): Cerebras GLM 4.7 is the
-  // PRIMARY path (speed-first, env-overridable via CE_DATAFETCH_ENDPOINT_ID);
-  // fable-5-medium is the verified FALLBACK rung, invoked in DELTA mode only
-  // when the primary pass misses the 100+ quality gate.
-  // 2026-07-21 policy: fable-5-medium is the ONLY synchronous population model.
-  // No second sync rung — a short fable pass KEEPS its artifacts, corpus-backfills
-  // to clear the floor now, and the caller schedules a Cerebras BACKGROUND job
-  // (cerebrasDeltaFetch) that merges in real model points and auto-refreshes the UI.
+  // LADDER (2026-07-22 Cerebras-free policy): the fable enrichment model is the
+  // ONLY population rung — primary AND retry. A short pass KEEPS its artifacts,
+  // retries chunked on the same rung, then corpus-backfills to clear the floor.
+  // There is NO Cerebras rung and NO background Cerebras job anymore.
   endpointLadder = [
     { endpointId: FABLE_FALLBACK_ENDPOINT_ID, effort: FABLE_FALLBACK_REASONING_EFFORT, label: 'fable-5-medium' },
   ],
@@ -322,7 +317,7 @@ export async function hardForceDataPoints({
   const primary = endpointLadder[0];
   const fallback = endpointLadder[1] || null;
 
-  // ---- PASS 1: PRIMARY (Cerebras GLM 4.7) — fast single extraction ----
+  // ---- PASS 1: PRIMARY (fable enrichment model) — single extraction ----
   captured = mergePasses(await runSingle(primary, { tagSuffix: 'p1', target: TARGET_DATA_POINTS }));
   // ---- PASS 1b: one chunked retry on the SAME rung if short (same run) ----
   if (captured.length < MIN_DATA_POINTS) {
@@ -378,27 +373,3 @@ export async function hardForceDataPoints({
   return finalize(combined, backfilled.length);
 }
 
-
-/**
- * cerebrasDeltaFetch — BACKGROUND backfill pass (2026-07-21).
- * Runs the Cerebras GLM 4.7 engine in DELTA mode against the already-captured
- * fable records (exclusion prompt), returning ONLY new validated model points.
- * Called server-side by the background backfill job when a fable population
- * pass came back short of the floor; the caller merges (mergePasses), dedupes,
- * re-persists the run, and the UI auto-refreshes via the existing status poll.
- */
-export async function cerebrasDeltaFetch({ iso, countryName, phrase, material, captured, sessionTag }) {
-  void iso;
-  const t0 = Date.now();
-  const need = Math.max(4, MIN_DATA_POINTS - (captured?.length || 0) + 10);
-  const sid = await createOdSession(`${sessionTag}-bgc`, []);
-  const prompt = buildExtractionPrompt({ countryName, phrase, material, min: need, target: need + 20 })
-    + buildDeltaExclusion(captured || []);
-  const raw = await syncQuery({ odSessionId: sid, query: prompt, systemPrompt: EXTRACTION_SYSTEM, endpointId: CEREBRAS_ENDPOINT_ID, reasoningEffort: CE_DATAFETCH_REASONING_EFFORT });
-  const parsed = (function () { try { return extractJson(raw); } catch { return null; } })();
-  const batch = validateBatch(Array.isArray(parsed) ? parsed : []);
-  const capturedKeys = new Set((captured || []).map(claimKey));
-  const fresh = batch.points.filter(p => !capturedKeys.has(claimKey(p))).map(p => ({ ...p, origin: 'cerebras-backfill' }));
-  log.info('datafetch.cerebras_bg_delta', { sessionTag, returned: batch.count, fresh: fresh.length, latencyMs: Date.now() - t0 });
-  return fresh;
-}

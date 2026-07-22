@@ -245,10 +245,10 @@ export default function CorrelationEngine({ iso, countryName }) {
     }, 4000);
   };
 
-  // ---------- background-backfill auto-refresh (2026-07-21) ----------
-  // While the loaded run reports dataFetch.backgroundBackfill.status === 'running',
-  // poll the latest pointer every 5s; when the server-side Cerebras job merges its
-  // delta and re-persists, reload the run automatically — NO user action needed.
+  // ---------- background-backfill auto-refresh (legacy poll) ----------
+  // New runs never schedule a background job (Cerebras backfill removed
+  // 2026-07-22), but a LEGACY persisted run can still carry a stuck
+  // backgroundBackfill:'running' marker — keep polling so those runs settle.
   useEffect(() => {
     const bb = run?.stats?.dataFetch?.backgroundBackfill;
     if (!bb || bb.status !== 'running') return;
@@ -266,8 +266,8 @@ export default function CorrelationEngine({ iso, countryName }) {
     return () => clearInterval(t);
   }, [run, iso]);
 
-  // Start Correlation Engine → deep pipeline with HARD-FORCED ≥100 data points
-  // (server-side reject+retry, Cerebras-first)
+  // Start Correlation Engine → deep pipeline with HARD-FORCED minimum data points
+  // (server-side reject+retry on the fable enrichment model)
   const onStartEngine = async () => {
     try { setErr(null); const { job: j } = await startEngine(iso); setJob(j); startPoll(); }
     catch (e) { setErr(e.message); }

@@ -29,7 +29,7 @@ export function streamNarrative(iso, runId, { onToken, onError } = {}) {
   });
 }
 
-/** Quick Query (GLM 4.7 Cerebras) — SSE: answer tokens, then a `metrics` frame
+/** Quick Query (Cerebras light surface) — SSE: answer tokens, then a `metrics` frame
  *  carrying {latencyMs, approxTokens, stoppedEarly, model}. */
 export function quickQuery({ context, question, onToken, onMetrics, onError }) {
   const ctrl = new AbortController();

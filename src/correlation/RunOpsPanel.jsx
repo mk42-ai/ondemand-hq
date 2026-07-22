@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Cpu, GitMerge, Database, Zap } from 'lucide-react';
 
 /**
- * RunOpsPanel — Palantir-style engine-run operations strip (2026-07-21 overhaul).
+ * RunOpsPanel — Palantir-style engine-run operations strip (2026-07-22 rewrite).
  * Surfaces the adaptive smart-run audit trail from run.stats.dataFetch:
- *   • PRIMARY pass (Cerebras GLM 4.7) — count + gate verdict
- *   • FALLBACK Δ pass (fable-5-medium, delta prompt) — records added
- *   • MERGE — final deduped dataset size vs the ≥100 quality gate
+ *   • PRIMARY pass (fable enrichment model) — count + gate verdict
+ *   • FALLBACK Δ pass (delta prompt) — records added (legacy runs only)
+ *   • MERGE — final deduped dataset size vs the quality gate
  *   • BACKFILL — corpus top-up count (last resort), if any
  * plus a collapsible monospace attempt log (endpoint, mode, valid, latency).
+ * Cerebras never appears in new runs (light surfaces only, 2026-07-22);
+ * the CEREBRAS badge remains solely so LEGACY persisted runs render truthfully.
  * Renders nothing for legacy runs without dataFetch stats.
  */
 const EP_LABELS = [
@@ -46,7 +48,7 @@ export default function RunOpsPanel({ run }) {
       <div className="rop-row">
         <span className="rop-title"><Cpu size={11} aria-hidden /> RUN OPS</span>
 
-        <span className={`rop-stage${primary ? '' : ' rop-stage--na'}`} title="Primary pass — Cerebras GLM 4.7, expand-mode smart run">
+        <span className={`rop-stage${primary ? '' : ' rop-stage--na'}`} title="Primary pass — fable enrichment model, expand-mode smart run">
           <Led state={primary ? (primary.gate === 'pass' ? 'pass' : 'short') : 'skip'} />
           <b>PRIMARY</b>
           <code>{epLabel(primary?.endpointId ?? df.endpointUsed)}</code>
@@ -55,7 +57,7 @@ export default function RunOpsPanel({ run }) {
 
         <span className="rop-arrow" aria-hidden>→</span>
 
-        <span className={`rop-stage${df.fallbackUsed ? '' : ' rop-stage--na'}`} title="Fallback pass — fable-5-medium, delta prompt (already-captured claims excluded)">
+        <span className={`rop-stage${df.fallbackUsed ? '' : ' rop-stage--na'}`} title="Fallback pass — delta prompt (already-captured claims excluded)">
           <Led state={df.fallbackUsed ? (fallback?.gate === 'pass' ? 'pass' : 'short') : 'skip'} />
           <b>FALLBACK·Δ</b>
           {df.fallbackUsed
@@ -88,9 +90,9 @@ export default function RunOpsPanel({ run }) {
         {df.backgroundBackfill && (
           <>
             <span className="rop-arrow" aria-hidden>→</span>
-            <span className="rop-stage" title="Server-side Cerebras background backfill — merges automatically, UI refreshes itself">
+            <span className="rop-stage" title="Legacy server-side background backfill (removed 2026-07-22 — shown only on old persisted runs)">
               <Led state={df.backgroundBackfill.status === 'done' ? 'pass' : (df.backgroundBackfill.status === 'running' ? 'live' : 'short')} />
-              <b>BG·CEREBRAS</b>
+              <b>BG·LEGACY</b>
               <code className="rop-n">{df.backgroundBackfill.status === 'done' ? `+${df.backgroundBackfill.added ?? 0}` : df.backgroundBackfill.status}</code>
             </span>
           </>
@@ -140,7 +142,7 @@ export function LiveRunStrip({ job, countryName }) {
         <span className="rop-arrow" aria-hidden>·</span>
         <span className="rop-stage"><code>stage: {job.stage || 'starting'}</code></span>
         {job.startedAt && <span className="rop-stage"><code className="rop-muted">t0 {new Date(job.startedAt).toISOString().slice(11, 19)}Z</code></span>}
-        <span className="rop-stage"><code className="rop-muted">quality gate ≥100 · cerebras-primary · fable-Δ-fallback</code></span>
+        <span className="rop-stage"><code className="rop-muted">quality gate · fable enrichment · Δ-retry</code></span>
       </div>
     </div>
   );
