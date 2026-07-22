@@ -111,8 +111,8 @@ export async function createOdSession(externalUserId, pluginIds = []) {
  * The server still PARSES frames read-only for: fullAnswer accumulation (persistence),
  * error-frame detection, [DONE] termination, and STREAM_DEBUG logging.
  * Default model policy: ENDPOINT_ID + TOP-LEVEL reasoningEffort (decomposed form —
- * suffixed ids like 'gpt-5.6-sol-medium' are a proven HTTP 400). Main chat default:
- * predefined-gpt-5.6-sol + 'low' (2026-07-20 streaming fix). Streaming always ON.
+ * suffixed model ids are a proven HTTP 400). Main chat default: the configured
+ * ENDPOINT_ID + 'low' (2026-07-20 streaming fix). Streaming always ON.
  */
 export async function streamQuery({ odSessionId, query, pluginIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false }) {
   const body = {

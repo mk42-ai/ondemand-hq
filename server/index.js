@@ -42,7 +42,7 @@ registerIntelRoutes(app);
 registerFactsRoutes(app);
 
 // MSM Analysis routes (daily mainstream-media monitor: Media-API transcription +
-// gpt-5.6-sol-medium per-video analysis, disk-persisted under server/data/msm/).
+// per-video model analysis, disk-persisted under server/data/msm/).
 registerMsmRoutes(app);
 
 // Correlation Engine routes (evidence-gated relationship graphs per country,

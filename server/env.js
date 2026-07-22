@@ -31,11 +31,11 @@ export const PORT = parseInt(process.env.PORT || '8080', 10);
 
 // ---------- Reasoning-mode configuration (2026-07-20 streaming fix) ----------
 // The DECOMPOSED model config is the only valid form: endpointId + TOP-LEVEL
-// reasoningEffort. Suffixed model ids (e.g. 'gpt-5.6-sol-medium') are a PROVEN
+// reasoningEffort. Suffixed model ids (e.g. '<model>-medium') are a PROVEN
 // HTTP 400 (dead end D2) and must never appear in a request body.
-// Supported modes come from GET /config/v1/public/endpoints for
-// predefined-gpt-5.6-sol: reasoning_efforts ["low","medium","max"] (re-verified
-// live 2026-07-20T20:35Z). Any configured value is validated against this list.
+// Supported modes come from GET /config/v1/public/endpoints:
+// reasoning_efforts ["low","medium","max"]. Any configured value is validated
+// against this list.
 export const REASONING_EFFORTS = ['low', 'medium', 'max'];
 // THE only ACTIVE GLM 4.7 endpoint (live registry 2026-07-20T20:57:56Z): Cerebras BYOI,
 // model_id zai-glm-4.7, 65k ctx, streaming true. predefined-glm-4.7 and
@@ -52,7 +52,7 @@ export function validEffort(effort, fallback) {
 // DEFAULT 'low' — explicitly NOT medium and NOT max (validator above enforces the
 // enum; invalid values fall back to 'low'). Decomposed form only — suffixed model
 // ids are a proven HTTP 400 (dead end D2). Workflows stay on their own platform-side
-// model config (gpt-5.6-sol) — workflow defs are NOT touched by this policy.
+// model config — workflow defs are NOT touched by this policy.
 // Override via CHAT_ENDPOINT_ID / CHAT_REASONING_EFFORT (validated above).
 export const ENDPOINT_ID = process.env.CHAT_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;
 export const REASONING_EFFORT = validEffort(process.env.CHAT_REASONING_EFFORT, 'low');
@@ -62,7 +62,7 @@ export const GATHER_ENDPOINT_ID = process.env.GATHER_ENDPOINT_ID || GLM_BYOI_END
 export const GATHER_REASONING_EFFORT = validEffort(process.env.GATHER_REASONING_EFFORT, 'medium');
 
 // ANALYSIS model policy for the ODA Intelligence pipeline (server/intel.js).
-// PRODUCTION: predefined-gpt-5.6-sol + medium (same as chat). Overridable via env
+// PRODUCTION: follows the main-chat endpoint policy. Overridable via env
 // for controlled test passes — e.g. ANALYSIS_ENDPOINT_ID=predefined-gemini-3.5-flash
 // (id verified live against GET /config/v1/public/endpoints, 2026-07-17).
 export const ANALYSIS_ENDPOINT_ID = process.env.ANALYSIS_ENDPOINT_ID || ENDPOINT_ID;

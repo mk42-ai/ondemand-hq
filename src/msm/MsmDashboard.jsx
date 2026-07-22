@@ -1,6 +1,6 @@
 // MsmDashboard.jsx — MSM Analysis: daily mainstream-media monitor for ODA Abu Dhabi.
 // White minimal newsroom dashboard. Data: /api/msm/* (Media-API transcription +
-// gpt-5.6-sol-medium streamed analysis, disk-persisted, deduped by videoId).
+// streamed model analysis, disk-persisted, deduped by videoId).
 // Progressive: cards render as each video completes (SSE /api/msm/run); filters are
 // instant client-side; per-card skeletons; bilingual EN/AR; fully RTL-safe (logical
 // CSS properties + dir attribute from i18n).

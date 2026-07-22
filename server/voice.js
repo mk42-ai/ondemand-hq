@@ -15,7 +15,7 @@ import { ONDEMAND_API_KEY } from './env.js';
 // NEVER silent: only used when VOICE_FALLBACK_ENDPOINT is explicitly set, and every
 // turn response carries {model, fallbackActive} so the UI displays it.
 export const VOICE_ENDPOINT_ID = process.env.VOICE_ENDPOINT_ID || 'byoi-6e314690-4eaf-4def-a33c-380809acf1f5';
-export const VOICE_FALLBACK_ENDPOINT = process.env.VOICE_FALLBACK_ENDPOINT || ''; // e.g. predefined-gpt-5.6-sol
+export const VOICE_FALLBACK_ENDPOINT = process.env.VOICE_FALLBACK_ENDPOINT || ''; // optional explicit fallback endpoint id
 export const WORLD_INTEL_WORKFLOW_ID = process.env.WORLD_INTEL_WORKFLOW_ID || '6a5d90228a845853270b9b53';
 
 const PERSONA = `You are ODA World Intelligence — the voice of the Office of Development Affairs world view.

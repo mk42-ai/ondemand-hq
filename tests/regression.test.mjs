@@ -61,14 +61,14 @@ test('KE baseline: badge → breakdown flow — totals agree with badgeCount', (
   }
 });
 
-test('KE baseline: tier styles — Verified solid #159a7a, Possible dashed, Predicted dotted', () => {
-  assert.equal(VERIFICATION_STYLES.Verified.color, '#159a7a');
+test('KE baseline: tier styles — Verified solid #ffffff (oda-mono), Possible dashed, Predicted dotted', () => {
+  assert.equal(VERIFICATION_STYLES.Verified.color, '#ffffff'); // oda-mono monochrome theme (TYPOGRAPHY.md)
   assert.deepEqual(VERIFICATION_STYLES.Verified.dash, []);
   assert.deepEqual(VERIFICATION_STYLES.Possible.dash, [7, 5]);
   assert.deepEqual(VERIFICATION_STYLES.Predicted.dash, [2, 5]);
   const ed1 = KE.edges.find(e => e.id === 'ED1');
   assert.equal(ed1.verification, 'Verified');
-  assert.equal(ed1.style.color, '#159a7a');
+  assert.equal(ed1.style.color, '#159a7a'); // recorded run artifact keeps its historical persisted style
 });
 
 test('KE baseline: filters — minWeight, type toggle, search dim, maxAge window', () => {
