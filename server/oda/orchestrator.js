@@ -7,7 +7,7 @@
 // through the runStore's validated transition graph.
 
 import { createOdSession } from '../ondemand.js';
-import { workerCall } from './models.js';
+import { workerCall, interpreterCall } from './models.js';
 import { interpretRequest } from './interpreter.js';
 import { getManifest } from './manifests.js';
 import { validatePipeline, nextRunnableNodes } from './sequencing.js';
@@ -20,6 +20,12 @@ import {
 import { emitRunEvent } from './events.js';
 import { verifyArtifact, planRevision, REVISE_POLICY, shouldEscalate } from './verifier.js';
 import { createGate, GATE_DEFS } from './gates.js';
+// Live-render upgrade (2026-07-22): GLM 4.7 slide director + selectable final-
+// document brain + mandatory downloadable artifact + terminal ASCII banner.
+import { initLiveDeck, directorHooks } from './liveDeck.js';
+import { resolveBrain, brainCall, DEFAULT_BRAIN } from './brains.js';
+import { packageRunArtifact } from './autoArtifact.js';
+import { printRunBanner, printRunFooter } from './asciiLogo.js';
 
 /** Skill id → central model-config surface (models.js ODA_MODEL_ROUTING keys). */
 const SKILL_SURFACE = Object.freeze({
@@ -65,6 +71,15 @@ function nodeArtifactSpec(node) {
   return { logicalId: `${node.nodeId}-${node.skill}`, ...m };
 }
 
+/** Live-deck hooks accessor — re-attaches after resume/restart (functions don't persist). */
+function liveOf(run) {
+  if (!run._live || typeof run._live.onInterpreted !== 'function') {
+    if (!run.liveDeck) initLiveDeck(run);
+    run._live = directorHooks(run, { persist: () => _flushSync(run) });
+  }
+  return run._live;
+}
+
 /** Lazily create the run's OnDemand chat session (one per run). */
 async function ensureSession(run) {
   if (!run.odSessionId) {
@@ -80,6 +95,14 @@ async function ensureSession(run) {
  */
 export async function startRun(run) {
   try {
+    // ---- 0. LIVE DECK + BRAIN + TERMINAL BANNER (live-render upgrade) ----
+    // Brain: validated at run creation (routes.js); default sonnet-5. GLM 4.7
+    // remains interpreter-only — the brain authors the final document.
+    run.brain = run.brain || DEFAULT_BRAIN;
+    initLiveDeck(run);
+    const live = liveOf(run);
+    printRunBanner({ runId: run.runId, brain: run.brain, intent: run.request.text });
+
     // ---- 1. INTERPRET (GLM 4.7 → control JSON; heuristic fallback never fails) ----
     transition(run, 'interpreting');
     const sessionId = await ensureSession(run);
@@ -92,6 +115,7 @@ export async function startRun(run) {
     run.mode = control.mode;
     run.control = control;
     emitRunEvent(run, 'request.interpreted', { control, source, safeStatus: control.safe_status });
+    live.onInterpreted(control); // slide 1 fills from the REAL interpretation
 
     // ---- 2. PLAN (validate pipeline against sequencing rules) ----
     transition(run, 'planning');
@@ -106,6 +130,7 @@ export async function startRun(run) {
       pipeline: run.pipeline, deliverables: control.deliverables,
       workspaceRenderer: control.workspace_renderer, mode: control.mode,
     });
+    live.onPipelineSelected(run.pipeline); // slides 1→final + 4 plan preview
     _flushSync(run);
 
     // ---- 3. PRE-EXECUTION GATE (FULL mode / interpreter-requested) ----
@@ -286,10 +311,12 @@ async function executeNode(run, node) {
 
   // ---- WORKER (Sonnet 5 — the only author of deliverable content) ----
   const query = `${contextBlock}\n\n--- PRODUCE ---\n${spec.title} (${spec.type}) in mode ${node.mode.toUpperCase()}. Objective: ${handoff.objective}\nReturn ONLY the deliverable content in markdown (or HTML for deck-html) — no preamble, no self-commentary; append a final "Self-report" section (what you did, assumed, could not resolve).`;
-  const draftText = await workerCall({
-    surface, sessionId, query, systemPrompt,
-    pluginIds: [], stream: false,
-  });
+  // Selected brain authors the deliverable (live-render upgrade). sonnet-5 keeps
+  // the central models.js worker path; any other brain routes through brains.js
+  // (same forbidden-endpoint guard, NO silent downgrades — errors surface).
+  const draftText = (run.brain && run.brain !== 'sonnet-5')
+    ? await brainCall({ brainId: run.brain, sessionId, query, systemPrompt })
+    : await workerCall({ surface, sessionId, query, systemPrompt, pluginIds: [], stream: false });
 
   const artifact = addArtifact(run, {
     logicalId: spec.logicalId, type: spec.type, title: spec.title,
@@ -301,7 +328,15 @@ async function executeNode(run, node) {
   // Evidence extraction (structured state, not prose): record tagged facts the
   // worker declared, if any, as evidence items (best-effort, non-fatal).
   for (const m of String(draftText).matchAll(/\*\*fact\*\*[:\s—-]*(.{10,180}?)(?:\n|$)/gi)) {
-    addEvidence(run, { claim: m[1].trim(), tag: 'fact', addedBy: node.skill, nodeId: node.nodeId }); // emits evidence.added
+    const evItem = addEvidence(run, { claim: m[1].trim(), tag: 'fact', addedBy: node.skill, nodeId: node.nodeId }); // emits evidence.added
+    liveOf(run).onEvidence(evItem); // slide 2 fills from REAL evidence state
+  }
+
+  // GLM 4.7 slide director: slides 3+4 fill from the REAL draft artifact.
+  try {
+    await liveOf(run).onArtifactPreview(artifact, { interpreterCall, sessionId });
+  } catch (dirErr) {
+    console.warn(`[oda-live] slide director skipped: ${dirErr.message}`);
   }
 
   // ---- VERIFIER (Sonnet 5, surface 'verification'; independent per policy) ----
@@ -344,6 +379,7 @@ async function verifyNodeArtifact(run, node, artifact, definitionOfDone, manifes
 
     if (findings.status === 'passed') {
       setArtifactStatus(run, artifact.artifactId, 'verified', findings); // emits verification.passed
+      liveOf(run).onVerificationPassed(artifact.artifactId);
       ns.status = 'completed';
       ns.completedAt = new Date().toISOString();
       emitRunEvent(run, 'skill.completed', { nodeId: node.nodeId, skill: node.skill, artifactId: artifact.artifactId });
@@ -414,12 +450,27 @@ async function completeRun(run) {
     // Synthesis failure does not un-verify delivered artifacts — complete honestly without it.
     console.warn(`[oda-orchestrator] synthesis failed on ${run.runId}: ${err.message}`);
   }
+  // MANDATORY download URL (live-render upgrade): package the primary verified
+  // artifact into a downloadable file BEFORE completing; surface it in the SSE
+  // stream (artifact.download.ready + run.completed payload) and the run state.
+  const pkg = await packageRunArtifact(run);
+  if (pkg.downloadUrl) {
+    emitRunEvent(run, 'artifact.download.ready', {
+      artifactId: pkg.artifactId, downloadUrl: pkg.downloadUrl, format: pkg.format, bytes: pkg.bytes,
+    });
+  } else {
+    console.warn(`[oda-live] packaging produced no download URL: ${pkg.reason}`);
+  }
+  liveOf(run).onRunCompleted({ downloadUrl: pkg.downloadUrl });
   transition(run, 'completed');
   run.timestamps.completedAt = new Date().toISOString();
   emitRunEvent(run, 'run.completed', {
     artifacts: run.artifacts.filter((a) => a.status === 'verified').map((a) => ({ artifactId: a.artifactId, type: a.type, title: a.title, version: a.version })),
+    downloadUrl: pkg.downloadUrl || null,
+    brain: run.brain || DEFAULT_BRAIN,
     durationMs: Date.parse(run.timestamps.completedAt) - Date.parse(run.timestamps.createdAt),
   });
+  printRunFooter({ runId: run.runId, status: 'completed', downloadUrl: pkg.downloadUrl });
   _flushSync(run);
 }
 

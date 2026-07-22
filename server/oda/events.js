@@ -47,6 +47,11 @@ export const EVENT_TYPES = Object.freeze([
   'skill.completed',
   'run.completed',
   'run.failed',
+  // Live-render upgrade (2026-07-22): pre-cooked slide template updates driven
+  // by the GLM 4.7 slide director — every frame maps to a real state transition.
+  'slide.update',          // { slideNo: 1-4, patch: { title?, bullets?, status?, confidence? } }
+  'deck.ready',            // { slides: [...] } — all four slides finalised
+  'artifact.download.ready', // { artifactId, downloadUrl, format, bytes } — mandatory post-run
 ]);
 
 const EVENT_TYPE_SET = new Set(EVENT_TYPES);

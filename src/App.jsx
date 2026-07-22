@@ -11,6 +11,8 @@ import IntelDashboard from './intel/IntelDashboard.jsx';
 import MsmDashboard from './msm/MsmDashboard.jsx';
 // ODA Workspace (Phase 3) — lazy-loaded so the suite home bundle stays lean.
 const OdaWorkspace = React.lazy(() => import('./oda/OdaWorkspace.jsx'));
+// ODA Live Render (live-render upgrade) — /oda/live route, lazy chunk.
+const LiveRender = React.lazy(() => import('./oda/live/LiveRender.jsx'));
 import { ArrowDown, X, AlertTriangle } from 'lucide-react';
 import { dissect } from './markdown.jsx';
 
@@ -54,16 +56,20 @@ export default function App() {
   const [odaOpen, setOdaOpen] = useState(() => {
     try { return window.location.pathname.replace(/\/+$/, '') === '/oda'; } catch { return false; }
   });
+  const [liveOpen, setLiveOpen] = useState(() => {
+    try { return window.location.pathname.replace(/\/+$/, '') === '/oda/live'; } catch { return false; }
+  });
   useEffect(() => {
-    const want = odaOpen ? '/oda' : (msmOpen ? '/msm-analysis' : '/');
+    const want = liveOpen ? '/oda/live' : (odaOpen ? '/oda' : (msmOpen ? '/msm-analysis' : '/'));
     try { if (window.location.pathname !== want) window.history.pushState({}, '', want); } catch { /* noop */ }
-  }, [msmOpen, odaOpen]);
+  }, [msmOpen, odaOpen, liveOpen]);
   useEffect(() => {
     const onPop = () => {
       try {
         const p = window.location.pathname.replace(/\/+$/, '');
         setMsmOpen(p === '/msm-analysis');
         setOdaOpen(p === '/oda');
+        setLiveOpen(p === '/oda/live');
       } catch { /* noop */ }
     };
     window.addEventListener('popstate', onPop);
@@ -391,7 +397,11 @@ export default function App() {
         onMsm={() => { setIntelOpen(false); setOdaOpen(false); setMsmOpen(true); }} msmActive={msmOpen}
         onOda={() => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(true); }} odaActive={odaOpen}
         open={sidebarOpen} />
-      {odaOpen ? (
+      {liveOpen ? (
+        <React.Suspense fallback={<div className="main main--intel" style={{ display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 13 }}>Opening ODA Live Render…</div>}>
+          <LiveRender onExit={() => { setLiveOpen(false); setOdaOpen(true); }} />
+        </React.Suspense>
+      ) : odaOpen ? (
         <React.Suspense fallback={<div className="main main--intel" style={{ display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 13 }}>Opening the ODA workspace…</div>}>
           <OdaWorkspace onExit={() => setOdaOpen(false)} />
         </React.Suspense>

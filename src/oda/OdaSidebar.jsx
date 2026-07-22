@@ -86,6 +86,9 @@ export default function OdaSidebar({
         </button>
       </div>
 
+      <button type="button" className="oda-side__new" onClick={() => { try { window.history.pushState({}, '', '/oda/live'); window.dispatchEvent(new PopStateEvent('popstate')); } catch { /* noop */ } }}>
+        <Plus size={15} aria-hidden /> Live Render
+      </button>
       <button type="button" className="oda-side__new" onClick={() => onNewTask?.()}>
         <Plus size={15} aria-hidden /> New task
       </button>

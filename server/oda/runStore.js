@@ -68,7 +68,10 @@ const pendingTimers = new Map();
 function writeRunFileSync(run) {
   const file = runFile(run.runId);
   const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(run, null, 2), 'utf8');
+  // `_live` holds the in-memory director hooks (functions) — never persisted;
+  // liveOf() re-attaches them after restart from the durable run.liveDeck data.
+  const { _live, ...persistable } = run;
+  fs.writeFileSync(tmp, JSON.stringify(persistable, null, 2), 'utf8');
   fs.renameSync(tmp, file); // atomic on POSIX filesystems — no half-written run files
 }
 
@@ -217,11 +220,12 @@ export function transition(run, nextStatus, meta = {}) {
  * @param {{ text: string, attachments?: import('./contracts.d.ts').ArtifactReference[], externalUserId: string }} params
  * @returns {ODARun}
  */
-export function createRun({ text, attachments = [], externalUserId }) {
+export function createRun({ text, attachments = [], externalUserId, brain = null }) {
   const runId = crypto.randomUUID();
   const now = new Date().toISOString();
   /** @type {ODARun} */
   const run = {
+    brain: brain || null,
     runId,
     status: 'idle',
     request: { text, attachments, externalUserId },

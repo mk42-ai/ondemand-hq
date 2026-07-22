@@ -78,13 +78,24 @@ router.post('/interpret/heuristic', (req, res) => {
 // ---------------------------------------------------------------------------
 
 router.post('/runs', asyncH(async (req, res) => {
-  const { text, attachments = [], externalUserId = 'oda-user' } = req.body || {};
+  const { text, attachments = [], externalUserId = 'oda-user', brain = null } = req.body || {};
   if (!text || typeof text !== 'string') return res.status(400).json({ error: 'text (string) is required' });
-  const run = runStore.createRun({ text, attachments, externalUserId });
+  // Brain validation (live-render upgrade): unknown brains are a 400, never a
+  // silent fallback; forbidden endpoints throw per the central guard.
+  let brainId = null;
+  if (brain) {
+    try {
+      const { resolveBrain, assertBrainAllowed } = await import('./brains.js');
+      brainId = assertBrainAllowed(resolveBrain(brain)).id;
+    } catch (err) {
+      return res.status(400).json({ error: err.message, code: err.code || 'ODA_UNKNOWN_BRAIN' });
+    }
+  }
+  const run = runStore.createRun({ text, attachments, externalUserId, brain: brainId });
   // (runStore.createRun already emits run.created — exactly one frame per state change.)
   // Fire the engine asynchronously — the client follows progress on the SSE stream.
   startRun(run).catch((err) => console.error(`[oda-routes] startRun ${run.runId}: ${err.message}`));
-  res.status(201).json({ runId: run.runId, status: run.status });
+  res.status(201).json({ runId: run.runId, status: run.status, brain: run.brain || 'sonnet-5' });
 }));
 
 router.get('/runs', (req, res) => res.json({ runs: runStore.listRuns() }));
@@ -94,8 +105,15 @@ router.get('/runs/:id', (req, res) => {
   if (!run) return notFound(res, 'run');
   // Full durable state (recovery after refresh — M13). Trim event payloads to
   // the last 200 to keep the JSON light; the SSE stream replays the rest.
-  const { events, ...rest } = run;
-  res.json({ ...rest, events: events.slice(-200), openGates: openGates(run), gateSummary: gateSummary(run) });
+  const { events, _live, ...rest } = run;
+  res.json({
+    ...rest,
+    events: events.slice(-200),
+    openGates: openGates(run),
+    gateSummary: gateSummary(run),
+    downloadUrl: run.finalArtifact?.downloadUrl || null,
+    liveDeck: run.liveDeck || null,
+  });
 });
 
 // SSE event stream with reconnection replay: GET /runs/:id/events?since=<seq>
@@ -251,6 +269,12 @@ router.get('/files/:name', asyncH(async (req, res) => {
   res.setHeader('Content-Type', FORMAT_MIME[ext] || 'application/octet-stream');
   res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
   fs.createReadStream(file).pipe(res);
+}));
+
+/** GET /brains — the selectable final-document brains (live-render upgrade). */
+router.get('/brains', asyncH(async (req, res) => {
+  const { describeBrains } = await import('./brains.js');
+  res.json(describeBrains());
 }));
 
 /** GET /builders — observability: available Phase 4 builders. */
