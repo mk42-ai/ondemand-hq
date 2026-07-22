@@ -6,6 +6,23 @@ import { ONDEMAND_API_KEY, ONDEMAND_BASE_URL, ENDPOINT_ID, REASONING_EFFORT, STR
 
 const H = { apikey: ONDEMAND_API_KEY, 'Content-Type': 'application/json' };
 
+// ---------- API-key fail-fast guard (2026-07-22 HTTP-500 root-cause fix) ----------
+// ROOT CAUSE (verified live 2026-07-22 against POST /chat/v1/sessions):
+//   • apikey header EMPTY  -> upstream HTTP 500 "An unexpected error occurred"
+//   • apikey header ABSENT -> HTTP 401 "No API key header"
+//   • apikey header INVALID-> HTTP 401 "Invalid API Key"
+// A deployment that omits ONDEMAND_API_KEY/ON_DEMAND_API_KEY therefore surfaces as
+// an opaque 500 on EVERY OnDemand call. Fail fast with an actionable error instead
+// of sending an empty header upstream.
+function assertApiKey(op) {
+  if (!ONDEMAND_API_KEY) {
+    const err = new Error(`OnDemand ${op} blocked: ONDEMAND_API_KEY (or ON_DEMAND_API_KEY) is not set in this deployment — an empty apikey header would return upstream HTTP 500 "An unexpected error occurred". Set the env var and restart.`);
+    err.status = 503;
+    err.errorCode = 'MISSING_ONDEMAND_API_KEY';
+    throw err;
+  }
+}
+
 // 2026-07-19 live-verified platform change: the chat API now rejects `pluginIds`
 // at query time with HTTP 400 "One or more agents are invalid: agent-XXXX"
 // (details.invalidAgentIds). The working form — verified live today against
@@ -65,6 +82,13 @@ async function parseUpstreamError(r) {
 }
 
 export async function createOdSession(externalUserId, pluginIds = []) {
+  assertApiKey('session create');
+  // Session-create contract re-verified against the LIVE public docs 2026-07-22
+  // (GET /config/v1/public/docs/reference/api/createchatsession):
+  //   POST {base}/chat/v1/sessions · header `apikey` · body requires externalUserId;
+  //   docs schema lists pluginIds[]; the live API also accepts agentIds[] (201-proven
+  //   2026-07-22 with a real session id) — agentIds retained per the 2026-07-19
+  //   platform change where query-time pluginIds returned HTTP 400.
   // (2026-07-20 streaming-bug fix) The gateway INTERMITTENTLY answers session-create
   // with 404 "no Route matched with those values" (observed live: first typed-prompt
   // call 404s, immediate identical retry 201s). odFetch only retries network/5xx, so
@@ -87,7 +111,9 @@ export async function createOdSession(externalUserId, pluginIds = []) {
       return j?.data?.id;
     }
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
-    const err = new Error(`OnDemand session create failed (HTTP ${r.status}): ${message}`);
+    const hint = r.status === 500 && /unexpected error/i.test(message)
+      ? ' [hint: upstream returns this exact 500 when the apikey header is EMPTY — check ONDEMAND_API_KEY wiring]' : '';
+    const err = new Error(`OnDemand session create failed (HTTP ${r.status}): ${message}${hint}`);
     err.status = r.status;
     err.errorCode = `UPSTREAM_HTTP_${r.status}`;
     err.upstreamErrorCode = upstreamErrorCode;
@@ -115,6 +141,7 @@ export async function createOdSession(externalUserId, pluginIds = []) {
  * predefined-gpt-5.6-sol + 'low' (2026-07-20 streaming fix). Streaming always ON.
  */
 export async function streamQuery({ odSessionId, query, pluginIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false }) {
+  assertApiKey('query stream');
   const body = {
     query,
     endpointId: endpointOverride || ENDPOINT_ID,
@@ -259,6 +286,7 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
 
 /** Non-streaming helper for internal calls (router classification, title generation). Same model policy. */
 export async function syncQuery({ odSessionId, query, systemPrompt, pluginIds = [], endpointId, reasoningEffort }) {
+  assertApiKey('sync query');
   const r = await odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions/${odSessionId}/query`, {
     method: 'POST', headers: H,
     body: JSON.stringify({
