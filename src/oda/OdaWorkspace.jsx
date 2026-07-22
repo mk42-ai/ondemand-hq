@@ -1,0 +1,83 @@
+// OdaWorkspace.jsx — the dedicated ODA workspace route (Phase 3 §1).
+// Three-area layout: LEFT persistent sidebar (identity, composer, history,
+// controls) · CENTRE adaptive live canvas (one renderer per active stage) ·
+// RIGHT collapsible artifact rail. All state flows from useOdaRun (real SSE
+// events only). The EXISTING suite home (executive brief + quick starts) is
+// untouched — this mounts as a separate /oda route over it and 'Back to suite'
+// returns without any state loss.
+import React, { useCallback, useEffect, useState } from 'react';
+import useOdaRun from './useOdaRun.js';
+import OdaSidebar from './OdaSidebar.jsx';
+import ArtifactRail from './ArtifactRail.jsx';
+import Canvas from './Canvas.jsx';
+import './oda.css';
+
+export default function OdaWorkspace({ onExit }) {
+  const { run, connected, start, attach, resolveGate, lifecycle, reset, fetchArtifact } = useOdaRun();
+  const [railCollapsed, setRailCollapsed] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const [controls, setControls] = useState({ lang: 'en', output: 'auto', depth: 'fast' });
+
+  // Run history (durable server list — refresh-safe).
+  const loadHistory = useCallback(async () => {
+    try {
+      const r = await fetch('/api/oda/runs');
+      if (r.ok) setHistory((await r.json()).runs.map((x) => ({ runId: x.runId, intent: x.intent || '(interpreting…)', status: x.status, createdAt: x.createdAt })));
+    } catch { /* offline tolerated */ }
+  }, []);
+  useEffect(() => { loadHistory(); }, [loadHistory, run.status]);
+
+  const onSubmit = useCallback(async ({ text, files = [] }) => {
+    setBusy(true); setError(null);
+    try {
+      let finalText = text;
+      const extras = [];
+      if (controls.lang !== 'en') extras.push(`Language: ${controls.lang === 'ar' ? 'Arabic' : 'bilingual English and Arabic'}`);
+      if (controls.output !== 'auto') extras.push(`Output: ${controls.output}`);
+      if (controls.depth !== 'fast') extras.push('Depth: full engagement with approval gates');
+      if (extras.length) finalText += ` — ${extras.join('; ')}`;
+      await start({ text: finalText, attachments: files.map((f) => ({ name: f.name, size: f.size })) });
+    } catch (e) { setError(e.message); }
+    finally { setBusy(false); }
+  }, [start, controls]);
+
+  const onLifecycle = useCallback(async (op) => {
+    setError(null);
+    try { await lifecycle(op); } catch (e) { setError(e.message); }
+  }, [lifecycle]);
+
+  const onDownload = useCallback((a) => {
+    if (a.url) window.open(a.url, '_blank', 'noopener');
+  }, []);
+
+  return (
+    <div className="oda-ws">
+      <OdaSidebar
+        run={run}
+        connected={connected}
+        busy={busy}
+        history={history}
+        controls={controls}
+        onControlsChange={setControls}
+        onSubmit={onSubmit}
+        onLifecycle={onLifecycle}
+        onNewTask={() => { reset(); setError(null); }}
+        onSelectRun={(id) => attach(id).catch((e) => setError(e.message))}
+        onExit={onExit}
+      />
+      <div style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {error && <div className="oda-wserr">{error}</div>}
+        <Canvas run={run} resolveGate={resolveGate} fetchArtifact={fetchArtifact} />
+      </div>
+      <ArtifactRail
+        run={run}
+        collapsed={railCollapsed}
+        onToggle={() => setRailCollapsed((c) => !c)}
+        onDownload={onDownload}
+        onPreview={() => { /* preview opens in-canvas via the document stage */ }}
+      />
+    </div>
+  );
+}

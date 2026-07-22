@@ -9,6 +9,8 @@ import DebugDrawer from './components/DebugDrawer.jsx';
 import BilingualLoader from './components/BilingualLoader.jsx';
 import IntelDashboard from './intel/IntelDashboard.jsx';
 import MsmDashboard from './msm/MsmDashboard.jsx';
+// ODA Workspace (Phase 3) — lazy-loaded so the suite home bundle stays lean.
+const OdaWorkspace = React.lazy(() => import('./oda/OdaWorkspace.jsx'));
 import { ArrowDown, X, AlertTriangle } from 'lucide-react';
 import { dissect } from './markdown.jsx';
 
@@ -47,12 +49,23 @@ export default function App() {
   const [msmOpen, setMsmOpen] = useState(() => {
     try { return window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'; } catch { return false; }
   });
+  // ODA Workspace (Phase 3) — /oda route, deep-linkable; the suite home
+  // (executive brief + per-skill quick starts) is preserved untouched at '/'.
+  const [odaOpen, setOdaOpen] = useState(() => {
+    try { return window.location.pathname.replace(/\/+$/, '') === '/oda'; } catch { return false; }
+  });
   useEffect(() => {
-    const want = msmOpen ? '/msm-analysis' : '/';
+    const want = odaOpen ? '/oda' : (msmOpen ? '/msm-analysis' : '/');
     try { if (window.location.pathname !== want) window.history.pushState({}, '', want); } catch { /* noop */ }
-  }, [msmOpen]);
+  }, [msmOpen, odaOpen]);
   useEffect(() => {
-    const onPop = () => { try { setMsmOpen(window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'); } catch { /* noop */ } };
+    const onPop = () => {
+      try {
+        const p = window.location.pathname.replace(/\/+$/, '');
+        setMsmOpen(p === '/msm-analysis');
+        setOdaOpen(p === '/oda');
+      } catch { /* noop */ }
+    };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
@@ -371,13 +384,18 @@ export default function App() {
     <div className="app">
       <LightboxHost />
       <Sidebar conversations={convs} activeId={activeId}
-        onSelect={(id) => { setIntelOpen(false); setMsmOpen(false); loadConversation(id); }}
-        onNew={() => { setIntelOpen(false); setMsmOpen(false); newChat('chat'); }}
-        onTool={startTool}
-        onIntel={() => { setMsmOpen(false); setIntelOpen(true); }} intelActive={intelOpen}
-        onMsm={() => { setIntelOpen(false); setMsmOpen(true); }} msmActive={msmOpen}
+        onSelect={(id) => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(false); loadConversation(id); }}
+        onNew={() => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(false); newChat('chat'); }}
+        onTool={(k) => { setOdaOpen(false); startTool(k); }}
+        onIntel={() => { setMsmOpen(false); setOdaOpen(false); setIntelOpen(true); }} intelActive={intelOpen}
+        onMsm={() => { setIntelOpen(false); setOdaOpen(false); setMsmOpen(true); }} msmActive={msmOpen}
+        onOda={() => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(true); }} odaActive={odaOpen}
         open={sidebarOpen} />
-      {msmOpen ? (
+      {odaOpen ? (
+        <React.Suspense fallback={<div className="main main--intel" style={{ display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 13 }}>Opening the ODA workspace…</div>}>
+          <OdaWorkspace onExit={() => setOdaOpen(false)} />
+        </React.Suspense>
+      ) : msmOpen ? (
         <div className="main main--intel">
           <MsmDashboard onExit={() => setMsmOpen(false)} onAnalyseDeeper={analyseDeeper} />
         </div>

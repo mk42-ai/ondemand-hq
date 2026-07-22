@@ -185,4 +185,78 @@ router.get('/runs/:id/artifacts/:artifactId', (req, res) => {
   res.json(a);
 });
 
+// ---------------------------------------------------------------------------
+// Phase 4 — artifact materialisation (editable PPTX/DOCX/XLSX + PDF/HTML/MD)
+// ---------------------------------------------------------------------------
+
+const FORMAT_MIME = {
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  pdf: 'application/pdf',
+  html: 'text/html; charset=utf-8',
+  md: 'text/markdown; charset=utf-8',
+};
+
+/**
+ * POST /runs/:id/artifacts/:artifactId/materialize  { format }
+ * Materialises a VERIFIED content artifact into an editable file via the
+ * Phase 4 builders (per-slide QA for PPTX, live formulas for XLSX, RTL runs
+ * for DOCX…). The file lands under server/oda/data/files/ and is served by
+ * GET /files/:name; the run records the artifact URL + QA report.
+ */
+router.post('/runs/:id/artifacts/:artifactId/materialize', asyncH(async (req, res) => {
+  const run = runStore.getRun(req.params.id);
+  if (!run) return notFound(res, 'run');
+  const a = run.artifacts.find((x) => x.artifactId === req.params.artifactId);
+  if (!a) return notFound(res, 'artifact');
+  if (a.status !== 'verified') return res.status(409).json({ error: `artifact ${a.artifactId} is ${a.status} — only verified artifacts materialise` });
+  const format = String(req.body?.format || '').toLowerCase();
+  if (!FORMAT_MIME[format]) return res.status(400).json({ error: `format must be one of ${Object.keys(FORMAT_MIME).join('|')}` });
+
+  const { parseContentSpec, buildArtifact } = await import('./builders/index.js');
+  const path = await import('node:path');
+  const fs = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+  fs.mkdirSync(dir, { recursive: true });
+
+  const spec = parseContentSpec(a.content || a.preview || '');
+  if (!spec.title) spec.title = a.title;
+  const langHint = /arabic|بالعربية/i.test(a.type) || a.type.startsWith('arabic-') ? 'ar' : 'en';
+  spec.lang = spec.lang || langHint;
+  const base = `${run.runId.slice(0, 8)}-${a.logicalId}-v${a.version}`.replace(/[^a-zA-Z0-9_-]/g, '');
+  const outPath = path.join(dir, `${base}.${format}`);
+  const result = await buildArtifact({ format, spec, outPath });
+
+  const url = `/api/oda/files/${path.basename(outPath)}`;
+  a.url = url;
+  a.materialized = { format, bytes: result.bytes, qa: result.qa, at: new Date().toISOString() };
+  runStore._flushSync(run);
+  const { emitRunEvent } = await import('./events.js');
+  emitRunEvent(run, 'artifact.preview.updated', { artifactId: a.artifactId, url, format, qa: result.qa });
+  res.json({ artifactId: a.artifactId, url, format, bytes: result.bytes, qa: result.qa });
+}));
+
+/** GET /files/:name — serve materialised artifact files (download dock). */
+router.get('/files/:name', asyncH(async (req, res) => {
+  const path = await import('node:path');
+  const fs = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+  const name = path.basename(req.params.name); // no traversal
+  const file = path.join(dir, name);
+  if (!fs.existsSync(file)) return notFound(res, 'file');
+  const ext = name.split('.').pop().toLowerCase();
+  res.setHeader('Content-Type', FORMAT_MIME[ext] || 'application/octet-stream');
+  res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  fs.createReadStream(file).pipe(res);
+}));
+
+/** GET /builders — observability: available Phase 4 builders. */
+router.get('/builders', asyncH(async (req, res) => {
+  const { listBuilders } = await import('./builders/index.js');
+  res.json({ builders: listBuilders() });
+}));
+
 export default router;
