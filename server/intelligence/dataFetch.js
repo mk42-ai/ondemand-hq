@@ -1,11 +1,12 @@
-// dataFetch.js — ADAPTIVE-RETRY DATA-FETCH LAYER (smart-run rewrite, 2026-07-21).
-// ONE smart run per correlation request — NOT 4 verification passes.
-// PRIMARY PATH: Cerebras GLM 4.7 BYOI (ultimate speed) with a strict quality
-// gate: the run must yield >= MIN_DATA_POINTS (100+) clean, deduped, validated
-// data points. If the GLM 4.7 primary pass fails or comes back short, its
-// artifacts are KEPT (never discarded) and the engine falls back to
-// fable-5-medium with a DELTA PROMPT that excludes every already-captured
-// claim — only the missing remainder is fetched. Both passes are then MERGED
+// dataFetch.js — ADAPTIVE-RETRY DATA-FETCH LAYER (smart-run rewrite, 2026-07-21;
+// v3 Cerebras removal 2026-07-21). ONE smart run per correlation request.
+// CEREBRAS-FREE (2026-07-21 v3): Cerebras is restricted platform-wide to quick
+// summaries/queries and is fully removed from this correlation backend.
+// PRIMARY PATH: fable-5 with a strict quality gate: the run must yield
+// >= MIN_DATA_POINTS clean, deduped, validated data points. If the primary
+// pass fails or comes back short, its artifacts are KEPT (never discarded)
+// and a DELTA PROMPT pass excludes every already-captured claim — only the
+// missing remainder is fetched. Both passes are then MERGED
 // (validated + deduped across passes) so the latest correlation is always
 // present in the final dataset, and the merged set must satisfy the 100+
 // gate. As an absolute last-resort guarantee (so the pipeline NEVER blocks
@@ -20,7 +21,6 @@ import { createOdSession, syncQuery } from '../ondemand.js';
 import * as log from '../log.js';
 import { SOURCE_TYPES } from './sources.js';
 import {
-  CEREBRAS_ENDPOINT_ID, CE_DATAFETCH_REASONING_EFFORT,
   FABLE_FALLBACK_ENDPOINT_ID, FABLE_FALLBACK_REASONING_EFFORT,
   CE_MIN_DATA_POINTS,
 } from '../env.js';
@@ -142,13 +142,16 @@ export function buildExtractionMaterial({ iso, countryName } = {}) {
     sections.push(`=== CORPUS SECTION ${sections.length + 1} ===\n${lines.slice(i, i + CHUNK).join('\n')}`);
   }
   const material = sections.join('\n\n');
-  const CAP = 60000;
+  // UNCAPPED PRELOAD (2026-07-21 v3): preload as much country data material as
+  // possible — the previous 60k cap is lifted to the model-context ceiling.
+  const CAP = 400000;
   return material.length > CAP ? material.slice(0, CAP) : material;
 }
 
 /** Build the extraction prompt — hard requirements on minimum + target record counts. */
 export function buildExtractionPrompt({ countryName, phrase, material, min, target }) {
-  return `Extract an EVIDENCE/DATA-POINT ARRAY documenting UAE relations with ${countryName} over ${phrase}, grounded strictly in the material below.
+  return `Extract an EVIDENCE/DATA-POINT ARRAY documenting UAE↔${countryName} BILATERAL CONNECTIONS over ${phrase}, grounded strictly in the material below.
+PRIORITISE records that name BOTH a UAE-side entity (UAE government, ADQ, Mubadala, ADFD, Masdar, DP World, AD Ports, G42, ADNOC, Etihad, MOFA, ODA) AND a ${countryName}-side counterpart, covering: bilateral investment; CEPA/trade; development aid & ODA flows; sovereign fund deployments; energy & infrastructure projects; the remittance corridor; diplomatic/strategic frameworks; multilateral programs. Include the connection's two entities in the record's entities array.
 Each record schema: {"id":"E1"(sequential),"claim":string,"source_type":one of ${JSON.stringify(SOURCE_TYPES)},"source":string,"url":string(verbatim from material or null),"publish_date":"YYYY-MM-DD"|null,"snippet":string(<=40 words),"entities":[lowercase entity slugs],"confidence":number 0-1}
 HARD REQUIREMENTS: Return AT LEAST ${min} records and aim for ${target}. Responses with fewer than ${min} records are rejected and retried. Maximise data-point density: decompose every compound fact into multiple granular records (one per statistic, per entity-pair, per event, per date). ONLY claims present in the material.
 MATERIAL:
@@ -217,21 +220,24 @@ export function mergePasses(...passes) {
  *   PASS 1 (primary):  fable-5-medium, single extraction (the ONLY population model).
  *   PASS 1b:           if short, ONE chunked retry on the SAME rung (still the same run).
  *   PASS 2 (fallback): optional second rung in delta mode — none by default in the
- *                      2026-07-21 policy (Cerebras runs as a BACKGROUND job instead).
+ *                      2026-07-21 v3 policy (a FABLE background delta job tops up instead).
  *   MERGE:             all passes merged + deduped; gate re-evaluated on the merge.
  *   BACKFILL:          last-resort corpus top-up (real data only) so the pipeline
  *                      never blocks. Throws only if even backfill cannot reach the floor.
  */
 export async function hardForceDataPoints({
   iso, countryName, phrase, material, sessionTag,
-  // ADAPTIVE-RETRY LADDER (2026-07-21 smart-run policy): Cerebras GLM 4.7 is the
-  // PRIMARY path (speed-first, env-overridable via CE_DATAFETCH_ENDPOINT_ID);
-  // fable-5-medium is the verified FALLBACK rung, invoked in DELTA mode only
-  // when the primary pass misses the 100+ quality gate.
-  // 2026-07-21 policy: fable-5-medium is the ONLY synchronous population model.
-  // No second sync rung — a short fable pass KEEPS its artifacts, corpus-backfills
-  // to clear the floor now, and the caller schedules a Cerebras BACKGROUND job
-  // (cerebrasDeltaFetch) that merges in real model points and auto-refreshes the UI.
+  // INCREMENTAL RUNS (2026-07-21 v3): priorCaptured = evidence records already
+  // persisted by earlier runs for this country. When present, every pass runs
+  // in DELTA mode (exclusion prompt) so the engine fetches ONLY new/missing
+  // data instead of re-fetching everything; prior records are merged into the
+  // final dataset unchanged.
+  priorCaptured = null,
+  // 2026-07-21 v3 policy (CEREBRAS-FREE): fable-5 is the ONLY population model,
+  // synchronous AND background. A short fable pass KEEPS its artifacts,
+  // corpus-backfills to clear the floor now, and the caller schedules a FABLE
+  // BACKGROUND delta job (backgroundDeltaFetch) that merges in real model
+  // points and auto-refreshes the UI. Cerebras never appears in this ladder.
   endpointLadder = [
     { endpointId: FABLE_FALLBACK_ENDPOINT_ID, effort: FABLE_FALLBACK_REASONING_EFFORT, label: 'fable-5-medium' },
   ],
@@ -249,8 +255,12 @@ export async function hardForceDataPoints({
     return full;
   };
 
-  // captured = artifacts KEPT across passes (never discarded on a short pass)
-  let captured = [];
+  // captured = artifacts KEPT across passes (never discarded on a short pass).
+  // Incremental mode: prior-run records seed the captured set so passes below
+  // exclude them (delta prompts) and only the missing remainder is fetched.
+  const prior = Array.isArray(priorCaptured) ? priorCaptured.map(validateDataPoint).filter(Boolean) : [];
+  let captured = mergePasses(prior.map(p => ({ ...p, origin: p.origin || 'prior-run' })));
+  const incremental = captured.length > 0;
   let primaryCount = 0;
   let deltaAdded = 0;
   let fallbackUsed = false;
@@ -322,11 +332,14 @@ export async function hardForceDataPoints({
   const primary = endpointLadder[0];
   const fallback = endpointLadder[1] || null;
 
-  // ---- PASS 1: PRIMARY (Cerebras GLM 4.7) — fast single extraction ----
-  captured = mergePasses(await runSingle(primary, { tagSuffix: 'p1', target: TARGET_DATA_POINTS }));
+  if (incremental) {
+    passLog.push({ pass: 'prior-run', label: 'incremental-seed', endpointId: null, count: captured.length, gate: captured.length >= MIN_DATA_POINTS ? 'pass' : 'short' });
+  }
+  // ---- PASS 1: PRIMARY (fable-5) — single extraction; DELTA mode when incremental ----
+  captured = mergePasses(captured, await runSingle(primary, { deltaOf: incremental ? captured : null, tagSuffix: 'p1', target: TARGET_DATA_POINTS }));
   // ---- PASS 1b: one chunked retry on the SAME rung if short (same run) ----
   if (captured.length < MIN_DATA_POINTS) {
-    captured = mergePasses(captured, await runChunked(primary, { tagSuffix: 'p1b' }));
+    captured = mergePasses(captured, await runChunked(primary, { deltaOf: incremental ? captured : null, tagSuffix: 'p1b' }));
   }
   primaryCount = captured.length;
   passLog.push({ pass: 'primary', label: primary.label, endpointId: primary.endpointId, count: primaryCount, gate: primaryCount >= MIN_DATA_POINTS ? 'pass' : 'short' });
@@ -380,25 +393,26 @@ export async function hardForceDataPoints({
 
 
 /**
- * cerebrasDeltaFetch — BACKGROUND backfill pass (2026-07-21).
- * Runs the Cerebras GLM 4.7 engine in DELTA mode against the already-captured
- * fable records (exclusion prompt), returning ONLY new validated model points.
- * Called server-side by the background backfill job when a fable population
- * pass came back short of the floor; the caller merges (mergePasses), dedupes,
- * re-persists the run, and the UI auto-refreshes via the existing status poll.
+ * backgroundDeltaFetch — BACKGROUND backfill pass (2026-07-21; v3 Cerebras-free).
+ * Runs FABLE in DELTA mode against the already-captured records (exclusion
+ * prompt), returning ONLY new validated model points. Called server-side by
+ * the background backfill job when a population pass came back short of the
+ * floor; the caller merges (mergePasses), dedupes, re-persists the run, and
+ * the UI auto-refreshes via the existing status poll. NO Cerebras here —
+ * Cerebras is restricted to quick summaries/queries only.
  */
-export async function cerebrasDeltaFetch({ iso, countryName, phrase, material, captured, sessionTag }) {
+export async function backgroundDeltaFetch({ iso, countryName, phrase, material, captured, sessionTag }) {
   void iso;
   const t0 = Date.now();
   const need = Math.max(4, MIN_DATA_POINTS - (captured?.length || 0) + 10);
   const sid = await createOdSession(`${sessionTag}-bgc`, []);
   const prompt = buildExtractionPrompt({ countryName, phrase, material, min: need, target: need + 20 })
     + buildDeltaExclusion(captured || []);
-  const raw = await syncQuery({ odSessionId: sid, query: prompt, systemPrompt: EXTRACTION_SYSTEM, endpointId: CEREBRAS_ENDPOINT_ID, reasoningEffort: CE_DATAFETCH_REASONING_EFFORT });
+  const raw = await syncQuery({ odSessionId: sid, query: prompt, systemPrompt: EXTRACTION_SYSTEM, endpointId: FABLE_FALLBACK_ENDPOINT_ID, reasoningEffort: FABLE_FALLBACK_REASONING_EFFORT });
   const parsed = (function () { try { return extractJson(raw); } catch { return null; } })();
   const batch = validateBatch(Array.isArray(parsed) ? parsed : []);
   const capturedKeys = new Set((captured || []).map(claimKey));
-  const fresh = batch.points.filter(p => !capturedKeys.has(claimKey(p))).map(p => ({ ...p, origin: 'cerebras-backfill' }));
-  log.info('datafetch.cerebras_bg_delta', { sessionTag, returned: batch.count, fresh: fresh.length, latencyMs: Date.now() - t0 });
+  const fresh = batch.points.filter(p => !capturedKeys.has(claimKey(p))).map(p => ({ ...p, origin: 'fable-bg-backfill' }));
+  log.info('datafetch.bg_delta', { sessionTag, engine: 'fable-5', returned: batch.count, fresh: fresh.length, latencyMs: Date.now() - t0 });
   return fresh;
 }

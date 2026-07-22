@@ -1,3 +1,75 @@
+## 2026-07-22 — ODA bilateral correlation core: cross-cluster UAE↔country mandate (checkpoint/correlation-engine-fixes)
+
+Master entry for the 3-commit ODA intelligence series:
+
+1. **feat(oda-correlation) 492b4ce** — new `server/intelligence/odaCorrelation.js`:
+   8 ODA intelligence categories (bilateral investment; CEPA/trade; development
+   aid & ODA flows; sovereign fund deployments ADQ/Mubadala/ADFD; energy &
+   infrastructure Masdar/DP World/AD Ports; remittances; diplomatic frameworks;
+   multilateral programs); `buildOdaCorrelationPrompt()` mandates ≥6
+   cross-cluster UAE↔{country} edges with a hard evidence-or-gap rule;
+   `ODA_GROUNDING` citation-backed bilateral facts injected as evidence;
+   `ensureCrossClusterEdges()` deterministic backstop on EVERY pipeline pass —
+   the graph is never silently disconnected and facts are never invented.
+   Root cause fixed: the old Stage-D prompt never required the country node in
+   any edge (PK 0/39, BD 0/188 edges touched their country node).
+2. **feat(oda-prompts) a98e61e** — ALL plugin-facing enrichment prompts
+   (16 source-class retrieval queries, 10 specialists, evidence extraction,
+   round-1 perplexity/xsearch/reddit gathers) now demand UAE↔{country}
+   bilateral connections naming both sides — never isolated single-country data.
+3. **feat(oda-recorrelation) f756d71** — `scripts/oda-recorrelate.mjs` re-ran
+   the corrected correlation on Fable 5 MAX via 4 parallel sub-agent workers:
+   16/16 countries, 0 failures, additive versioned runs (prior data preserved).
+   Cross-cluster edges per country all > 0 (PK=9: 4 evidence-backed + 5
+   gap-flagged; EG=11, KE=11, BD=17, …). Both 24h workflows updated & active
+   with the ODA bilateral contract; ingest auto-correlation verified offline.
+
+## 2026-07-22 — Production bug fixes: OnDemand session-create HTTP 500 + full-country correlation prefill (checkpoint/correlation-engine-fixes)
+
+Master entry for the 2-commit bug-fix series:
+
+1. **fix(ondemand-500)** — session-create 'HTTP 500: An unexpected error occurred'
+   root-caused (live-probed): an EMPTY `apikey` header (deployment missing
+   `ONDEMAND_API_KEY`) makes the upstream return that exact opaque 500; absent
+   header → 401, invalid key → 401. Contract re-verified against the LIVE public
+   docs (`POST /chat/v1/sessions`, `apikey` header, body `externalUserId` +
+   optional `pluginIds[]`/`agentIds[]`). Fix: `assertApiKey()` fail-fast guard on
+   session-create/stream/sync (503 `MISSING_ONDEMAND_API_KEY` with actionable
+   message) + a 500-signature diagnostic hint. Verified with a REAL call: 201 +
+   session id through the repo's own code path.
+2. **feat(ce-prefill)** — correlation engine now loads FULLY PREFILLED for all 16
+   countries on first visit. Root cause: only BD+KE had committed seed runs and
+   the live run dir is gitignored. New `scripts/prefill-correlation-seed.mjs`
+   (parallel workers) executed for every country — real Fable 5 extraction +
+   deterministic deep-v2 assembly, committed under `server/data/correlation-seed/`
+   so `hydrateRuns()` serves data instantly; subsequent runs remain incremental.
+   Both 24h auto-enrichment workflows confirmed ACTIVE (metrics enrichment +
+   CE evidence refresh; refresh assembler re-pointed to fable-5).
+
+## 2026-07-22 — Correlation Engine v3: Fable 5 MAX prefill, Cerebras-free backend, uncapped incremental preload, drag-to-pin charts (checkpoint/correlation-engine-fixes)
+
+Master entry for the 5-commit checkpoint series on `checkpoint/correlation-engine-fixes`:
+
+1. **feat(ce-model): Fable 5 MAX prefilled as the default/selected correlation model**
+   (`predefined-claude-fable-5` + MAX effort) across the deep pipeline, analysis/
+   extraction/narrative, and streamed CE surfaces; every run now carries a
+   deterministic `enrichment` block (source-type density, top entities, date
+   coverage, avg confidence, sourced-URL share) surfaced as header KPIs.
+2. **refactor(ce-models): gpt-5.6-sol fully removed from the correlation engine** —
+   zero references, calls, or fallbacks remain in `server/correlation.js`,
+   `server/intelligence/*`, or `src/correlation/*`.
+3. **refactor(ce-cerebras): Cerebras restricted to quick summaries + quick queries
+   ONLY** — scoped `CEREBRAS_QUICK_*` config; the CE backend is Cerebras-free
+   (background backfill now runs a FABLE delta job, `backgroundDeltaFetch`).
+4. **feat(ce-data): uncapped country-data preload + incremental runs** — the
+   100-record default cap is gone (`/v2/evidence` defaults to the full corpus;
+   WDI/GHO/SDG series uncapped; material cap 60k→400k); subsequent 'run'
+   executions seed `priorEvidence` from the latest persisted run and fetch only
+   the new/missing delta.
+5. **feat(ce-charts-ux): drag-to-pin** — dragging a data point (ECharts volume
+   chart handles) or a graph node sticks it exactly at the release position;
+   double-click / right-click to unpin.
+
 ## 2026-07-21 — Kimi K3 correlating model + fable-only population w/ Cerebras background backfill + brand-consistency pass
 
 - **feat(model): Kimi K3 MEDIUM is THE correlating model** — `predefined-kimi-k3`

@@ -19,7 +19,10 @@ export const SPECIALISTS = [
 /** Build the 10 specialist prompts for a country + research-window phrase. */
 export function buildSpecialistPrompts(countryName, phrase) {
   const T = `the United Arab Emirates (UAE) and ${countryName}`;
-  const cite = 'Cite a real source URL and publish date for every factual item. Never invent URLs or dates; use null when unknown.';
+  // (2026-07-22 ODA bilateral mandate) every specialist explicitly hunts
+  // UAE↔country connections — never isolated single-country facts.
+  const bilateral = ` Prioritise UAE↔${countryName} BILATERAL CONNECTIONS: bilateral investment, CEPA/trade, development aid & ODA flows, sovereign fund deployments (ADQ/Mubadala/ADFD), energy & infrastructure (Masdar, DP World, AD Ports), the remittance corridor, and diplomatic/strategic frameworks; name the entities on BOTH sides of every connection.`;
+  const cite = 'Cite a real source URL and publish date for every factual item. Never invent URLs or dates; use null when unknown.' + bilateral;
   return {
     S1:  `Summarise ALL developments involving ${T} over ${phrase}: agreements, investments, visits, aid, trade, technology, defence, energy, infrastructure. One dated line per development. ${cite}`,
     S2:  `From reporting on ${T} over ${phrase}, find EVERY organisation mentioned (government bodies, sovereign funds, companies, NGOs, multilaterals). For each: name, country side, role in the relationship, and the source URL where it appears. ${cite}`,

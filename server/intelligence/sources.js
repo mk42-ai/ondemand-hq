@@ -16,7 +16,13 @@ export const SOURCE_TYPES = [
  */
 export function buildRetrievalPlan(countryName, phrase) {
   const T = `United Arab Emirates (UAE) and ${countryName}`;
-  const common = `over ${phrase}. For EVERY item return: exact date, source publication, source URL, entities involved, and a one-line factual claim. Cite only real URLs.`;
+  // (2026-07-22 ODA bilateral mandate) EVERY retrieval query must pull
+  // UAE↔country CONNECTIONS — investments, CEPA/trade, aid & ODA flows,
+  // sovereign fund deployments (ADQ/Mubadala/ADFD), DP World/Masdar/AD Ports
+  // projects, the remittance corridor, and diplomatic frameworks — never
+  // isolated single-country data.
+  const bilateral = `FOCUS STRICTLY ON UAE↔${countryName} BILATERAL CONNECTIONS: bilateral investments, CEPA/trade agreements and flows, development aid & ODA flows, sovereign fund deployments (ADQ, Mubadala, ADFD), energy & infrastructure projects (Masdar, DP World, AD Ports), the remittance corridor, and diplomatic/strategic frameworks. Single-country data with no UAE link is out of scope.`;
+  const common = `over ${phrase}. ${bilateral} For EVERY item return: exact date, source publication, source URL, entities involved (BOTH sides of the connection), and a one-line factual claim naming the UAE entity and the ${countryName} counterpart. Cite only real URLs.`;
   return [
     { sourceType: 'official_website',       plugin: 'perplexity', query: `Official websites (ministries, sovereign funds, state entities) content on ${T} cooperation ${common}` },
     { sourceType: 'government_release',     plugin: 'perplexity', query: `Government releases, gazette notices and ministerial announcements involving ${T} ${common}` },

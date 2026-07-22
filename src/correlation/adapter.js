@@ -15,6 +15,12 @@ export const REL_TYPE_COLORS = {
   Investment: '#ffffff', Trade: '#e0e0e0', 'Aid-Humanitarian': '#c8c8c8',
   Diplomatic: '#b0b0b0', Infrastructure: '#989898', Energy: '#808080',
   Technology: '#686868', Security: '#505050', 'Media-narrative': '#404040',
+  // 2026-07-22 canvas fix: deep-v2's correlation layer emits 'Influence-network'
+  // edges (correlationLayer.js). This type was MISSING here, so the default
+  // chip filter (new Set(REL_TYPES)) silently dropped EVERY such edge — on
+  // prefill runs whose edges are all Influence-network the canvas collapsed
+  // to 2 bare country bubbles with zero links/dots (the reported bug).
+  'Influence-network': '#303030',
 };
 export const REL_TYPES = Object.keys(REL_TYPE_COLORS);
 export const PLATFORM_GLYPHS = { perplexity: 'P', x: '𝕏', reddit: 'R', instagram: '◎' };
@@ -61,7 +67,10 @@ export function runToGraph(run, filters = {}) {
   const evById = new Map(run.evidence.map(e => [e.id, e]));
 
   const keepEdge = (e) => {
-    if (!types.has(e.relationship_type)) return false;
+    // UNKNOWN-TYPE SAFETY (2026-07-22): only apply the chip filter to KNOWN
+    // types. An edge whose relationship_type is outside REL_TYPES (future
+    // pipeline additions) must never be silently dropped by default filters.
+    if (REL_TYPES.includes(e.relationship_type) && !types.has(e.relationship_type)) return false;
     if ((e.weight ?? 0) < minWeight) return false;
     // time-range: edge survives if ≥1 backing evidence is inside the window
     const ages = e.evidence_record_ids.map(id => evById.get(id)).filter(Boolean).map(ev => evidenceAgeDays(ev, run));

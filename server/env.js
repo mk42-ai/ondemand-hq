@@ -81,15 +81,19 @@ export const ANALYSIS_REASONING_EFFORT = validEffort(process.env.ANALYSIS_REASON
 // endpoint. ON by default at start; set STREAM_DEBUG=false to turn off (STREAM_DEBUG=true = explicit-on).
 export const STREAM_DEBUG = String(process.env.STREAM_DEBUG ?? 'true').toLowerCase() !== 'false';
 
-// ---------- Correlating model (2026-07-21 switch): Kimi K3 MEDIUM ----------
-// predefined-kimi-k3 is ACTIVE in the live registry (verified 2026-07-21T01:30Z:
-// status active, reasoning_efforts [low,medium,max], 1M ctx, streaming). It fully
-// REPLACES GLM 4.7 (byoi-6e314690 / zai-glm-4.7) as the correlation model — GLM
-// is NO LONGER a correlation model anywhere in the pipeline (it remains only as
-// the non-correlation main-chat default and the Cerebras BACKGROUND backfill
-// engine for data population shortfalls).
-export const KIMI_K3_ENDPOINT_ID = process.env.CE_CORRELATION_ENDPOINT_ID || 'predefined-kimi-k3';
-export const KIMI_K3_REASONING_EFFORT = validEffort(process.env.CE_CORRELATION_REASONING_EFFORT, 'medium');
+// ---------- Correlating model (2026-07-21 v3 switch): FABLE 5 MAX ----------
+// The Correlation Engine is PREFILLED with Fable 5 MAX (predefined-claude-fable-5
+// at MAX reasoning effort) as the DEFAULT/SELECTED model for every correlation
+// surface: analysis, extraction, narrative, story mode, and the deep pipeline.
+// Env-overridable via CE_CORRELATION_ENDPOINT_ID / CE_CORRELATION_REASONING_EFFORT.
+export const FABLE_5_MAX_ENDPOINT_ID = process.env.CE_CORRELATION_ENDPOINT_ID || 'predefined-claude-fable-5';
+export const FABLE_5_MAX_REASONING_EFFORT = validEffort(process.env.CE_CORRELATION_REASONING_EFFORT, 'max');
+export const FABLE_5_MAX_LABEL = 'Fable 5 MAX';
+// Kimi K3 is retained ONLY for plugin/evidence-gathering calls (Claude endpoints
+// reject plugin attachment on this platform — HTTP 400 "agents are invalid",
+// live-logged 2026-07-19 in PLUGIN_TESTS.md).
+export const KIMI_K3_ENDPOINT_ID = process.env.CE_PLUGIN_GATHER_ENDPOINT_ID || 'predefined-kimi-k3';
+export const KIMI_K3_REASONING_EFFORT = validEffort(process.env.CE_PLUGIN_GATHER_REASONING_EFFORT, 'medium');
 
 // ---------- Hard-force data-fetch policy (2026-07-20; 2026-07-21 fable-only rewrite) ----------
 // fable-5-medium is the ONLY synchronous data-population model (2026-07-21).
@@ -98,7 +102,21 @@ export const KIMI_K3_REASONING_EFFORT = validEffort(process.env.CE_CORRELATION_R
 // fable pass (merge+dedupe, UI auto-refresh; see dataFetch.js cerebrasDeltaFetch).
 export const FABLE_FALLBACK_ENDPOINT_ID = process.env.CE_DATAFETCH_ENDPOINT_ID || 'predefined-claude-fable-5';
 export const FABLE_FALLBACK_REASONING_EFFORT = validEffort(process.env.CE_DATAFETCH_REASONING_EFFORT_FABLE, 'medium');
-export const CEREBRAS_ENDPOINT_ID = process.env.CE_BACKFILL_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;  // background backfill ONLY — never the primary population path
+// ---------- Cerebras policy (2026-07-21 v3 restriction) ----------
+// Cerebras (GLM 4.7 BYOI) is restricted to QUICK SUMMARIES and QUICK QUERIES ONLY.
+// It is fully REMOVED from the correlation engine backend: no data-fetch pass,
+// no background backfill, no analysis/narrative/story call may use it. The
+// background delta backfill now runs on Fable (see dataFetch.js backgroundDeltaFetch).
+// (2026-07-22 model fix) Quick summaries + quick queries run on GLM 4.7 —
+// EXPLICITLY pinned to the GLM 4.7 Cerebras BYOI endpoint (byoi-6e314690 /
+// zai-glm-4.7). Fable 5 MAX stays the correlation model (CE_ANALYSIS_*); the
+// two 24h enrichment workflows keep their fable-medium assembler untouched.
+export const GLM_47_QUICK_ENDPOINT_ID = process.env.GLM_47_QUICK_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID; // GLM 4.7 — quick summaries + quick queries ONLY
+export const GLM_47_QUICK_REASONING_EFFORT = validEffort(process.env.GLM_47_QUICK_REASONING_EFFORT, 'low');
+export const GLM_47_QUICK_LABEL = 'GLM 4.7';
+// Back-compat aliases (previous var names) — same GLM 4.7 values.
+export const CEREBRAS_QUICK_ENDPOINT_ID = GLM_47_QUICK_ENDPOINT_ID;
+export const CEREBRAS_QUICK_REASONING_EFFORT = GLM_47_QUICK_REASONING_EFFORT;
 export const CE_DATAFETCH_REASONING_EFFORT = validEffort(process.env.CE_BACKFILL_REASONING_EFFORT, 'low');
 export const CE_MIN_DATA_POINTS = Math.max(100, parseInt(process.env.CE_MIN_DATA_POINTS || '100', 10) || 100);  // strict floor — clamped, can never be configured below 100
 
@@ -112,15 +130,16 @@ if (!ONDEMAND_API_KEY) {
 // Plugin/evidence-gathering calls: Claude endpoints REJECT plugin attachment on this
 // platform (HTTP 400 "agents are invalid", live-logged 2026-07-19 in PLUGIN_TESTS.md),
 // so plugins run on the proven fulfillment model. Overridable via env.
-export const CE_PLUGIN_ENDPOINT_ID = process.env.CE_PLUGIN_ENDPOINT_ID || KIMI_K3_ENDPOINT_ID; // Kimi K3 (2026-07-21 switch — GLM removed from correlation)
-// Analysis/extraction/narrative: PRODUCTION default claude-fable-5 + medium reasoning.
+export const CE_PLUGIN_ENDPOINT_ID = process.env.CE_PLUGIN_ENDPOINT_ID || KIMI_K3_ENDPOINT_ID; // Kimi K3 — plugin attachment only (Claude endpoints reject plugins)
+// Analysis/extraction/narrative: PREFILLED default Fable 5 MAX (2026-07-21 v3).
 // Build/test override: CE_ANALYSIS_ENDPOINT_ID=predefined-claude-sonnet-5 (both 200-verified
 // 2026-07-19). Set in config here — never hardcoded at call sites.
-export const CE_ANALYSIS_ENDPOINT_ID = process.env.CE_ANALYSIS_ENDPOINT_ID || KIMI_K3_ENDPOINT_ID; // Kimi K3 MEDIUM — THE correlating model (2026-07-21; GLM removed from correlation)
-export const CE_ANALYSIS_REASONING_EFFORT = validEffort(process.env.CE_ANALYSIS_REASONING_EFFORT, KIMI_K3_REASONING_EFFORT);
-// Quick Query + streamed CE surfaces: Kimi K3 (2026-07-21 — correlation surfaces are
-// GLM-free). Var name kept for low-risk call-site compatibility; value is Kimi K3.
-export const GLM_ENDPOINT_ID = KIMI_K3_ENDPOINT_ID;
+export const CE_ANALYSIS_ENDPOINT_ID = process.env.CE_ANALYSIS_ENDPOINT_ID || FABLE_5_MAX_ENDPOINT_ID; // Fable 5 MAX — THE prefilled correlating model (2026-07-21 v3)
+export const CE_ANALYSIS_REASONING_EFFORT = validEffort(process.env.CE_ANALYSIS_REASONING_EFFORT, FABLE_5_MAX_REASONING_EFFORT);
+// Streamed CE surfaces (summarize/story/narrative): Fable 5 MAX (2026-07-21 v3 —
+// correlation surfaces are Cerebras-free AND GLM-free). Var name kept for low-risk
+// call-site compatibility; value is Fable 5 MAX.
+export const GLM_ENDPOINT_ID = FABLE_5_MAX_ENDPOINT_ID;
 // Streamed CE surfaces (quick-query/summarize/story) — validated, env-overridable.
 export const CE_STREAM_REASONING_EFFORT = validEffort(process.env.CE_STREAM_REASONING_EFFORT, 'max');
 export const QUICK_QUERY_MAX_TOKENS = 150;
