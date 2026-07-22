@@ -3629,7 +3629,713 @@
  ],
  "edges": [
   {
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "a->b",
+   "claim": "The UAE sent 30 tonnes of food aid to Kenya in February 2026 as direct bilateral food assistance.",
+   "evidence_record_ids": [
+    "E1",
+    "E4",
+    "E17"
+   ],
+   "confidence": 0.95,
+   "stance": "cooperation",
+   "inference": false,
    "id": "ED1",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2184,
+   "rawWeight": 1.2,
+   "sourceTypes": [
+    "press_release"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Media-narrative",
+   "direction": "a->b",
+   "claim": "Gulf News coverage frames the UAE food-aid delivery to Kenya as a response to deepening drought and La Niña-driven food insecurity.",
+   "evidence_record_ids": [
+    "E2",
+    "E3",
+    "E16",
+    "E17"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED2",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2184,
+   "rawWeight": 1.2,
+   "sourceTypes": [
+    "press_release"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "ke",
+   "relationship_type": "Diplomatic",
+   "direction": "both",
+   "claim": "The UAE and Kenya co-chaired the 24 September 2025 ministerial meeting on Sudan de-escalation and operate a joint co-chair mechanism together with the EU and Qatar.",
+   "evidence_record_ids": [
+    "E5",
+    "E6",
+    "E9",
+    "E10"
+   ],
+   "confidence": 0.9,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED3",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2851,
+   "rawWeight": 1.8,
+   "sourceTypes": [
+    "government_release"
+   ]
+  },
+  {
+   "entity_a": "ke",
+   "entity_b": "eu",
+   "relationship_type": "Diplomatic",
+   "direction": "both",
+   "claim": "Kenya and the European Union co-chaired the Sudan de-escalation ministerial meeting under the joint co-chair mechanism.",
+   "evidence_record_ids": [
+    "E5",
+    "E7",
+    "E9"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED4",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2646,
+   "rawWeight": 1.6,
+   "sourceTypes": [
+    "government_release"
+   ]
+  },
+  {
+   "entity_a": "ke",
+   "entity_b": "qatar",
+   "relationship_type": "Diplomatic",
+   "direction": "both",
+   "claim": "Kenya and Qatar jointly co-chaired the Sudan de-escalation ministerial meeting on 24 September 2025.",
+   "evidence_record_ids": [
+    "E5",
+    "E8",
+    "E9"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED5",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2646,
+   "rawWeight": 1.6,
+   "sourceTypes": [
+    "government_release"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "qatar",
+   "relationship_type": "Diplomatic",
+   "direction": "both",
+   "claim": "The UAE and Qatar cooperated as co-chairs of the Sudan de-escalation ministerial coordination mechanism.",
+   "evidence_record_ids": [
+    "E6",
+    "E8",
+    "E9",
+    "E10"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED6",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2851,
+   "rawWeight": 1.8,
+   "sourceTypes": [
+    "government_release"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "qatar",
+   "relationship_type": "Media-narrative",
+   "direction": "both",
+   "claim": "A 2024 academic study comparatively analyses Qatar and the UAE as rival Gulf donors in Sudan.",
+   "evidence_record_ids": [
+    "E61",
+    "E62"
+   ],
+   "confidence": 0.8,
+   "stance": "tension",
+   "inference": false,
+   "id": "ED7",
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "sourceTypes": [
+    "academic_paper"
+   ]
+  },
+  {
+   "entity_a": "adfd",
+   "entity_b": "africa",
+   "relationship_type": "Technology",
+   "direction": "a->b",
+   "claim": "ADEX, the export-financing arm of ADFD, leads the UAE $1 billion AI for Development initiative targeting African digital infrastructure.",
+   "evidence_record_ids": [
+    "E18",
+    "E20",
+    "E21",
+    "E24"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED8",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2184,
+   "rawWeight": 1.2,
+   "sourceTypes": [
+    "press_release"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "africa",
+   "relationship_type": "Infrastructure",
+   "direction": "a->b",
+   "claim": "The UAE AI for Development initiative, announced in a G20 context, links UAE development finance to digital infrastructure across Africa.",
+   "evidence_record_ids": [
+    "E19",
+    "E23",
+    "E24"
+   ],
+   "confidence": 0.8,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED9",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2184,
+   "rawWeight": 1.2,
+   "sourceTypes": [
+    "press_release"
+   ]
+  },
+  {
+   "entity_a": "uae-aid-agency",
+   "entity_b": "adfd",
+   "relationship_type": "Technology",
+   "direction": "both",
+   "claim": "The UAE foreign-aid agency co-leads the $1 billion AI for Development initiative with ADEX, ADFD's export-financing arm.",
+   "evidence_record_ids": [
+    "E20",
+    "E21",
+    "E22"
+   ],
+   "confidence": 0.8,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED10",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2184,
+   "rawWeight": 1.2,
+   "sourceTypes": [
+    "press_release"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "africa",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "a->b",
+   "claim": "Independent AllAfrica analysis from May 2026 documents expanding Emirati aid engagement across Africa.",
+   "evidence_record_ids": [
+    "E25",
+    "E26"
+   ],
+   "confidence": 0.75,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED11",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2184,
+   "rawWeight": 1.2,
+   "sourceTypes": [
+    "press_release"
+   ]
+  },
+  {
+   "entity_a": "oda",
+   "entity_b": "tony-elumelu-foundation",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "both",
+   "claim": "The UAE Office of Development Affairs partnered with the Tony Elumelu Foundation to empower an additional 1,000 young African entrepreneurs.",
+   "evidence_record_ids": [
+    "E27"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED12",
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "sourceTypes": [
+    "social_media"
+   ]
+  },
+  {
+   "entity_a": "khalifa-bin-zayed-al-nahyan-foundation",
+   "entity_b": "tony-elumelu-foundation",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "both",
+   "claim": "The Khalifa Bin Zayed Al Nahyan Foundation co-funds African entrepreneurship with the Tony Elumelu Foundation as part of the 1,000-entrepreneur partnership.",
+   "evidence_record_ids": [
+    "E27",
+    "E28"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED13",
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0727,
+   "rawWeight": 0.3,
+   "sourceTypes": [
+    "social_media"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "gaza",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "a->b",
+   "claim": "The UAE has provided over $3 billion and 90,000+ tons of aid to Gaza since 2023 across land, air, and maritime modes, with continuing convoy operations under Operation Chivalrous Knight 3 through mid-2026.",
+   "evidence_record_ids": [
+    "E31",
+    "E32",
+    "E33",
+    "E38",
+    "E99",
+    "E101",
+    "E113"
+   ],
+   "confidence": 0.95,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED14",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.3095,
+   "rawWeight": 2.0571,
+   "sourceTypes": [
+    "official_website",
+    "press_release",
+    "social_media"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "sudan",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "a->b",
+   "claim": "The UAE pledged $500 million to a Sudan Humanitarian Fund in February 2026.",
+   "evidence_record_ids": [
+    "E57"
+   ],
+   "confidence": 0.9,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED15",
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.3389,
+   "rawWeight": 2.4,
+   "sourceTypes": [
+    "government_release"
+   ]
+  },
+  {
+   "entity_a": "mofa",
+   "entity_b": "wfp",
+   "relationship_type": "Diplomatic",
+   "direction": "a->b",
+   "claim": "The UAE Ministry of Foreign Affairs condemned the targeting of a WFP convoy in Sudan and publicly supports WFP humanitarian operations there.",
+   "evidence_record_ids": [
+    "E58",
+    "E59",
+    "E60"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED16",
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "sourceTypes": [
+    "social_media"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "adb",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "a->b",
+   "claim": "The UAE contributed $1.5 million via the International Affairs Office at the Presidential Court to an ADB fund promoting agricultural innovation and Asia-Pacific food security.",
+   "evidence_record_ids": [
+    "E68",
+    "E69",
+    "E70",
+    "E71"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED17",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2184,
+   "rawWeight": 1.2,
+   "sourceTypes": [
+    "press_release"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "eu",
+   "relationship_type": "Diplomatic",
+   "direction": "both",
+   "claim": "The UAE and EU held a DG ECHO co-hosted panel on humanitarian supply-chain resilience in Brussels in June 2026 and maintain a working humanitarian-logistics dialogue.",
+   "evidence_record_ids": [
+    "E72",
+    "E73",
+    "E74",
+    "E76",
+    "E77"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED18",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.1628,
+   "rawWeight": 0.8,
+   "sourceTypes": [
+    "official_website"
+   ]
+  },
+  {
+   "entity_a": "dubai-humanitarian",
+   "entity_b": "eu",
+   "relationship_type": "Infrastructure",
+   "direction": "both",
+   "claim": "Dubai Humanitarian participated in the June 2026 UAE-EU discussions on global humanitarian supply-chain resilience in Brussels.",
+   "evidence_record_ids": [
+    "E73",
+    "E75",
+    "E76"
+   ],
+   "confidence": 0.8,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED19",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.1628,
+   "rawWeight": 0.8,
+   "sourceTypes": [
+    "official_website"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "qatar",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "both",
+   "claim": "The UAE and Qatar both co-signed the joint ministerial statement advancing a maritime corridor for humanitarian assistance to Gaza.",
+   "evidence_record_ids": [
+    "E86",
+    "E90",
+    "E92",
+    "E93"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED20",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2851,
+   "rawWeight": 1.8,
+   "sourceTypes": [
+    "government_release"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "uk",
+   "relationship_type": "Diplomatic",
+   "direction": "both",
+   "claim": "The UAE and the United Kingdom both joined the joint ministerial statement on advancing the Gaza humanitarian maritime corridor.",
+   "evidence_record_ids": [
+    "E86",
+    "E87",
+    "E92"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED21",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2646,
+   "rawWeight": 1.6,
+   "sourceTypes": [
+    "government_release"
+   ]
+  },
+  {
+   "entity_a": "uae",
+   "entity_b": "us",
+   "relationship_type": "Diplomatic",
+   "direction": "both",
+   "claim": "The UAE and the United States both joined the joint ministerial coalition advancing a maritime corridor to deliver humanitarian assistance to Gaza.",
+   "evidence_record_ids": [
+    "E86",
+    "E88",
+    "E92"
+   ],
+   "confidence": 0.85,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED22",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2646,
+   "rawWeight": 1.6,
+   "sourceTypes": [
+    "government_release"
+   ]
+  },
+  {
+   "entity_a": "un-ocha",
+   "entity_b": "uae",
+   "relationship_type": "Aid-Humanitarian",
+   "direction": "a->b",
+   "claim": "UN OCHA independently tracks UAE humanitarian funding through its Financial Tracking Service, recording $94,336,382 funded and $133,015,246 paid for 2026.",
+   "evidence_record_ids": [
+    "E53",
+    "E54",
+    "E55",
+    "E56"
+   ],
+   "confidence": 0.9,
+   "stance": "neutral",
+   "inference": false,
+   "id": "ED23",
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.0932,
+   "rawWeight": 0.4,
+   "sourceTypes": [
+    "public_dataset"
+   ]
+  },
+  {
+   "entity_a": "oda",
+   "entity_b": "uae-embassy-beijing",
+   "relationship_type": "Diplomatic",
+   "direction": "both",
+   "claim": "The Office of Development Affairs at the UAE Presidential Court held an event with the UAE Embassy in Beijing in July 2026.",
+   "evidence_record_ids": [
+    "E118"
+   ],
+   "confidence": 0.7,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED24",
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.2851,
+   "rawWeight": 1.8,
+   "sourceTypes": [
+    "social_media"
+   ]
+  },
+  {
+   "entity_a": "qffd",
+   "entity_b": "uae",
+   "relationship_type": "Media-narrative",
+   "direction": "both",
+   "claim": "Qatar operates institutionalized development assistance through QFFD in parallel to UAE agencies, positioning the two as parallel Gulf donor structures.",
+   "evidence_record_ids": [
+    "E123",
+    "E125"
+   ],
+   "confidence": 0.7,
+   "stance": "neutral",
+   "inference": false,
+   "id": "ED25",
+   "verification": "Likely",
+   "style": {
+    "color": "#1dac89",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.1302,
+   "rawWeight": 0.6,
+   "sourceTypes": [
+    "official_website"
+   ]
+  },
+  {
+   "entity_a": "trends-research-and-advisory",
+   "entity_b": "moccae",
+   "relationship_type": "Technology",
+   "direction": "both",
+   "claim": "TRENDS Research and Advisory and the UAE Ministry of Climate Change and Environment signed an MoU to boost UAE food security through joint research.",
+   "evidence_record_ids": [
+    "E128",
+    "E129"
+   ],
+   "confidence": 0.8,
+   "stance": "cooperation",
+   "inference": false,
+   "id": "ED26",
+   "verification": "Verified",
+   "style": {
+    "color": "#159a7a",
+    "line": "solid",
+    "pulse": false
+   },
+   "weight": 0.1778,
+   "rawWeight": 0.9,
+   "sourceTypes": [
+    "press_release"
+   ]
+  },
+  {
+   "id": "ED27",
    "entity_a": "uae",
    "entity_b": "kenya",
    "relationship_type": "Influence-network",
@@ -3656,7 +4362,7 @@
    "contradiction": false
   },
   {
-   "id": "ED2",
+   "id": "ED28",
    "entity_a": "uae",
    "entity_b": "food-aid",
    "relationship_type": "Influence-network",
@@ -3683,7 +4389,7 @@
    "contradiction": false
   },
   {
-   "id": "ED3",
+   "id": "ED29",
    "entity_a": "kenya",
    "entity_b": "food-aid",
    "relationship_type": "Influence-network",
@@ -3710,7 +4416,7 @@
    "contradiction": false
   },
   {
-   "id": "ED4",
+   "id": "ED30",
    "entity_a": "kenya",
    "entity_b": "drought",
    "relationship_type": "Influence-network",
@@ -3737,7 +4443,7 @@
    "contradiction": false
   },
   {
-   "id": "ED5",
+   "id": "ED31",
    "entity_a": "kenya",
    "entity_b": "food-security",
    "relationship_type": "Influence-network",
@@ -3764,7 +4470,7 @@
    "contradiction": false
   },
   {
-   "id": "ED6",
+   "id": "ED32",
    "entity_a": "drought",
    "entity_b": "food-security",
    "relationship_type": "Influence-network",
@@ -3791,7 +4497,7 @@
    "contradiction": false
   },
   {
-   "id": "ED7",
+   "id": "ED33",
    "entity_a": "kenya",
    "entity_b": "la-nina",
    "relationship_type": "Influence-network",
@@ -3818,7 +4524,7 @@
    "contradiction": false
   },
   {
-   "id": "ED8",
+   "id": "ED34",
    "entity_a": "la-nina",
    "entity_b": "drought",
    "relationship_type": "Influence-network",
@@ -3845,7 +4551,7 @@
    "contradiction": false
   },
   {
-   "id": "ED9",
+   "id": "ED35",
    "entity_a": "la-nina",
    "entity_b": "uae",
    "relationship_type": "Influence-network",
@@ -3872,7 +4578,7 @@
    "contradiction": false
   },
   {
-   "id": "ED10",
+   "id": "ED36",
    "entity_a": "drought",
    "entity_b": "uae",
    "relationship_type": "Influence-network",
@@ -3899,7 +4605,7 @@
    "contradiction": false
   },
   {
-   "id": "ED11",
+   "id": "ED37",
    "entity_a": "uae",
    "entity_b": "bilateral-aid",
    "relationship_type": "Influence-network",
@@ -3926,7 +4632,7 @@
    "contradiction": false
   },
   {
-   "id": "ED12",
+   "id": "ED38",
    "entity_a": "kenya",
    "entity_b": "bilateral-aid",
    "relationship_type": "Influence-network",
@@ -4736,6 +5442,24 @@
    "id": "abu-dhabi-department-of-economic-development",
    "label": "Abu Dhabi Department Of Economic Development",
    "fullName": "abu-dhabi-department-of-economic-development",
+   "kind": "country-side"
+  },
+  {
+   "id": "eu",
+   "label": "Eu",
+   "fullName": "eu",
+   "kind": "country-side"
+  },
+  {
+   "id": "uk",
+   "label": "Uk",
+   "fullName": "uk",
+   "kind": "country-side"
+  },
+  {
+   "id": "us",
+   "label": "Us",
+   "fullName": "us",
    "kind": "country-side"
   }
  ],
@@ -12576,8 +13300,8 @@
  },
  "stats": {
   "evidenceCount": 128,
-  "edgeCount": 12,
-  "statedEdges": 0,
+  "edgeCount": 38,
+  "statedEdges": 26,
   "inferredEdges": 12,
   "byVerification": {
    "Verified": 0,
@@ -12697,5 +13421,11 @@
  "prefill": {
   "job": "prefill-correlation-seed",
   "at": "2026-07-22T00:57:18.700Z"
+ },
+ "edgeEnrichment": {
+  "job": "enrich-seed-edges",
+  "model": "Fable 5 MAX",
+  "at": "2026-07-22T01:21:15.504Z",
+  "statedAdded": 26
  }
 }
