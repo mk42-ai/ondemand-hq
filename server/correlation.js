@@ -626,14 +626,23 @@ export async function quickQuery({ context, question }, res) {
 // daily snapshot alongside round-1 runs — same run-store, same diff mechanics,
 // so the UI date scrubber and daily-diff (new-edge pulse) work unchanged.
 // EMPTY-UPSTREAM RESILIENT: an empty evidence set still yields a valid snapshot.
-export async function runDeepJob(iso, countryName, { window: windowId, offline = false, seedEvidence = null, seedStatedEdges = null } = {}) {
+export async function runDeepJob(iso, countryName, { window: windowId, offline = false, seedEvidence = null, seedStatedEdges = null, incremental = true } = {}) {
   if (jobs.get(iso)?.status === 'running') return jobs.get(iso);
-  const job = { status: 'running', stage: 'deep:init', runId: null, startedAt: new Date().toISOString(), error: null, pipeline: 'deep-v2', window: windowId || DEFAULT_WINDOW, minDataPoints: MIN_DATA_POINTS };
+  // ---------- INCREMENTAL RUN (2026-07-22) ----------
+  // The 'Run' action diffs against the already-stored latest result: prior
+  // evidence records are handed to the pipeline, the extraction runs in DELTA
+  // mode (exclusion prompt), and only new/missing data points are fetched.
+  // Stored records are NEVER re-fetched or dropped. Pass incremental:false
+  // (API body { incremental: false }) to force a from-scratch full run.
+  const priorRun = (!offline && incremental) ? getLatestRun(iso) : null;
+  const priorEvidence = Array.isArray(priorRun?.evidence) && priorRun.evidence.length ? priorRun.evidence : null;
+  const job = { status: 'running', stage: 'deep:init', runId: null, startedAt: new Date().toISOString(), error: null, pipeline: 'deep-v2', window: windowId || DEFAULT_WINDOW, minDataPoints: MIN_DATA_POINTS, incremental: !!priorEvidence, priorRunId: priorRun?.runId || null, priorEvidenceCount: priorEvidence?.length || 0 };
   jobs.set(iso, job);
   const pipelineArgs = {
     iso, countryName, window: windowId,
     plugins: PLUGINS, registry: UAE_REGISTRY, relationshipTypes: RELATIONSHIP_TYPES,
     offline, seedEvidence, seedStatedEdges,
+    priorEvidence,
     onStage: (name) => { job.stage = name; },
   };
   const work = (async () => {
@@ -704,8 +713,9 @@ export function registerCorrelationRoutes(app, { countries }) {
         offline: !!req.body?.offline,
         seedEvidence: Array.isArray(req.body?.seedEvidence) ? req.body.seedEvidence : null,
         seedStatedEdges: Array.isArray(req.body?.seedStatedEdges) ? req.body.seedStatedEdges : null,
+        incremental: req.body?.incremental !== false, // default ON — only new/missing data is fetched
       });
-      res.json({ job: { status: job.status, stage: job.stage, runId: job.runId, pipeline: job.pipeline, window: job.window } });
+      res.json({ job: { status: job.status, stage: job.stage, runId: job.runId, pipeline: job.pipeline, window: job.window, incremental: job.incremental, priorRunId: job.priorRunId } });
     } catch (e) { res.status(400).json({ error: e.message }); }
   });
 
@@ -761,8 +771,8 @@ export function registerCorrelationRoutes(app, { countries }) {
     const c = countryOf(iso);
     if (!c) return res.status(404).json({ error: 'Unknown country' });
     try {
-      const job = await runDeepJob(iso, c.name, {});
-      res.json({ job: { status: job.status, stage: job.stage, runId: job.runId, pipeline: job.pipeline, window: job.window, minDataPoints: job.minDataPoints } });
+      const job = await runDeepJob(iso, c.name, { incremental: req.body?.incremental !== false });
+      res.json({ job: { status: job.status, stage: job.stage, runId: job.runId, pipeline: job.pipeline, window: job.window, minDataPoints: job.minDataPoints, incremental: job.incremental, priorRunId: job.priorRunId } });
     } catch (e) { res.status(400).json({ error: e.message }); }
   });
 

@@ -99,6 +99,11 @@ export async function runDeepPipeline({
   iso, countryName, window: windowId = DEFAULT_WINDOW,
   plugins = {}, registry = [], relationshipTypes = [],
   offline = false, seedEvidence = null, seedStatedEdges = null, onStage = () => {},
+  // INCREMENTAL RUN (2026-07-22): priorEvidence = evidence records from the
+  // latest persisted run. The data-fetch layer runs in delta mode against them
+  // (only new/missing points are fetched) and the final evidence set is
+  // stored-prior + new, deduped by claim.
+  priorEvidence = null,
 }) {
   const nowTs = Date.now();
   const startedAt = new Date(nowTs);
@@ -148,6 +153,8 @@ export async function runDeepPipeline({
   stage('normalize:start');
   let evidence = Array.isArray(seedEvidence) ? [...seedEvidence] : [];
   let fetchRes = null;
+  const prior = Array.isArray(priorEvidence) ? priorEvidence.filter(Boolean) : [];
+  if (prior.length) evidence = prior.concat(evidence); // stored results always retained (incremental)
   if (!offline) {
     const liveMaterial = [
       ...rawMaterial.map(m => `=== SOURCE:${m.sourceType} ===\n${(m.text || '').slice(0, 6000)}`),
@@ -160,9 +167,18 @@ export async function runDeepPipeline({
     fetchRes = await hardForceDataPoints({
       iso, countryName, phrase, material: combinedMaterial,
       sessionTag: `deep-${iso}-datafetch`,
+      priorEvidence: prior.length ? prior : null, // INCREMENTAL: fetch only the new/missing delta
       onAttempt: (a) => stage('datafetch:attempt', { attempt: a.attempt, endpoint: a.endpointId, count: a.validCount, accepted: a.accepted }),
     });
     evidence = evidence.concat(fetchRes.dataPoints);
+    // Cross-pass dedupe (prior + seed + new) by normalized claim key.
+    const seenKeys = new Set();
+    evidence = evidence.filter(v => {
+      const k = String(v?.claim || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 120);
+      if (!k || seenKeys.has(k)) return false;
+      seenKeys.add(k);
+      return true;
+    });
   }
   // Validate + weight EVERY fact (empty-safe).
   evidence = evidence.map((v, i) => ({
@@ -181,6 +197,11 @@ export async function runDeepPipeline({
   if (offline || !fetchRes) {
     // legacy semantics for offline/seeded runs: strict window filter, original ids kept
     evidence = evidence.filter(v => inWindow(v.publish_date, win, nowTs));
+  } else if (prior.length) {
+    // INCREMENTAL PRESERVATION (2026-07-22): stored prior records are NEVER
+    // dropped — no window trimming, no odd-batch trimming. The run only GROWS:
+    // prior + new delta, deduped above. Re-id sequentially for edge gating.
+    evidence = evidence.map((v, i) => ({ ...v, id: `E${i + 1}` }));
   } else {
     // HARD FLOOR PRESERVATION: window filtering must never break the ≥MIN_DATA_POINTS
     // guarantee. In-window records are preferred; out-of-window records are retained
@@ -193,7 +214,7 @@ export async function runDeepPipeline({
         .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
       evidence = inWin.concat(outWin.slice(0, Math.max(0, MIN_DATA_POINTS - inWin.length)));
     }
-    // No odd batches: drop the single lowest-confidence record if the count is odd.
+    // No odd batches (full runs only): drop the single lowest-confidence record if odd.
     if (evidence.length % 2 === 1) {
       let minIdx = 0;
       for (let i = 1; i < evidence.length; i++) if ((evidence[i].confidence ?? 0) < (evidence[minIdx].confidence ?? 0)) minIdx = i;
@@ -371,6 +392,7 @@ Extract RELATIONSHIP EDGES — JSON array of:
         endpointUsed: fetchRes.endpointUsed,
         fallbackUsed: fetchRes.fallbackUsed,
         corpusBackfilled: fetchRes.corpusBackfilled,
+        incremental: fetchRes.incremental ?? { mode: 'full', priorCount: 0, newFetched: fetchRes.mergedCount ?? null },
         // adaptive smart-run audit (2026-07-21): per-pass counts + gate verdicts
         primaryCount: fetchRes.primaryCount ?? null,
         deltaAdded: fetchRes.deltaAdded ?? null,

@@ -21,13 +21,13 @@ import * as log from '../log.js';
 import { SOURCE_TYPES } from './sources.js';
 import {
   FABLE_ENRICHMENT_ENDPOINT_ID, FABLE_ENRICHMENT_REASONING_EFFORT,
-  CE_MIN_DATA_POINTS,
+  CE_MIN_DATA_POINTS, CE_TARGET_DATA_POINTS,
 } from '../env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const MIN_DATA_POINTS = CE_MIN_DATA_POINTS;      // strict floor — ≥100, clamped in env.js
-export const TARGET_DATA_POINTS = 120;                  // even target per run
+export const MIN_DATA_POINTS = CE_MIN_DATA_POINTS;      // strict FLOOR — a minimum, never a cap
+export const TARGET_DATA_POINTS = CE_TARGET_DATA_POINTS; // per-run AIM (no hard stop — 2026-07-22 uncap)
 export const MAX_FETCH_ATTEMPTS = 4;                    // reject+retry budget PER ENDPOINT (ladder rung)
 
 export const EXTRACTION_SYSTEM = 'You are the ODA Correlation Engine extractor. Respond with ONE valid JSON array only — no prose, no markdown fences. Ground every record in the provided material; null when unknown; never invent URLs, dates, or facts.';
@@ -183,7 +183,7 @@ function sliceMaterialIntoParts(material, parts) {
   return buckets.map(arr => arr.join('\n\n') || raw.slice(0, 4000));
 }
 
-const claimKey = (v) => String(v?.claim || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 120);
+export const claimKey = (v) => String(v?.claim || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 120);
 
 /**
  * Build the "already captured" exclusion block for a DELTA rerun. The fallback
@@ -212,6 +212,30 @@ export function mergePasses(...passes) {
 }
 
 /**
+ * corpusBackfillPoints — UNCAPPED corpus preload (2026-07-22).
+ * Returns every unique validated on-disk corpus record (highest confidence
+ * first) whose claim key is not in `excludeKeys`. `max` defaults to Infinity —
+ * the pre-2026-07-22 behaviour of stopping at TARGET_DATA_POINTS is GONE:
+ * enrichment preloads as much real data as possible.
+ */
+export function corpusBackfillPoints({ excludeKeys = new Set(), max = Infinity } = {}) {
+  const validatedCorpus = loadMainCorpusRecords()
+    .map(validateDataPoint)
+    .filter(Boolean)
+    .sort((a, b) => b.confidence - a.confidence);
+  const seen = new Set(excludeKeys);
+  const out = [];
+  for (const rec of validatedCorpus) {
+    if (out.length >= max) break;
+    const key = claimKey(rec);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push({ ...rec, origin: 'corpus-backfill' });
+  }
+  return out;
+}
+
+/**
  * THE adaptive smart run. ONE run, quality-gated:
  *   PASS 1 (primary):  fable-5-medium, single extraction (the ONLY population model).
  *   PASS 1b:           if short, ONE chunked retry on the SAME rung (still the same run).
@@ -223,6 +247,12 @@ export function mergePasses(...passes) {
  */
 export async function hardForceDataPoints({
   iso, countryName, phrase, material, sessionTag,
+  // INCREMENTAL RUN (2026-07-22): priorEvidence = the ALREADY-STORED records
+  // from the latest persisted run. When present, every model pass runs in
+  // DELTA mode (exclusion prompt over prior + captured), the quality gate
+  // counts prior+new, and the return carries ONLY the NEW points — the caller
+  // merges them over the stored set. Nothing already stored is re-fetched.
+  priorEvidence = null,
   // LADDER (2026-07-22 policy): FABLE 5 MAX is THE enrichment model — the ONLY
   // population rung, primary AND retry. A short pass KEEPS its artifacts,
   // retries chunked on the same rung, then corpus-backfills to clear the floor.
@@ -245,6 +275,10 @@ export async function hardForceDataPoints({
   };
 
   // captured = artifacts KEPT across passes (never discarded on a short pass)
+  const prior = Array.isArray(priorEvidence) ? priorEvidence.filter(Boolean) : [];
+  const priorKeys = new Set(prior.map(claimKey));
+  const dropPriorDupes = (pts) => pts.filter(p => !priorKeys.has(claimKey(p)));
+  const have = (pts) => prior.length + pts.length; // gate counts stored + new
   let captured = [];
   let primaryCount = 0;
   let deltaAdded = 0;
@@ -257,6 +291,11 @@ export async function hardForceDataPoints({
     return {
       dataPoints, attempts, endpointUsed, fallbackUsed, corpusBackfilled,
       primaryCount, deltaAdded, mergedCount: dataPoints.length, passes: passLog,
+      incremental: {
+        mode: prior.length ? 'incremental' : 'full',
+        priorCount: prior.length,
+        newFetched: dataPoints.length,
+      },
     };
   };
 
@@ -317,16 +356,18 @@ export async function hardForceDataPoints({
   const primary = endpointLadder[0];
   const fallback = endpointLadder[1] || null;
 
-  // ---- PASS 1: PRIMARY (Fable 5 MAX enrichment model) — single extraction ----
-  captured = mergePasses(await runSingle(primary, { tagSuffix: 'p1', target: TARGET_DATA_POINTS }));
+  // ---- PASS 1: PRIMARY (Fable 5 MAX enrichment model) — single extraction.
+  // Incremental: the prior stored records ride in the delta-exclusion prompt so
+  // the model fetches ONLY new/missing data points. ----
+  captured = dropPriorDupes(mergePasses(await runSingle(primary, { deltaOf: prior.length ? prior : null, tagSuffix: 'p1', target: TARGET_DATA_POINTS })));
   // ---- PASS 1b: one chunked retry on the SAME rung if short (same run) ----
-  if (captured.length < MIN_DATA_POINTS) {
-    captured = mergePasses(captured, await runChunked(primary, { tagSuffix: 'p1b' }));
+  if (have(captured) < MIN_DATA_POINTS) {
+    captured = dropPriorDupes(mergePasses(captured, await runChunked(primary, { deltaOf: prior.length ? prior.concat(captured) : null, tagSuffix: 'p1b' })));
   }
   primaryCount = captured.length;
-  passLog.push({ pass: 'primary', label: primary.label, endpointId: primary.endpointId, count: primaryCount, gate: primaryCount >= MIN_DATA_POINTS ? 'pass' : 'short' });
+  passLog.push({ pass: 'primary', label: primary.label, endpointId: primary.endpointId, count: primaryCount, gate: have(captured) >= MIN_DATA_POINTS ? 'pass' : 'short' });
 
-  if (captured.length >= MIN_DATA_POINTS) {
+  if (have(captured) >= MIN_DATA_POINTS) {
     endpointUsed = primary.endpointId;
     return finalize(captured, 0);
   }
@@ -337,36 +378,27 @@ export async function hardForceDataPoints({
     endpointUsed = fallback.endpointId;
     log.error('datafetch.primary_short', { sessionTag, primaryCount, needed: MIN_DATA_POINTS, fallingBackTo: fallback.label });
     const beforeDelta = captured.length;
-    const deltaPts = await runSingle(fallback, { deltaOf: captured, tagSuffix: 'p2', target: Math.max(TARGET_DATA_POINTS - captured.length, MIN_DATA_POINTS - captured.length + 20) });
-    captured = mergePasses(captured, deltaPts);
-    if (captured.length < MIN_DATA_POINTS) {
-      captured = mergePasses(captured, await runChunked(fallback, { deltaOf: captured, tagSuffix: 'p2b' }));
+    const deltaPts = await runSingle(fallback, { deltaOf: prior.concat(captured), tagSuffix: 'p2', target: Math.max(TARGET_DATA_POINTS - have(captured), MIN_DATA_POINTS - have(captured) + 20) });
+    captured = dropPriorDupes(mergePasses(captured, deltaPts));
+    if (have(captured) < MIN_DATA_POINTS) {
+      captured = dropPriorDupes(mergePasses(captured, await runChunked(fallback, { deltaOf: prior.concat(captured), tagSuffix: 'p2b' })));
     }
     deltaAdded = captured.length - beforeDelta;
-    passLog.push({ pass: 'fallback-delta', label: fallback.label, endpointId: fallback.endpointId, count: deltaAdded, gate: captured.length >= MIN_DATA_POINTS ? 'pass' : 'short' });
-    if (captured.length >= MIN_DATA_POINTS) {
+    passLog.push({ pass: 'fallback-delta', label: fallback.label, endpointId: fallback.endpointId, count: deltaAdded, gate: have(captured) >= MIN_DATA_POINTS ? 'pass' : 'short' });
+    if (have(captured) >= MIN_DATA_POINTS) {
       return finalize(captured, 0);
     }
   }
 
-  // ---- LAST-RESORT GUARANTEE: backfill the shortfall from the real corpus ----
-  const haveKeys = new Set(captured.map(claimKey));
-  const validatedCorpus = loadMainCorpusRecords()
-    .map(validateDataPoint)
-    .filter(Boolean)
-    .sort((a, b) => b.confidence - a.confidence);
-
-  const backfilled = [];
-  for (const rec of validatedCorpus) {
-    if (captured.length + backfilled.length >= TARGET_DATA_POINTS) break;
-    const key = claimKey(rec);
-    if (haveKeys.has(key)) continue;
-    haveKeys.add(key);
-    backfilled.push({ ...rec, origin: 'corpus-backfill' });
-  }
+  // ---- LAST-RESORT GUARANTEE: backfill the shortfall from the real corpus.
+  // UNCAPPED (2026-07-22): the old `>= TARGET_DATA_POINTS` stop is REMOVED —
+  // the backfill preloads EVERY unique validated corpus record not already
+  // stored (prior) or captured this run. As much real data as possible. ----
+  const excludeKeys = new Set([...priorKeys, ...captured.map(claimKey)]);
+  const backfilled = corpusBackfillPoints({ excludeKeys });
   const combined = captured.concat(backfilled);
-  if (combined.length < MIN_DATA_POINTS) {
-    throw new Error(`hardForceDataPoints: corpus backfill insufficient (${combined.length} < ${MIN_DATA_POINTS})`);
+  if (have(combined) < MIN_DATA_POINTS) {
+    throw new Error(`hardForceDataPoints: corpus backfill insufficient (${have(combined)} < ${MIN_DATA_POINTS})`);
   }
   passLog.push({ pass: 'corpus-backfill', label: 'corpus', endpointId: null, count: backfilled.length, gate: 'pass' });
   log.error('datafetch.corpus_backfill', { n: backfilled.length, total: combined.length });

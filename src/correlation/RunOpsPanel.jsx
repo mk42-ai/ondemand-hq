@@ -48,6 +48,15 @@ export default function RunOpsPanel({ run }) {
       <div className="rop-row">
         <span className="rop-title"><Cpu size={11} aria-hidden /> RUN OPS</span>
 
+        {df.incremental?.mode === 'incremental' && (
+          <span className="rop-stage" title={`Incremental run — diffed against the stored result (${df.incremental.priorCount} prior records kept); only new/missing data fetched`}>
+            <Led state="pass" />
+            <b>INCR·Δ</b>
+            <code className="rop-n">+{df.incremental.newFetched ?? 0}</code>
+            <code className="rop-muted">prior {df.incremental.priorCount}</code>
+          </span>
+        )}
+
         <span className={`rop-stage${primary ? '' : ' rop-stage--na'}`} title="Primary pass — fable enrichment model, expand-mode smart run">
           <Led state={primary ? (primary.gate === 'pass' ? 'pass' : 'short') : 'skip'} />
           <b>PRIMARY</b>

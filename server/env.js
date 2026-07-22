@@ -99,6 +99,13 @@ export const FABLE_ENRICHMENT_REASONING_EFFORT = validEffort(process.env.CE_ENRI
 export const CEREBRAS_LIGHT_ENDPOINT_ID = process.env.CE_LIGHT_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;
 export const CEREBRAS_LIGHT_REASONING_EFFORT = validEffort(process.env.CE_LIGHT_REASONING_EFFORT, 'low');
 export const CE_MIN_DATA_POINTS = Math.max(100, parseInt(process.env.CE_MIN_DATA_POINTS || '100', 10) || 100);  // strict floor — clamped, can never be configured below 100
+// ---------- NO ENRICHMENT CAP (2026-07-22) ----------
+// The floor above is a MINIMUM only — there is NO ceiling on enrichment.
+// CE_TARGET_DATA_POINTS is the per-run AIM handed to the extraction prompt
+// (default 400, was a hard 120 stop before 2026-07-22), and the corpus
+// backfill is UNCAPPED: it preloads every unique validated record available
+// instead of stopping at a target count.
+export const CE_TARGET_DATA_POINTS = Math.max(CE_MIN_DATA_POINTS + 20, parseInt(process.env.CE_TARGET_DATA_POINTS || '400', 10) || 400);
 
 if (!ONDEMAND_API_KEY) {
   console.error('[FAIL] [FATAL-CONFIG] ONDEMAND_API_KEY is not set. Create .env from .env.example. Refusing to start with a hardcoded or missing key.');
