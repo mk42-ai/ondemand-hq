@@ -312,10 +312,13 @@ export async function runPipeline(iso, countryName) {
     const pluginsCalled = [];
     try {
       // ---- Stage 1: gather (3 plugins in parallel; plugin-execution model policy) ----
+      // (2026-07-22 ODA bilateral mandate) every plugin query DEMANDS UAE↔country
+      // CONNECTIONS across the 8 ODA categories — never isolated single-country data.
+      const BILATERAL = `FOCUS STRICTLY ON UAE↔${countryName} BILATERAL CONNECTIONS across: bilateral investment; CEPA/trade agreements and flows; development aid & ODA flows; sovereign fund deployments (ADQ, Mubadala, ADFD); energy & infrastructure projects (Masdar, DP World, AD Ports); the remittance corridor; diplomatic/strategic frameworks; multilateral programs. Name the entities on BOTH sides of every connection; single-country items with no UAE link are out of scope.`;
       const queries = {
-        perplexity: `Latest (June-July 2026) official announcements and news on relations between the United Arab Emirates and ${countryName}: investments, trade agreements, development aid, infrastructure, energy, technology, defence and diplomacy involving UAE entities (ODA, MOFA, ADQ, Mubadala, G42, Core42, ADNOC, AD Ports, Presight, ADFD, Masdar, Etihad, DP World, EDGE). For EACH item give the date, the entities involved, a one-line description and the source URL.`,
-        xsearch: `Posts from 2026-06-19 to 2026-07-19 about UAE and ${countryName} cooperation: investments, aid, agreements, visits. Prioritize official accounts (ministries, embassies, state media, UAE entities). Include each post's x.com URL, author handle, and date.`,
-        reddit: `Fetch recent posts from subreddits about ${countryName} and the UAE (e.g. r/unitedarabemirates, country subreddits): aid, investments, ADNOC, Mubadala, DP World, partnerships. Include post titles, URLs, subreddit names and dates.`,
+        perplexity: `Latest (June-July 2026) official announcements and news on relations between the United Arab Emirates and ${countryName}. ${BILATERAL} UAE entities of interest: ODA, MOFA, ADQ, Mubadala, G42, Core42, ADNOC, AD Ports, Presight, ADFD, Masdar, Etihad, DP World, EDGE. For EACH item give the date, the entities involved on both sides, a one-line description of the CONNECTION and the source URL.`,
+        xsearch: `Posts from 2026-06-19 to 2026-07-19 about UAE and ${countryName} cooperation. ${BILATERAL} Prioritize official accounts (ministries, embassies, state media, UAE entities). Include each post's x.com URL, author handle, and date.`,
+        reddit: `Fetch recent posts from subreddits about ${countryName} and the UAE (e.g. r/unitedarabemirates, country subreddits). ${BILATERAL} Include post titles, URLs, subreddit names and dates.`,
       };
       const gather = {};
       const gatherResults = await Promise.allSettled(Object.entries(queries).map(async ([key, q]) => {

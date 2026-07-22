@@ -150,7 +150,8 @@ export function buildExtractionMaterial({ iso, countryName } = {}) {
 
 /** Build the extraction prompt — hard requirements on minimum + target record counts. */
 export function buildExtractionPrompt({ countryName, phrase, material, min, target }) {
-  return `Extract an EVIDENCE/DATA-POINT ARRAY documenting UAE relations with ${countryName} over ${phrase}, grounded strictly in the material below.
+  return `Extract an EVIDENCE/DATA-POINT ARRAY documenting UAE↔${countryName} BILATERAL CONNECTIONS over ${phrase}, grounded strictly in the material below.
+PRIORITISE records that name BOTH a UAE-side entity (UAE government, ADQ, Mubadala, ADFD, Masdar, DP World, AD Ports, G42, ADNOC, Etihad, MOFA, ODA) AND a ${countryName}-side counterpart, covering: bilateral investment; CEPA/trade; development aid & ODA flows; sovereign fund deployments; energy & infrastructure projects; the remittance corridor; diplomatic/strategic frameworks; multilateral programs. Include the connection's two entities in the record's entities array.
 Each record schema: {"id":"E1"(sequential),"claim":string,"source_type":one of ${JSON.stringify(SOURCE_TYPES)},"source":string,"url":string(verbatim from material or null),"publish_date":"YYYY-MM-DD"|null,"snippet":string(<=40 words),"entities":[lowercase entity slugs],"confidence":number 0-1}
 HARD REQUIREMENTS: Return AT LEAST ${min} records and aim for ${target}. Responses with fewer than ${min} records are rejected and retried. Maximise data-point density: decompose every compound fact into multiple granular records (one per statistic, per entity-pair, per event, per date). ONLY claims present in the material.
 MATERIAL:
