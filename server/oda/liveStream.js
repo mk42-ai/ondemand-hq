@@ -25,9 +25,16 @@ import { interpreterCall, FINAL_DOC_ENDPOINT_ID, assertFinalDocEndpoint } from '
 
 const CHUNK_TOKENS = 200;
 
+// 2026-07-23 fix (card 02 streaming): the digest now ALSO extracts evidence —
+// concrete facts/figures/names present in the REAL fragment — which stream
+// into slide 2 (Evidence & analysis). Previously slide 2 only filled via a
+// '**fact**' marker regex on the final draft that virtually never matched, so
+// card 02 sat in 'Queued' with skeleton bars for the whole run.
 const DIGEST_PROMPT = 'You are a live-render condenser. From the document fragment, emit ONLY JSON '
-  + '{"headline":"<=70 chars what this section establishes","points":["<=80 chars",".. max 2"]}. '
-  + 'Use only what is IN the fragment. No prose, no fences.';
+  + '{"headline":"<=70 chars what this section establishes","points":["<=80 chars",".. max 2"],'
+  + '"evidence":["<=90 chars concrete fact/figure/name stated in the fragment",".. max 2"]}. '
+  + 'evidence items MUST be verbatim-grounded facts from the fragment (numbers, dates, named entities); '
+  + 'if the fragment contains none, use []. Use only what is IN the fragment. No prose, no fences.';
 
 function parseDigest(raw, seq) {
   try {
@@ -37,9 +44,10 @@ function parseDigest(raw, seq) {
     return {
       headline: String(j.headline || '').slice(0, 70),
       points: (Array.isArray(j.points) ? j.points : []).map((p) => String(p).slice(0, 80)).slice(0, 2),
+      evidence: (Array.isArray(j.evidence) ? j.evidence : []).map((e) => String(e).slice(0, 90)).slice(0, 2),
     };
   } catch {
-    return { headline: `Section ${seq + 1} drafted`, points: [] };
+    return { headline: `Section ${seq + 1} drafted`, points: [], evidence: [] };
   }
 }
 
@@ -78,6 +86,22 @@ export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query,
         emitRunEvent(run, 'slide.update', {
           slideNo: 3,
           patch: { title, bullets, status: 'filling' },
+          chunkSeq: nextApply,
+          feed: 'cerebras',
+        });
+        persist();
+      }
+      // 2026-07-23 fix: evidence extracted from the SAME real fragment streams
+      // into slide 2 (Evidence & analysis) so card 02 renders live like the
+      // others instead of staying 'Queued'. Real digest content only.
+      if (slides && slides[1] && (digest.evidence || []).length) {
+        const s2 = slides[1];
+        const evBullets = [...(s2.bullets || []), ...digest.evidence.map((e) => `[doc] ${e}`)].slice(-6);
+        const evTitle = s2.title || 'Evidence & analysis — streaming live';
+        Object.assign(s2, { title: evTitle, bullets: evBullets, status: 'filling' });
+        emitRunEvent(run, 'slide.update', {
+          slideNo: 2,
+          patch: { title: evTitle, bullets: evBullets, status: 'filling' },
           chunkSeq: nextApply,
           feed: 'cerebras',
         });

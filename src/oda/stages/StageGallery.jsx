@@ -2,6 +2,7 @@
 // One card per logicalId (newest verified version), with type icon, version
 // pill, verification badge, preview snippet, download when materialised, and
 // a collapsed version history. Duration comes from REAL event timestamps.
+import { DownloadButton } from './StageLiveDeck.jsx';
 import React from 'react';
 import {
   Presentation, FileText, Table2, Languages, LayoutDashboard, Download, CheckCircle2,
@@ -41,9 +42,7 @@ export default function StageGallery({ run }) {
         <h2 className="oda-h" style={{ fontSize: 18, margin: 0 }}>{latest.length} verified deliverable{latest.length > 1 ? 's' : ''}</h2>
         {secs != null && <span className="oda-muted" style={{ fontSize: 12.5 }}>run completed in {secs >= 60 ? `${Math.floor(secs / 60)}m ${secs % 60}s` : `${secs}s`}</span>}
         {(run.downloadUrl || latest.length > 0) && (
-          <a className="oda-btn" href={`/api/oda/runs/${run.runId}/download`} download style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, marginLeft: 'auto' }}>
-            <Download size={13} aria-hidden /> Download final document
-          </a>
+          <DownloadButton runId={run.runId} style={{ marginTop: 0, marginLeft: 'auto' }} />
         )}
       </div>
       <div className="oda-gallery oda-cardgrid">

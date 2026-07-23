@@ -4,10 +4,35 @@
 // REAL time from slide.update SSE frames, restyled to the ivory editorial ODA
 // design system (white cards, fine borders, gold kickers, Lora headings).
 // No timers, no simulated progress — every visual change maps to a frame.
-import React from 'react';
+import React, { useState } from 'react';
 import { CheckCircle2, Download } from 'lucide-react';
+import downloadFinalDoc from '../downloadFinalDoc.js';
 
 const KICKERS = ['Understanding', 'Evidence & analysis', 'Core findings', 'Recommendations & next steps'];
+
+/** Real click-to-download button (2026-07-23 fix): explicit handler with
+ *  busy/error feedback instead of a bare <a download> anchor. */
+export function DownloadButton({ runId, style }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+  const onClick = async () => {
+    if (busy) return;
+    setBusy(true); setMsg(null);
+    const r = await downloadFinalDoc(runId);
+    setBusy(false);
+    setMsg(r.ok ? `Downloaded ${r.filename} (${r.bytes} bytes)` : `⚠ ${r.error}`);
+  };
+  return (
+    <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', ...style }}>
+      <button type="button" className="oda-btn" onClick={onClick} disabled={busy}
+        data-testid="download-final-doc"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 7, position: 'relative', zIndex: 3, pointerEvents: 'auto' }}>
+        <Download size={13} aria-hidden /> {busy ? 'Preparing download…' : 'Download final document'}
+      </button>
+      {msg && <span className="oda-muted" data-testid="download-result" style={{ fontSize: 12 }}>{msg}</span>}
+    </div>
+  );
+}
 
 function StatusChip({ status }) {
   if (status === 'final') {
@@ -69,11 +94,7 @@ export default function StageLiveDeck({ run }) {
         ))}
       </div>
       {(run.downloadUrl || (run.status === 'completed' && (run.artifacts || []).some((a) => a.status === 'verified'))) && (
-        <div style={{ marginTop: 16 }}>
-          <a className="oda-btn" href={`/api/oda/runs/${run.runId}/download`} download style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-            <Download size={13} aria-hidden /> Download final document
-          </a>
-        </div>
+        <DownloadButton runId={run.runId} />
       )}
     </div>
   );
