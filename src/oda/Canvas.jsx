@@ -67,8 +67,8 @@ export default function Canvas({ run, resolveGate, fetchArtifact }) {
       <div className="oda-canvas">
         <div className="oda-empty">
           <div className="oda-kicker">ODA Workspace</div>
-          <h2 className="oda-h" style={{ fontSize: 22, margin: '10px 0 6px' }}>What are we producing today?</h2>
-          <p className="oda-muted" style={{ maxWidth: 480, margin: '0 auto' }}>
+          <h2 className="oda-h" style={{ fontSize: 26, margin: '12px 0 8px', fontStyle: 'italic', fontWeight: 500 }}>What are we producing today?</h2>
+          <p className="oda-muted" style={{ maxWidth: 500, margin: '0 auto', fontStyle: 'italic', fontSize: 13.5 }}>
             Describe the deliverable in the composer — a briefing deck, a structured problem,
             a benchmark, a country pack, a translation. The canvas follows the run live.
           </p>

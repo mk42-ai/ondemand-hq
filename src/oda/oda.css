@@ -9,6 +9,9 @@
   --oda-mist: #CBDCE6;
   --oda-mist-soft: #E5EDF2;
   --oda-white: #FFFFFF;
+  --oda-ivory: #FAF8F2;     /* editorial page ground (canvas-screenshot-1721x866) */
+  --oda-ivory-deep: #F6F3EA; /* sidebar / rail wash */
+  --oda-charcoal: #23292E;   /* rounded action buttons */
   --oda-ink70: #5B6770;
   --oda-green: #3E7C4F;
   --oda-red: #A33B2E;
@@ -18,7 +21,7 @@
   z-index: 60;
   display: grid;
   grid-template-columns: 300px 1fr auto;
-  background: var(--oda-white);
+  background: var(--oda-ivory);
   color: var(--oda-ink);
   font-family: 'Montserrat', system-ui, sans-serif;
 }
@@ -69,7 +72,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: #FBFAF7;
+  background: var(--oda-ivory-deep);
   border-right: 1px solid var(--oda-mist-soft);
   overflow-y: auto;
   padding: 18px 16px 14px;
@@ -107,7 +110,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--oda-ink);
+  background: var(--oda-charcoal);
   color: var(--oda-white);
   border: none;
   border-radius: 8px;
@@ -116,7 +119,7 @@
   font-weight: 600;
 }
 
-.oda-ws .oda-side__new:hover { background: #0F1418; }
+.oda-ws .oda-side__new:hover { background: #14181C; }
 
 .oda-ws .oda-side__hist {
   display: flex;
@@ -174,7 +177,7 @@
   padding: 10px 12px;
   font-size: 13px;
   line-height: 1.5;
-  background: var(--oda-white);
+  background: var(--oda-ivory);
   color: var(--oda-ink);
 }
 
@@ -249,7 +252,7 @@
   border-radius: 6px;
   padding: 7px 8px;
   font-size: 12.5px;
-  background: var(--oda-white);
+  background: var(--oda-ivory);
   color: var(--oda-ink);
 }
 
@@ -361,7 +364,7 @@
   grid-column: 3;
   width: 320px;
   border-left: 1px solid var(--oda-mist-soft);
-  background: #FBFAF7;
+  background: var(--oda-ivory-deep);
   overflow-y: auto;
   transition: width .18s ease;
   padding: 14px 14px 24px;
@@ -401,7 +404,7 @@
 .oda-ws .oda-rail__h {
   font-family: 'Lora', Georgia, serif;
   font-weight: 600;
-  font-size: 12.5px;
+  font-size: 14px;
   color: var(--oda-ink);
   margin: 0 0 8px;
 }
@@ -826,7 +829,7 @@
   padding: 10px 12px;
   font-size: 13px;
   margin-bottom: 10px;
-  background: var(--oda-white);
+  background: var(--oda-ivory);
   color: var(--oda-ink);
 }
 
