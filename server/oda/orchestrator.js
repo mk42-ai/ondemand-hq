@@ -7,7 +7,7 @@
 // through the runStore's validated transition graph.
 
 import { createOdSession } from '../ondemand.js';
-import { workerCall, interpreterCall } from './models.js';
+import { workerCall, interpreterCall, FINAL_DOC_BRAIN, FINAL_DOC_ENDPOINT_ID, assertFinalDocEndpoint } from './models.js';
 import { interpretRequest } from './interpreter.js';
 import { getManifest } from './manifests.js';
 import { validatePipeline, nextRunnableNodes } from './sequencing.js';
@@ -23,7 +23,7 @@ import { createGate, GATE_DEFS } from './gates.js';
 // Live-render upgrade (2026-07-22): GLM 4.7 slide director + selectable final-
 // document brain + mandatory downloadable artifact + terminal ASCII banner.
 import { initLiveDeck, directorHooks } from './liveDeck.js';
-import { resolveBrain, brainCall, DEFAULT_BRAIN } from './brains.js';
+import { resolveBrain, brainCall, DEFAULT_BRAIN, BRAINS } from './brains.js';
 import { packageRunArtifact } from './autoArtifact.js';
 import { printRunBanner, printRunFooter } from './asciiLogo.js';
 
@@ -311,12 +311,22 @@ async function executeNode(run, node) {
 
   // ---- WORKER (Sonnet 5 — the only author of deliverable content) ----
   const query = `${contextBlock}\n\n--- PRODUCE ---\n${spec.title} (${spec.type}) in mode ${node.mode.toUpperCase()}. Objective: ${handoff.objective}\nReturn ONLY the deliverable content in markdown (or HTML for deck-html) — no preamble, no self-commentary; append a final "Self-report" section (what you did, assumed, could not resolve).`;
-  // Selected brain authors the deliverable (live-render upgrade). sonnet-5 keeps
-  // the central models.js worker path; any other brain routes through brains.js
-  // (same forbidden-endpoint guard, NO silent downgrades — errors surface).
-  const draftText = (run.brain && run.brain !== 'sonnet-5')
-    ? await brainCall({ brainId: run.brain, sessionId, query, systemPrompt })
-    : await workerCall({ surface, sessionId, query, systemPrompt, pluginIds: [], stream: false });
+  // FINAL-DOCUMENT ENFORCEMENT (2026-07-22): every substantive authoring call
+  // runs on opus-4.8, whatever brain was requested. The requested brain stays
+  // recorded on the run; enforcement is surfaced on the event stream with the
+  // REAL endpoint id (proof logging). assertFinalDocEndpoint throws on any
+  // substitution — no silent downgrades.
+  const requestedBrain = run.brain || DEFAULT_BRAIN;
+  run.enforcedBrain = FINAL_DOC_BRAIN;
+  assertFinalDocEndpoint(BRAINS[FINAL_DOC_BRAIN].endpointId);
+  emitRunEvent(run, 'skill.progress', {
+    nodeId: node.nodeId,
+    note: `authoring endpoint ${BRAINS[FINAL_DOC_BRAIN].endpointId} (final-doc policy: opus-4.8 enforced${requestedBrain !== FINAL_DOC_BRAIN ? `; requested ${requestedBrain}` : ''})`,
+    endpointId: BRAINS[FINAL_DOC_BRAIN].endpointId,
+    enforcedBrain: FINAL_DOC_BRAIN,
+    requestedBrain,
+  });
+  const draftText = await brainCall({ brainId: FINAL_DOC_BRAIN, sessionId, query, systemPrompt });
 
   const artifact = addArtifact(run, {
     logicalId: spec.logicalId, type: spec.type, title: spec.title,
@@ -412,8 +422,9 @@ async function verifyNodeArtifact(run, node, artifact, definitionOfDone, manifes
       const owningSurface = SKILL_SURFACE[group.owningSkill] || SKILL_SURFACE[node.skill];
       emitRunEvent(run, 'skill.progress', { nodeId: node.nodeId, note: `revision by ${group.owningSkill}`, defects: group.findings.length });
       const { systemPrompt } = buildContextBundle({ run, node: { ...node, skill: group.owningSkill in SKILL_SURFACE ? group.owningSkill : node.skill }, handoff: null, attachments: [], projectMemory: [], stepHint: 'revision' });
-      revisedText = await workerCall({
-        surface: owningSurface, // revision runs on the defect-owning skill's surface (Sonnet 5)
+      emitRunEvent(run, 'skill.progress', { nodeId: node.nodeId, note: `revision authoring endpoint ${BRAINS[FINAL_DOC_BRAIN].endpointId} (final-doc policy)`, endpointId: BRAINS[FINAL_DOC_BRAIN].endpointId, owningSurface });
+      revisedText = await brainCall({
+        brainId: FINAL_DOC_BRAIN,
         sessionId,
         systemPrompt,
         query: `--- ARTIFACT UNDER REVISION (${artifact.type}) ---\n${revisedText}\n\n--- VERIFIER FINDINGS (fix ONLY these; you own defects of your discipline) ---\n${group.findings.map((f, i) => `${i + 1}. [${f.severity}/${f.category}] at ${f.location}: ${f.message} → ${f.requiredAction}`).join('\n')}\n\nReturn the FULL corrected artifact content — no commentary.`,
@@ -435,8 +446,8 @@ async function completeRun(run) {
   const sessionId = await ensureSession(run);
   const verified = run.artifacts.filter((a) => a.status === 'verified');
   try {
-    const synthesis = await workerCall({
-      surface: 'orchestrator-synthesis',
+    const synthesis = await brainCall({
+      brainId: FINAL_DOC_BRAIN,
       sessionId,
       systemPrompt: 'You are the ODA orchestrator. Synthesise ONE short answer-first completion note (≤150 words, British English, ODA voice) telling the user what was produced, which artifacts are ready, and any assumptions to note. No new claims, no new figures.',
       query: `Request: ${run.request.text}\nIntent: ${run.intent}\nVerified artifacts:\n${verified.map((a) => `• ${a.title} (${a.type}, v${a.version})`).join('\n')}\nAssumptions: ${run.assumptions.join('; ') || '(none)'}`,

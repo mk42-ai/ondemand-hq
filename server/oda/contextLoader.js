@@ -9,6 +9,7 @@
 // design-system spec, and vice versa.
 
 import { getManifest } from './manifests.js';
+import { groundTruthContext, GROUND_TRUTH_SKILLS } from './groundTruth.js';
 
 /**
  * Shared ODA execution rules — the harmonization/trinity distillate that binds
@@ -126,7 +127,12 @@ export function buildContextBundle({ run, node, handoff = null, attachments = []
 
   const systemPrompt = `${SHARED_RULES}\n\n=== SKILL: ${manifest.name} (${node.skill}${node.route ? ` · route ${node.route}` : ''}) — mode ${node.mode.toUpperCase()} ===\n${manifest.purpose}\n\n${skillContext}`;
 
-  const contextBlock = [handoffBlock, artifactBlock, attachmentBlock, memoryBlock].filter(Boolean).join('\n\n');
+  // Data-correctness (QA pass 2026-07-22): data-bearing skills receive the
+  // verified reference facts so outputs match ground truth, never the brief's
+  // unverified numbers. Selective — non-data skills stay lean (M6).
+  const groundTruthBlock = GROUND_TRUTH_SKILLS.includes(node.skill) ? groundTruthContext() : '';
+
+  const contextBlock = [handoffBlock, groundTruthBlock, artifactBlock, attachmentBlock, memoryBlock].filter(Boolean).join('\n\n');
 
   return { systemPrompt, contextBlock, loadedRefs: loadedRefs.map((k) => `${node.skill}/${k}`) };
 }
