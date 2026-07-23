@@ -303,7 +303,11 @@ router.get('/files/:name', asyncH(async (req, res) => {
   if (!fs.existsSync(file)) return notFound(res, 'file');
   const ext = name.split('.').pop().toLowerCase();
   res.setHeader('Content-Type', FORMAT_MIME[ext] || 'application/octet-stream');
-  res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  // inline + explicit Content-Length (2026-07-23): the OnDemand Media API's
+  // URL fetcher requires a sized, non-attachment response — with chunked
+  // streaming + attachment disposition it fails ingestion with a 500.
+  res.setHeader('Content-Disposition', `inline; filename="${name}"`);
+  res.setHeader('Content-Length', fs.statSync(file).size);
   fs.createReadStream(file).pipe(res);
 }));
 
