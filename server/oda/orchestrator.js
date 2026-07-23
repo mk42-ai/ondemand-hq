@@ -25,6 +25,7 @@ import { createGate, GATE_DEFS } from './gates.js';
 import { initLiveDeck, directorHooks } from './liveDeck.js';
 import { resolveBrain, brainCall, DEFAULT_BRAIN, BRAINS } from './brains.js';
 import { packageRunArtifact } from './autoArtifact.js';
+import { streamAuthoringWithLiveFeed } from './liveStream.js';
 import { printRunBanner, printRunFooter } from './asciiLogo.js';
 
 /** Skill id → central model-config surface (models.js ODA_MODEL_ROUTING keys). */
@@ -326,7 +327,20 @@ async function executeNode(run, node) {
     enforcedBrain: FINAL_DOC_BRAIN,
     requestedBrain,
   });
-  const draftText = await brainCall({ brainId: FINAL_DOC_BRAIN, sessionId, query, systemPrompt });
+  // Concurrent Cerebras live feed (2026-07-23): the opus-4.8 authoring runs as
+  // a TOKEN STREAM; every 200 tokens the chunk is dispatched to Cerebras in
+  // parallel and its digest patches the live-render cards progressively.
+  // Falls back to the blocking brainCall only if streaming itself fails.
+  let draftText;
+  try {
+    draftText = await streamAuthoringWithLiveFeed({
+      run, node, sessionId, query, systemPrompt,
+      persist: () => _flushSync(run),
+    });
+  } catch (streamErr) {
+    console.warn(`[oda-live] streaming authoring failed (${streamErr.message}) — falling back to sync opus-4.8 call`);
+    draftText = await brainCall({ brainId: FINAL_DOC_BRAIN, sessionId, query, systemPrompt });
+  }
 
   const artifact = addArtifact(run, {
     logicalId: spec.logicalId, type: spec.type, title: spec.title,

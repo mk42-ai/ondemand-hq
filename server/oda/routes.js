@@ -256,6 +256,41 @@ router.post('/runs/:id/artifacts/:artifactId/materialize', asyncH(async (req, re
   res.json({ artifactId: a.artifactId, url, format, bytes: result.bytes, qa: result.qa });
 }));
 
+/**
+ * GET /runs/:id/download — ROBUST final-document download (2026-07-23 fix).
+ * Re-packages the primary verified artifact on demand when the materialised
+ * file is missing (fresh sandbox / restarted pod), then streams it with
+ * correct Content-Type + Content-Disposition so the browser always gets a
+ * real file download. This is what the gold 'Download final document'
+ * button calls.
+ */
+router.get('/runs/:id/download', asyncH(async (req, res) => {
+  const run = runStore.getRun(req.params.id);
+  if (!run) return notFound(res, 'run');
+  const path = await import('node:path');
+  const fs = await import('node:fs');
+  const { fileURLToPath } = await import('node:url');
+  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+
+  let rec = run.finalArtifact || null;
+  let file = rec ? path.join(dir, path.basename(rec.downloadUrl)) : null;
+  if (!rec || !fs.existsSync(file)) {
+    // Materialised file missing (ephemeral pod) — regenerate from durable run state.
+    const { packageRunArtifact } = await import('./autoArtifact.js');
+    const pkg = await packageRunArtifact(run);
+    if (!pkg.downloadUrl) return res.status(409).json({ error: `no downloadable document: ${pkg.reason || 'no verified artifact'}` });
+    runStore._flushSync(run);
+    rec = run.finalArtifact;
+    file = path.join(dir, path.basename(rec.downloadUrl));
+  }
+  const name = path.basename(file);
+  const ext = name.split('.').pop().toLowerCase();
+  res.setHeader('Content-Type', FORMAT_MIME[ext] || 'application/octet-stream');
+  res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  res.setHeader('Content-Length', fs.statSync(file).size);
+  fs.createReadStream(file).pipe(res);
+}));
+
 /** GET /files/:name — serve materialised artifact files (download dock). */
 router.get('/files/:name', asyncH(async (req, res) => {
   const path = await import('node:path');

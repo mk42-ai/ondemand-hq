@@ -68,9 +68,9 @@ export default function StageLiveDeck({ run }) {
           </div>
         ))}
       </div>
-      {run.downloadUrl && (
+      {(run.downloadUrl || (run.status === 'completed' && (run.artifacts || []).some((a) => a.status === 'verified'))) && (
         <div style={{ marginTop: 16 }}>
-          <a className="oda-btn" href={run.downloadUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+          <a className="oda-btn" href={`/api/oda/runs/${run.runId}/download`} download style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
             <Download size={13} aria-hidden /> Download final document
           </a>
         </div>
