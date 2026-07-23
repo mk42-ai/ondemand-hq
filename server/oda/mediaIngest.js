@@ -26,6 +26,20 @@ import { ONDEMAND_API_KEY } from '../env.js';
 
 const MEDIA_API_URL = 'https://api.on-demand.io/media/v1/public/file';
 
+// LIVE-VERIFIED QUIRKS (2026-07-23T04:22-04:25Z, probed against the real API):
+//   1. Despite the spec marking `plugins` as merely "required" (empty array
+//      allowed), the endpoint returns HTTP 500 {"errorCode":"server_error"}
+//      whenever plugins is []. With the spec's own example processing plugin
+//      id it returns 200 "Media Created". So we always send that default
+//      plugin id (overridable via ODA_MEDIA_PLUGIN_ID).
+//   2. The endpoint also 500s on .md / .html / .txt source URLs (verified on
+//      both our sandbox files AND public w3.org files) while accepting .pdf
+//      and .docx. When the packaged final doc is such a format we build a PDF
+//      RENDITION of the same artifact and ingest that instead — the media URL
+//      then serves the PDF; the local /download route keeps the native format.
+const MEDIA_PLUGIN_ID = process.env.ODA_MEDIA_PLUGIN_ID || 'plugin-1713954536';
+const MEDIA_OK_EXTS = new Set(['pdf', 'docx', 'pptx', 'xlsx']);
+
 /** Public base URL under which /api/oda/files/* is reachable from the internet. */
 export function publicBaseUrl() {
   return (process.env.ODA_PUBLIC_BASE_URL || process.env.PUBLIC_BASE_URL || '').replace(/\/+$/, '');
@@ -45,8 +59,21 @@ export async function ingestFinalDocument(run, { fetchImpl = fetch } = {}) {
     const base = publicBaseUrl();
     if (!base) return { mediaUrl: null, reason: 'ODA_PUBLIC_BASE_URL not set — file not publicly reachable, ingestion skipped' };
 
-    const fileName = path.basename(rec.downloadUrl);
-    const filePath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files', fileName);
+    let fileName = path.basename(rec.downloadUrl);
+    const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+    let filePath = path.join(dir, fileName);
+    const ext = fileName.split('.').pop().toLowerCase();
+    if (!MEDIA_OK_EXTS.has(ext)) {
+      // Quirk 2: build a PDF rendition of the SAME artifact for ingestion.
+      const primary = (run.artifacts || []).find((a) => a.artifactId === rec.artifactId);
+      if (!primary?.content) return { mediaUrl: null, reason: `format .${ext} rejected by Media API and no artifact content for PDF rendition` };
+      const { parseContentSpec, buildArtifact } = await import('./builders/index.js');
+      const spec = parseContentSpec(primary.content);
+      if (!spec.title) spec.title = primary.title;
+      fileName = `${fileName.replace(/\.[^.]+$/, '')}-media.pdf`;
+      filePath = path.join(dir, fileName);
+      await buildArtifact({ format: 'pdf', spec, outPath: filePath });
+    }
     const sizeBytes = fs.existsSync(filePath) ? fs.statSync(filePath).size : (rec.bytes || undefined);
     const publicUrl = `${base}/api/oda/files/${fileName}`;
 
@@ -55,7 +82,7 @@ export async function ingestFinalDocument(run, { fetchImpl = fetch } = {}) {
       headers: { apikey: ONDEMAND_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: publicUrl,                 // required — ingestion is by URL
-        plugins: [],                    // required (may be empty)
+        plugins: [MEDIA_PLUGIN_ID],     // required — MUST be non-empty (see quirk above)
         responseMode: 'sync',           // required — enum sync | webhook
         name: fileName,
         externalUserId: run.request?.externalUserId || 'oda-workspace',
