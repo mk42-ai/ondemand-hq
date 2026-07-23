@@ -35,6 +35,35 @@ function fmtClock(ts) {
   return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
+/** Human-readable one-liner for a REAL ODARunEvent (activity feed). */
+function eventLine(ev) {
+  const d = ev.data || {};
+  switch (ev.type) {
+    case 'run.created': return 'Run created';
+    case 'request.interpreted': return `Interpretation ready — ${d.control?.primary_skill || d.primary_skill || 'plan'} (${d.control?.mode || d.mode || ''})`.trim();
+    case 'pipeline.selected': return `Pipeline selected — ${(d.pipeline || []).length || ''} node(s)`;
+    case 'stage.transition': return `Stage — ${d.from} → ${d.to}`;
+    case 'skill.queued': return `Queued ${d.skill || d.nodeId || ''}`;
+    case 'skill.started': return `Started ${d.skill || d.nodeId || ''}`;
+    case 'skill.progress': return truncate(d.note || 'Working…', 90);
+    case 'evidence.added': return `Evidence — ${truncate(d.claim || '', 70)}`;
+    case 'artifact.created': return `Artifact — ${d.title || d.artifactId || ''}`;
+    case 'artifact.preview.updated': return d.revision ? 'Artifact revised' : 'Artifact preview updated';
+    case 'slide.update': return `Live digest → slide ${d.slideNo}${Number.isInteger(d.chunkSeq) ? ` (chunk ${d.chunkSeq + 1})` : ''}`;
+    case 'deck.ready': return 'Live deck finalised';
+    case 'verification.started': return 'Verification started';
+    case 'verification.passed': return 'Verification passed';
+    case 'verification.failed': return `Verification failed — ${(d.findings || []).length} finding(s)`;
+    case 'skill.completed': return `Completed ${d.skill || d.nodeId || ''}`;
+    case 'artifact.download.ready': return `Download ready (${d.format || 'file'}, ${d.bytes || '?'} B)`;
+    case 'artifact.media.ingested': return 'Final document ingested into Media API';
+    case 'question.required': return 'Awaiting your decision';
+    case 'run.completed': return 'Run completed';
+    case 'run.failed': return `Run failed — ${truncate(d.error || '', 70)}`;
+    default: return ev.type;
+  }
+}
+
 /** m:ss between two REAL ISO timestamps — never fabricated. */
 function fmtDuration(startTs, endTs) {
   if (!startTs || !endTs) return '—';
@@ -265,6 +294,22 @@ export default function ArtifactRail({ run, collapsed, onToggle, onDownload, onP
               </div>
             );
           })
+        )}
+      </section>
+
+      <section className="oda-rail__sec">
+        <div className="oda-rail__h">Live activity</div>
+        {events.length === 0 ? (
+          <div className="oda-empty">No activity yet</div>
+        ) : (
+          <div className="oda-rail__activity">
+            {events.slice(-14).reverse().map((ev) => (
+              <div className="oda-rail__row oda-rail__row--activity" key={ev.seq}>
+                <span className="oda-muted oda-rail__ts">{fmtClock(ev.ts)}</span>
+                <span className="oda-rail__claim">{eventLine(ev)}</span>
+              </div>
+            ))}
+          </div>
         )}
       </section>
 

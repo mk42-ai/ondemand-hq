@@ -26,6 +26,7 @@ const EMPTY = {
   safeStatus: null,
   liveDeck: null,
   downloadUrl: null,
+  finalDocumentUrl: null,
   events: [],
   error: null,
 };
@@ -104,9 +105,19 @@ function reduceEvent(state, ev) {
     case 'artifact.download.ready':
       s.downloadUrl = d.downloadUrl || s.downloadUrl;
       break;
+    case 'artifact.media.ingested':
+      // Fresh OnDemand Media API URL — the Download button prefers this.
+      s.finalDocumentUrl = d.mediaUrl || s.finalDocumentUrl;
+      s.artifacts = s.artifacts.map((a) => (a.artifactId === d.artifactId ? { ...a, mediaUrl: d.mediaUrl } : a));
+      break;
+    case 'stage.transition':
+      // Real status-edge frame (queued/rendering/verifying/final narration).
+      s.status = d.to || s.status;
+      break;
     case 'run.completed':
       s.status = 'completed';
       if (d.downloadUrl) s.downloadUrl = d.downloadUrl;
+      if (d.finalDocumentUrl) s.finalDocumentUrl = d.finalDocumentUrl;
       break;
     case 'run.failed': s.status = 'failed'; s.error = d.error || 'Run failed'; break;
     default: break;
@@ -136,6 +147,7 @@ function hydrate(run) {
     safeStatus: run.control?.safe_status || null,
     liveDeck: run.liveDeck || null,
     downloadUrl: run.downloadUrl || run.finalArtifact?.downloadUrl || null,
+    finalDocumentUrl: run.finalDocumentUrl || run.finalArtifact?.mediaUrl || null,
     events: run.events || [],
     error: run.error?.message || null,
   };
@@ -174,6 +186,7 @@ export default function useOdaRun() {
       'artifact.preview.updated', 'verification.started', 'verification.failed',
       'verification.passed', 'skill.completed', 'run.completed', 'run.failed',
       'slide.update', 'deck.ready', 'artifact.download.ready',
+      'stage.transition', 'artifact.media.ingested',
     ].forEach((t) => es.addEventListener(t, onFrame));
     es.onmessage = onFrame; // unnamed frames
   }, [close]);

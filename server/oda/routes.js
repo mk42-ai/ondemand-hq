@@ -112,6 +112,7 @@ router.get('/runs/:id', (req, res) => {
     openGates: openGates(run),
     gateSummary: gateSummary(run),
     downloadUrl: run.finalArtifact?.downloadUrl || null,
+    finalDocumentUrl: run.finalDocumentUrl || null,
     liveDeck: run.liveDeck || null,
   });
 });

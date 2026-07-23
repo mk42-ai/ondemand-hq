@@ -202,12 +202,17 @@ export function transition(run, nextStatus, meta = {}) {
   if (!legal.includes(nextStatus)) {
     throw illegalTransitionError(run.runId, run.status, nextStatus);
   }
+  const prevStatus = run.status;
   run.status = nextStatus;
   run.timestamps.updatedAt = new Date().toISOString();
   if (meta && Object.keys(meta).length) Object.assign(run, meta);
-  // Event narration policy (M5, single-narrator): the ORCHESTRATOR emits
-  // run.completed / run.failed with rich payloads — transition() itself emits
-  // nothing, so no status edge ever produces a duplicate frame.
+  // Event narration policy (M5, single-narrator): the ORCHESTRATOR still owns
+  // the rich run.completed / run.failed payloads. Real-streaming upgrade
+  // (2026-07-23): every legal status edge ALSO emits a lightweight
+  // 'stage.transition' frame — a REAL state change recorded here, distinct
+  // from the orchestrator's terminal frames, so nothing is duplicated and the
+  // canvas/right rail never go quiet across an edge.
+  emitRunEvent(run, 'stage.transition', { from: prevStatus, to: nextStatus });
   persist(run);
   return run;
 }
@@ -613,7 +618,7 @@ export function addEvidence(run, item) {
   const evidence = { id: crypto.randomUUID(), ts: new Date().toISOString(), ...item };
   run.evidence.push(evidence);
   run.timestamps.updatedAt = new Date().toISOString();
-  emitRunEvent(run, 'evidence.added', { evidenceId: evidence.id, tag: evidence.tag, nodeId: evidence.nodeId });
+  emitRunEvent(run, 'evidence.added', { evidenceId: evidence.id, tag: evidence.tag, nodeId: evidence.nodeId, claim: String(evidence.claim || '').slice(0, 200) });
   persist(run);
   return evidence;
 }

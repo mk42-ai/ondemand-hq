@@ -23,7 +23,7 @@ import { syncQuery } from '../ondemand.js';
  * @property {string} label                           Human-readable name for the selector UI.
  * @property {string} endpointId                      OnDemand endpoint id this brain calls.
  * @property {'low'|'medium'|'max'|null} reasoningEffort  null => omit the
- *   reasoningEffort field entirely on calls (see the predefined-claude-fable-5 note below).
+ *   reasoningEffort field entirely on calls.
  * @property {string} blurb                           One-line description shown under the label.
  */
 
@@ -38,17 +38,11 @@ import { syncQuery } from '../ondemand.js';
  */
 
 // ---------------------------------------------------------------------------
-// Brain registry — all four endpoint ids were live-verified ACTIVE against
+// Brain registry — exactly THREE brains (2026-07-23 model-routing fix): the
+// user-selected brain AUTHORS THE FINAL DOCUMENT — no silent rerouting to
+// Opus. All three endpoint ids were live-verified ACTIVE against
 // the platform's endpoint registry (GET /config/v1/public/endpoints) at
 // 2026-07-22T22:57Z.
-//
-// NOTE (registry, 2026-07-22T22:57Z): predefined-claude-fable-5 reports
-// reasoning_efforts: [] — unlike the other three brains it does not accept a
-// reasoningEffort override at all. Its entry below is therefore
-// reasoningEffort: null, and brainCall() OMITS the reasoningEffort field
-// entirely from the upstream call whenever the resolved brain's
-// reasoningEffort is null, rather than sending a value the endpoint does not
-// understand.
 // ---------------------------------------------------------------------------
 
 /** @type {Readonly<Record<string, ODABrain>>} */
@@ -56,7 +50,6 @@ export const BRAINS = Object.freeze({
   'kimi3': Object.freeze({ id: 'kimi3', label: 'Kimi K3', endpointId: 'predefined-kimi-k3', reasoningEffort: 'medium', blurb: 'Fast broad worker' }),
   'sonnet-5': Object.freeze({ id: 'sonnet-5', label: 'Sonnet 5', endpointId: 'predefined-claude-sonnet-5', reasoningEffort: 'medium', blurb: 'Default substantive worker (1M ctx)' }),
   'opus-4.8': Object.freeze({ id: 'opus-4.8', label: 'Opus 4.8', endpointId: 'predefined-claude-4-8-opus', reasoningEffort: 'medium', blurb: 'Deepest reasoning' }),
-  'fable': Object.freeze({ id: 'fable', label: 'Fable 5', endpointId: 'predefined-claude-fable-5', reasoningEffort: null, blurb: 'Long-form narrative' }),
 });
 
 /** Brain used unless the caller/user explicitly picks another — never applied as a silent fallback for an unknown id (see resolveBrain). */
@@ -76,7 +69,6 @@ const BRAIN_ALIASES = Object.freeze({
   'opus': 'opus-4.8',
   'opus4.8': 'opus-4.8',
   'opus-48': 'opus-4.8',
-  'fable-5': 'fable',
 });
 
 /**
@@ -197,7 +189,7 @@ export async function brainCall({ brainId, sessionId, query, systemPrompt, plugi
       systemPrompt,
       pluginIds,
       endpointId: brain.endpointId,
-      // reasoningEffort omitted entirely when null (predefined-claude-fable-5 — see registry note above).
+      // reasoningEffort omitted entirely when the brain's value is null.
       ...(brain.reasoningEffort ? { reasoningEffort: brain.reasoningEffort } : {}),
     });
     ok = true;

@@ -408,23 +408,13 @@ export async function interpreterCall({ sessionId, query, systemPrompt, signal }
  * }}
  */
 /**
- * FINAL-DOCUMENT PRODUCTION POLICY (2026-07-22): every substantive final-
- * document authoring call runs on Opus 4.8 — regardless of the brain the
- * client requested. GLM 4.7 remains interpreter-only. Any attempt to author
- * the final document on a different endpoint THROWS (no silent downgrades,
- * no substitutions).
+ * FINAL-DOCUMENT AUTHORING (2026-07-23 model-routing fix): the brain the user
+ * selects in the workspace (see ./brains.js — kimi3 / sonnet-5 / opus-4.8) is
+ * the model that authors the final document. There is NO forced rerouting to
+ * a fixed endpoint. GLM 4.7 remains interpreter-only (assertEndpointAllowed
+ * above still forbids it from authoring), and unknown brain ids still throw
+ * (resolveBrain) — explicit routing, no silent substitutions.
  */
-export const FINAL_DOC_BRAIN = 'opus-4.8';
-export const FINAL_DOC_ENDPOINT_ID = 'predefined-claude-4-8-opus';
-
-export function assertFinalDocEndpoint(endpointId) {
-  if (endpointId !== FINAL_DOC_ENDPOINT_ID) {
-    const err = new Error(`ODA final-document policy: endpoint "${endpointId}" may not author the final document — only ${FINAL_DOC_ENDPOINT_ID} (opus-4.8) is permitted`);
-    err.code = 'ODA_FINAL_DOC_POLICY';
-    throw err;
-  }
-  return endpointId;
-}
 
 export function describeModelConfig() {
   return {

@@ -52,6 +52,10 @@ export const EVENT_TYPES = Object.freeze([
   'slide.update',          // { slideNo: 1-4, patch: { title?, bullets?, status?, confidence? } }
   'deck.ready',            // { slides: [...] } — all four slides finalised
   'artifact.download.ready', // { artifactId, downloadUrl, format, bytes } — mandatory post-run
+  // Real-streaming upgrade (2026-07-23): every REAL pipeline occurrence gets a
+  // frame — still zero fabricated/timer events.
+  'stage.transition',        // { from, to } — every legal run-status edge (transition())
+  'artifact.media.ingested', // { artifactId, mediaUrl, mediaId, bytes } — Media API ingestion done
 ]);
 
 const EVENT_TYPE_SET = new Set(EVENT_TYPES);

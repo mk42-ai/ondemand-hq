@@ -941,3 +941,8 @@
   margin-top: 6px;
   padding-left: 2px;
 }
+
+/* Live activity feed (real SSE events tail — 2026-07-23 real-streaming fix) */
+.oda-ws .oda-rail__activity { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
+.oda-ws .oda-rail__row--activity { display: flex; gap: 8px; align-items: baseline; font-size: 11.5px; line-height: 1.45; }
+.oda-ws .oda-rail__ts { flex: 0 0 auto; font-variant-numeric: tabular-nums; font-size: 10.5px; }

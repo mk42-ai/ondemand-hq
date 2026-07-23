@@ -193,10 +193,8 @@ export default function OdaSidebar({
               <option value="kimi3">Kimi K3</option>
               <option value="sonnet-5">Sonnet 5</option>
               <option value="opus-4.8">Opus 4.8</option>
-              <option value="fable">Fable 5</option>
             </select>
           </label>
-          <div className="oda-side__policyline">Final documents are written on Opus 4.8</div>
         </div>
 
         <div className="oda-side__submit">

@@ -4,8 +4,9 @@
 // terminal data:[DONE]) — see MIGRATION_MAP.md §4.2 and server/ondemand.js.
 //
 // Design:
-//   • The FINAL document still streams from opus-4.8 (FINAL_DOC_ENDPOINT_ID —
-//     enforcement unchanged, assertFinalDocEndpoint throws on substitution).
+//   • The FINAL document streams from the USER-SELECTED brain's endpoint
+//     (2026-07-23 model-routing fix — no silent rerouting to Opus; unknown
+//     brains throw upstream via resolveBrain).
 //   • As fulfillment tokens arrive they are buffered; every CHUNK_TOKENS (200)
 //     tokens the chunk is dispatched IMMEDIATELY to Cerebras (the GLM 4.7 byoi
 //     endpoint api.cerebras.ai) IN PARALLEL — we never wait for the OnDemand
@@ -21,7 +22,8 @@
 //     is dispatched as the final chunk, then all in-flight digests settle.
 import { streamQuery, createOdSession } from '../ondemand.js';
 import { emitRunEvent } from './events.js';
-import { interpreterCall, FINAL_DOC_ENDPOINT_ID, assertFinalDocEndpoint } from './models.js';
+import { interpreterCall } from './models.js';
+import { resolveBrain, DEFAULT_BRAIN } from './brains.js';
 
 const CHUNK_TOKENS = 200;
 
@@ -44,12 +46,12 @@ function parseDigest(raw, seq) {
 }
 
 /**
- * Stream the opus-4.8 authoring while feeding 200-token chunks to Cerebras in
- * parallel; Cerebras digests patch slide 3 (core findings) progressively.
- * Returns the FULL opus-4.8 draft text (the final document source).
+ * Stream the selected-brain authoring while feeding 200-token chunks to
+ * Cerebras in parallel; Cerebras digests patch slide 3 (core findings)
+ * progressively. Returns the FULL draft text (the final document source).
  */
-export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query, systemPrompt, persist = () => {} }) {
-  assertFinalDocEndpoint(FINAL_DOC_ENDPOINT_ID); // no silent downgrades — throws otherwise
+export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query, systemPrompt, brain = null, persist = () => {} }) {
+  const authorBrain = brain || resolveBrain(run.brain || DEFAULT_BRAIN); // unknown brains throw — no silent substitution
 
   // Dedicated Cerebras feed session so parallel digest calls never contend
   // with the authoring session.
@@ -108,14 +110,14 @@ export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query,
     inflight.push(p);
   };
 
-  // ---- The opus-4.8 authoring stream (OnDemand submitquery, responseMode stream) ----
+  // ---- The selected-brain authoring stream (OnDemand submitquery, responseMode stream) ----
   await streamQuery({
     odSessionId: sessionId,
     query,
     systemPrompt,
     pluginIds: [],
-    endpointId: FINAL_DOC_ENDPOINT_ID,
-    reasoningEffort: 'medium',
+    endpointId: authorBrain.endpointId,
+    ...(authorBrain.reasoningEffort ? { reasoningEffort: authorBrain.reasoningEffort } : {}),
     fulfillmentOnly: true,
     // streamQuery invokes onEvent('answer', <delta>) per fulfillment frame
     // (see server/ondemand.js parseFrame) — positional args, not an object.
@@ -147,7 +149,7 @@ export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query,
   applyReadyInOrder(); // drain anything that completed last
 
   if (!full.trim()) {
-    const err = new Error('opus-4.8 authoring stream produced no fulfillment tokens');
+    const err = new Error(`${authorBrain.id} authoring stream produced no fulfillment tokens`);
     err.code = 'ODA_EMPTY_STREAM';
     throw err;
   }

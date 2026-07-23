@@ -7,7 +7,7 @@
 // through the runStore's validated transition graph.
 
 import { createOdSession } from '../ondemand.js';
-import { workerCall, interpreterCall, FINAL_DOC_BRAIN, FINAL_DOC_ENDPOINT_ID, assertFinalDocEndpoint } from './models.js';
+import { workerCall, interpreterCall } from './models.js';
 import { interpretRequest } from './interpreter.js';
 import { getManifest } from './manifests.js';
 import { validatePipeline, nextRunnableNodes } from './sequencing.js';
@@ -312,34 +312,29 @@ async function executeNode(run, node) {
 
   // ---- WORKER (Sonnet 5 — the only author of deliverable content) ----
   const query = `${contextBlock}\n\n--- PRODUCE ---\n${spec.title} (${spec.type}) in mode ${node.mode.toUpperCase()}. Objective: ${handoff.objective}\nReturn ONLY the deliverable content in markdown (or HTML for deck-html) — no preamble, no self-commentary; append a final "Self-report" section (what you did, assumed, could not resolve).`;
-  // FINAL-DOCUMENT ENFORCEMENT (2026-07-22): every substantive authoring call
-  // runs on opus-4.8, whatever brain was requested. The requested brain stays
-  // recorded on the run; enforcement is surfaced on the event stream with the
-  // REAL endpoint id (proof logging). assertFinalDocEndpoint throws on any
-  // substitution — no silent downgrades.
-  const requestedBrain = run.brain || DEFAULT_BRAIN;
-  run.enforcedBrain = FINAL_DOC_BRAIN;
-  assertFinalDocEndpoint(BRAINS[FINAL_DOC_BRAIN].endpointId);
+  // MODEL ROUTING (2026-07-23 fix): the USER-SELECTED brain authors the final
+  // document — no silent rerouting to Opus. Unknown ids throw (resolveBrain);
+  // the REAL endpoint id is surfaced on the event stream (proof logging).
+  const authorBrain = resolveBrain(run.brain || DEFAULT_BRAIN);
   emitRunEvent(run, 'skill.progress', {
     nodeId: node.nodeId,
-    note: `authoring endpoint ${BRAINS[FINAL_DOC_BRAIN].endpointId} (final-doc policy: opus-4.8 enforced${requestedBrain !== FINAL_DOC_BRAIN ? `; requested ${requestedBrain}` : ''})`,
-    endpointId: BRAINS[FINAL_DOC_BRAIN].endpointId,
-    enforcedBrain: FINAL_DOC_BRAIN,
-    requestedBrain,
+    note: `authoring endpoint ${authorBrain.endpointId} (selected brain: ${authorBrain.id})`,
+    endpointId: authorBrain.endpointId,
+    brain: authorBrain.id,
   });
-  // Concurrent Cerebras live feed (2026-07-23): the opus-4.8 authoring runs as
-  // a TOKEN STREAM; every 200 tokens the chunk is dispatched to Cerebras in
-  // parallel and its digest patches the live-render cards progressively.
+  // Concurrent Cerebras live feed (2026-07-23): the selected-brain authoring
+  // runs as a TOKEN STREAM; every 200 tokens the chunk is dispatched to
+  // Cerebras in parallel and its digest patches the live-render cards.
   // Falls back to the blocking brainCall only if streaming itself fails.
   let draftText;
   try {
     draftText = await streamAuthoringWithLiveFeed({
-      run, node, sessionId, query, systemPrompt,
+      run, node, sessionId, query, systemPrompt, brain: authorBrain,
       persist: () => _flushSync(run),
     });
   } catch (streamErr) {
-    console.warn(`[oda-live] streaming authoring failed (${streamErr.message}) — falling back to sync opus-4.8 call`);
-    draftText = await brainCall({ brainId: FINAL_DOC_BRAIN, sessionId, query, systemPrompt });
+    console.warn(`[oda-live] streaming authoring failed (${streamErr.message}) — falling back to sync ${authorBrain.id} call`);
+    draftText = await brainCall({ brainId: authorBrain.id, sessionId, query, systemPrompt });
   }
 
   const artifact = addArtifact(run, {
@@ -436,9 +431,10 @@ async function verifyNodeArtifact(run, node, artifact, definitionOfDone, manifes
       const owningSurface = SKILL_SURFACE[group.owningSkill] || SKILL_SURFACE[node.skill];
       emitRunEvent(run, 'skill.progress', { nodeId: node.nodeId, note: `revision by ${group.owningSkill}`, defects: group.findings.length });
       const { systemPrompt } = buildContextBundle({ run, node: { ...node, skill: group.owningSkill in SKILL_SURFACE ? group.owningSkill : node.skill }, handoff: null, attachments: [], projectMemory: [], stepHint: 'revision' });
-      emitRunEvent(run, 'skill.progress', { nodeId: node.nodeId, note: `revision authoring endpoint ${BRAINS[FINAL_DOC_BRAIN].endpointId} (final-doc policy)`, endpointId: BRAINS[FINAL_DOC_BRAIN].endpointId, owningSurface });
+      const revBrain = resolveBrain(run.brain || DEFAULT_BRAIN);
+      emitRunEvent(run, 'skill.progress', { nodeId: node.nodeId, note: `revision authoring endpoint ${revBrain.endpointId} (selected brain: ${revBrain.id})`, endpointId: revBrain.endpointId, owningSurface });
       revisedText = await brainCall({
-        brainId: FINAL_DOC_BRAIN,
+        brainId: revBrain.id,
         sessionId,
         systemPrompt,
         query: `--- ARTIFACT UNDER REVISION (${artifact.type}) ---\n${revisedText}\n\n--- VERIFIER FINDINGS (fix ONLY these; you own defects of your discipline) ---\n${group.findings.map((f, i) => `${i + 1}. [${f.severity}/${f.category}] at ${f.location}: ${f.message} → ${f.requiredAction}`).join('\n')}\n\nReturn the FULL corrected artifact content — no commentary.`,
@@ -461,7 +457,7 @@ async function completeRun(run) {
   const verified = run.artifacts.filter((a) => a.status === 'verified');
   try {
     const synthesis = await brainCall({
-      brainId: FINAL_DOC_BRAIN,
+      brainId: run.brain || DEFAULT_BRAIN,
       sessionId,
       systemPrompt: 'You are the ODA orchestrator. Synthesise ONE short answer-first completion note (≤150 words, British English, ODA voice) telling the user what was produced, which artifacts are ready, and any assumptions to note. No new claims, no new figures.',
       query: `Request: ${run.request.text}\nIntent: ${run.intent}\nVerified artifacts:\n${verified.map((a) => `• ${a.title} (${a.type}, v${a.version})`).join('\n')}\nAssumptions: ${run.assumptions.join('; ') || '(none)'}`,
@@ -486,12 +482,37 @@ async function completeRun(run) {
   } else {
     console.warn(`[oda-live] packaging produced no download URL: ${pkg.reason}`);
   }
-  liveOf(run).onRunCompleted({ downloadUrl: pkg.downloadUrl });
+  // DOWNLOAD FIX (2026-07-23): ingest the packaged final document into the
+  // OnDemand Media API (POST /media/v1/public/file — by URL, per the live
+  // contract in ONDEMAND_API_CONTRACTS.md) and store the returned fresh media
+  // URL on the run record. The Download button prefers this URL; on ingestion
+  // failure it falls back honestly to the local /download route.
+  if (pkg.downloadUrl) {
+    const { ingestFinalDocument } = await import('./mediaIngest.js');
+    const ing = await ingestFinalDocument(run);
+    if (ing.mediaUrl) {
+      run.finalDocumentUrl = ing.mediaUrl;
+      if (run.finalArtifact) {
+        run.finalArtifact.mediaUrl = ing.mediaUrl;
+        run.finalArtifact.mediaId = ing.mediaId || null;
+      }
+      const art = run.artifacts.find((a) => a.artifactId === pkg.artifactId);
+      if (art) art.mediaUrl = ing.mediaUrl;
+      emitRunEvent(run, 'artifact.media.ingested', {
+        artifactId: pkg.artifactId, mediaUrl: ing.mediaUrl, mediaId: ing.mediaId || null, bytes: ing.bytes || pkg.bytes,
+      });
+    } else {
+      console.warn(`[oda-media] Media API ingestion skipped/failed: ${ing.reason}`);
+      emitRunEvent(run, 'skill.progress', { nodeId: 'oda', note: `media ingestion unavailable (${ing.reason}) — local download route remains`, mediaIngest: false });
+    }
+  }
+  liveOf(run).onRunCompleted({ downloadUrl: run.finalDocumentUrl || pkg.downloadUrl });
   transition(run, 'completed');
   run.timestamps.completedAt = new Date().toISOString();
   emitRunEvent(run, 'run.completed', {
     artifacts: run.artifacts.filter((a) => a.status === 'verified').map((a) => ({ artifactId: a.artifactId, type: a.type, title: a.title, version: a.version })),
     downloadUrl: pkg.downloadUrl || null,
+    finalDocumentUrl: run.finalDocumentUrl || null,
     brain: run.brain || DEFAULT_BRAIN,
     durationMs: Date.parse(run.timestamps.completedAt) - Date.parse(run.timestamps.createdAt),
   });
