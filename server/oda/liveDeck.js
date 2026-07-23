@@ -6,6 +6,34 @@
 // artifact excerpts into slide copy; it never authors deliverable content.
 import { emitRunEvent } from './events.js';
 
+// ---------------------------------------------------------------------------
+// 2026-07-23 evidence-quality fix: meta/status lines from a draft's own
+// process headers ('Status: source content not received', '[VERIFY AGAINST
+// WAM — …]', 'verification … remains open') are NOT evidence. Single source
+// of truth for what may render on card 02 / slide 2.
+const EVIDENCE_META_RE = [
+  /source content not received/i,
+  /remains open/i,
+  /verification[^.]*pending/i,
+  /^\s*\[?doc\]?\s*status[:\s]/i,
+  /^status[:\s]/i,
+  /not provided/i,
+  /no attachments?/i,
+  /verify against wam/i,
+  /pending source citation/i,
+  /no external evidence/i,
+  /awaiting (?:source|content|input)/i,
+  /placeholder/i,
+  /to be (?:confirmed|verified|added)/i,
+  /source document/i,
+];
+
+/** True only for substantive, subject-matter evidence text. */
+export const isSubstantiveEvidence = (s) => {
+  const t = String(s || '').trim();
+  return t.length >= 10 && !EVIDENCE_META_RE.some((re) => re.test(t));
+};
+
 /** Slide ownership: 1 understanding · 2 evidence · 3 core findings · 4 actions. */
 export const SLIDE_MAP = Object.freeze({ interpret: 1, evidence: 2, core: 3, actions: 4 });
 
@@ -97,6 +125,7 @@ export function directorHooks(run, { persist = () => {} } = {}) {
 
     /** Slide 2 appends REAL evidence items (cap 6, FIFO). */
     onEvidence(item) {
+      if (!isSubstantiveEvidence(item.claim)) return; // meta/status lines never render
       const s = slide(2);
       const bullets = [...s.bullets, `[${item.tag}] ${clip(item.claim, 120)}`].slice(-6);
       patchSlide(2, { title: 'Evidence gathered live', bullets, status: 'filling' });
@@ -157,7 +186,15 @@ export function directorHooks(run, { persist = () => {} } = {}) {
       const s = slide(4);
       const bullets = downloadUrl ? [...s.bullets.slice(0, 3), 'Download ready'] : s.bullets;
       patchSlide(4, { status: 'final', bullets });
-      if (!slide(2).bullets.length) patchSlide(2, { title: 'No external evidence required', status: 'final' });
+      // 2026-07-23: slide 2 ALWAYS completes Queued→Rendering→Final by run end
+      // via REAL frames (never skeleton forever, never junk locked as final).
+      const s2 = slide(2);
+      if (!s2.bullets.length) {
+        patchSlide(2, { title: 'Evidence & analysis', status: 'filling' });
+        patchSlide(2, { title: 'No external evidence required', status: 'final' });
+      } else if (s2.status !== 'final') {
+        patchSlide(2, { status: 'final' });
+      }
       emitRunEvent(run, 'deck.ready', { slides: run.liveDeck.slides });
       persist();
     },

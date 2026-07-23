@@ -22,7 +22,7 @@ import { verifyArtifact, planRevision, REVISE_POLICY, shouldEscalate } from './v
 import { createGate, GATE_DEFS } from './gates.js';
 // Live-render upgrade (2026-07-22): GLM 4.7 slide director + selectable final-
 // document brain + mandatory downloadable artifact + terminal ASCII banner.
-import { initLiveDeck, directorHooks } from './liveDeck.js';
+import { initLiveDeck, directorHooks, isSubstantiveEvidence } from './liveDeck.js';
 import { resolveBrain, brainCall, DEFAULT_BRAIN, BRAINS } from './brains.js';
 import { packageRunArtifact } from './autoArtifact.js';
 import { streamAuthoringWithLiveFeed } from './liveStream.js';
@@ -134,15 +134,22 @@ export async function startRun(run) {
     live.onPipelineSelected(run.pipeline); // slides 1→final + 4 plan preview
     _flushSync(run);
 
-    // ---- 3. PRE-EXECUTION GATE (FULL mode / interpreter-requested) ----
+    // ---- 3. PRE-EXECUTION SCOPE CONFIRMATION (2026-07-23: NEVER PARKS) ----
+    // The pipeline engages IMMEDIATELY on Start run — with or without
+    // attachments. Scope confirmation is a recorded decision + non-blocking
+    // notice, never a 'Waiting for you' stop. The app NEVER asks for
+    // documents; attachments stay optional via the Attach button only.
     if (control.requires_user_gate && control.mode === 'full') {
-      const gateType = PRE_EXECUTION_GATE[control.primary_skill] || 'scope_edit';
-      await raiseRunGate(run, {
-        gateType,
-        nodeId: run.pipeline[0]?.nodeId || null,
-        payload: { intent: control.intent, pipeline: run.pipeline, deliverables: control.deliverables },
+      const hasAttachments = (run.request.attachments || []).length > 0;
+      addDecision(run, {
+        summary: `Scope auto-approved (${hasAttachments ? 'attachments supplied as optional input' : 'no attachments — web-sourced evidence'}) — runs never park on scope confirmation`,
+        decidedBy: 'system',
       });
-      return run; // parked in waiting_for_user — resolveGateAndContinue resumes
+      emitRunEvent(run, 'skill.progress', {
+        nodeId: run.pipeline[0]?.nodeId || null,
+        note: `notice: scope confirmation auto-approved — pipeline engaging immediately${hasAttachments ? ' (attachments in context)' : ' on web-sourced evidence'}`,
+        notice: 'auto_approved_scope_gate',
+      });
     }
 
     // ---- 4. EXECUTE ----
@@ -351,8 +358,10 @@ async function executeNode(run, node) {
 
   // Evidence extraction (structured state, not prose): record tagged facts the
   // worker declared, if any, as evidence items (best-effort, non-fatal).
-  for (const m of String(draftText).matchAll(/\*\*fact\*\*[:\s—-]*(.{10,180}?)(?:\n|$)/gi)) {
-    const evItem = addEvidence(run, { claim: m[1].trim(), tag: 'fact', addedBy: node.skill, nodeId: node.nodeId }); // emits evidence.added
+  for (const m of String(draftText).matchAll(/\*\*(?:tagged )?fact\*\*[:\s—-]*(.{10,180}?)(?:\n|$)/gi)) {
+    const claim = m[1].trim();
+    if (!isSubstantiveEvidence(claim)) continue; // meta/status lines never pollute run.evidence
+    const evItem = addEvidence(run, { claim, tag: 'fact', addedBy: node.skill, nodeId: node.nodeId }); // emits evidence.added
     liveOf(run).onEvidence(evItem); // slide 2 fills from REAL evidence state
   }
 
@@ -416,14 +425,27 @@ async function verifyNodeArtifact(run, node, artifact, definitionOfDone, manifes
     setArtifactStatus(run, artifact.artifactId, 'failed', findings); // emits verification.failed (full findings)
 
     if (shouldEscalate(round + 1)) {
-      // ESCALATE (bundle cap reached): surface unresolved defects honestly via a
-      // resumable verification_findings gate — never ship, never silently pass.
-      ns.status = 'failed';
-      await raiseRunGate(run, {
-        gateType: 'verification_findings',
-        nodeId: node.nodeId,
-        payload: { artifactId: artifact.artifactId, findings: findings.findings },
+      // ESCALATE (bundle cap reached). 2026-07-23: the run NEVER parks here —
+      // the best artifact ships WITH its open findings recorded honestly
+      // (decision + non-blocking notice) and the pipeline continues. This
+      // removes the 'Waiting for you' dead-end entirely.
+      addDecision(run, {
+        summary: `Shipped ${artifact.artifactId} with ${findings.findings.length} open verification finding(s) — runs never park on verifier escalation`,
+        decidedBy: 'system',
       });
+      emitRunEvent(run, 'skill.progress', {
+        nodeId: node.nodeId,
+        note: `notice: shipped with ${findings.findings.length} open finding(s) — review recommended`,
+        notice: 'shipped_with_open_findings',
+        artifactId: artifact.artifactId,
+      });
+      setArtifactStatus(run, artifact.artifactId, 'verified', { ...findings, status: 'passed_with_findings' });
+      liveOf(run).onVerificationPassed(artifact.artifactId);
+      ns.status = 'completed';
+      ns.completedAt = new Date().toISOString();
+      emitRunEvent(run, 'skill.completed', { nodeId: node.nodeId, skill: node.skill, artifactId: artifact.artifactId });
+      if (run.status === 'verifying') transition(run, 'executing');
+      _flushSync(run);
       return;
     }
 

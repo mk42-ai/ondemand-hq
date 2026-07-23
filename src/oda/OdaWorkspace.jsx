@@ -11,6 +11,7 @@ import OdaSidebar from './OdaSidebar.jsx';
 import ArtifactRail from './ArtifactRail.jsx';
 import Canvas from './Canvas.jsx';
 import WidgetCard from './WidgetCard.jsx';
+import { installDownloadDelegationListener } from './downloadFinalDoc.js';
 import './oda.css';
 
 export default function OdaWorkspace({ onExit }) {
@@ -32,6 +33,10 @@ export default function OdaWorkspace({ onExit }) {
     } catch { /* offline tolerated */ }
   }, []);
   useEffect(() => { loadHistory(); }, [loadHistory, run.status]);
+  // Parent-side download delegation: when a nested frame posts
+  // {action:'download', url} we open it from this (top-level) context so the
+  // native save-to-disk fires even when the child sits in a download sandbox.
+  useEffect(() => { installDownloadDelegationListener(); }, []);
 
   const onSubmit = useCallback(async ({ text, files = [] }) => {
     // Widget fast-path: 'widget:' prefix renders a live widget card in-canvas

@@ -93,7 +93,9 @@ export default function StageCountry({ run, stage, gate, artifact, artifactConte
         <div className="oda-kicker">Country data</div>
         <div className="oda-h">{artifact?.logicalId || 'Country profile'}</div>
         <div className="oda-empty">
-          Fetching sourced data…
+          {run?.status === 'waiting_for_user' ? 'Waiting for your input — answer the open question to continue'
+            : run?.status === 'failed' ? 'Run stopped before data arrived'
+              : 'Gathering web-sourced data…'}
           {running && <div className="oda-spin" aria-hidden="true" />}
         </div>
       </div>

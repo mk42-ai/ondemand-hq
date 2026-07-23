@@ -113,9 +113,14 @@ export function buildContextBundle({ run, node, handoff = null, attachments = []
     .map((a) => `--- VERIFIED ARTIFACT ${a.artifactId} (${a.type} · "${a.title}" · by ${a.producedBy}) ---\n${clip(a.content || a.preview || a.url || '(binary artifact — reference only)', inputArtifacts.includes(a) ? 16000 : 3000)}`)
     .join('\n\n');
 
-  const attachmentBlock = attachments
-    .map((f) => `--- USER ATTACHMENT ${f.name} ---\n${clip(f.summary || f.text || '', 8000)}`)
-    .join('\n\n');
+  // 2026-07-23: when NO documents were attached, tell the worker explicitly —
+  // proceed on web-sourced knowledge tagged [web]; NEVER write blocking
+  // status lines or demand documents from the user.
+  const attachmentBlock = attachments.length
+    ? attachments
+      .map((f) => `--- USER ATTACHMENT ${f.name} ---\n${clip(f.summary || f.text || '', 8000)}`)
+      .join('\n\n')
+    : `--- SOURCE DOCUMENTS ---\nNo documents were attached to this request, and none are required. Proceed immediately using web-sourced knowledge tagged [web] (plus stated assumptions where needed). Do NOT request documents from the user, do NOT write status lines such as "Status: source content not received" or "verification … remains open", and do NOT block or park any section on missing source material — a genuinely material gap is at most a single non-blocking note in the self-report.`;
 
   const memoryBlock = projectMemory.length
     ? `--- PROJECT MEMORY (relevant records only) ---\n${projectMemory.map((m) => `• ${m}`).join('\n')}`

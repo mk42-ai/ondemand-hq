@@ -84,7 +84,7 @@ export function emitRunEvent(run, type, data) {
   };
   run.events.push(event);
 
-  const frame = `event:${type}\ndata:${JSON.stringify(event)}\n\n`;
+  const frame = `id:${event.seq}\nevent:${type}\ndata:${JSON.stringify(event)}\n\n`;
   const conns = subscribers.get(run.runId);
   if (conns) {
     for (const res of conns) {
@@ -111,18 +111,27 @@ export function emitRunEvent(run, type, data) {
 export function subscribe(runId, res, { since = 0, run = null } = {}) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
-    'Cache-Control': 'no-cache',
+    'Cache-Control': 'no-cache, no-transform',
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
   });
   res.flushHeaders?.();
 
+  // 2026-07-23 SSE hardening: advise EventSource reconnect cadence. Together
+  // with per-frame `id:` fields (the seq), a dropped connection auto-resumes
+  // via the Last-Event-ID request header — honoured below alongside ?since=.
+  res.write('retry: 3000\n\n');
+
   // M13 reconnection recovery: replay everything the client missed before
   // wiring it into live fan-out, so the client never sees a gap in `seq`.
+  // Resume point = max(?since=, Last-Event-ID header) — native EventSource
+  // reconnects send Last-Event-ID automatically.
+  const lastEventId = Number(res.req?.headers?.['last-event-id'] || 0) || 0;
+  const resumeFrom = Math.max(since, lastEventId);
   if (run) {
     for (const event of run.events) {
-      if (event.seq > since) {
-        res.write(`event:${event.type}\ndata:${JSON.stringify(event)}\n\n`);
+      if (event.seq > resumeFrom) {
+        res.write(`id:${event.seq}\nevent:${event.type}\ndata:${JSON.stringify(event)}\n\n`);
       }
     }
     res.flush?.();

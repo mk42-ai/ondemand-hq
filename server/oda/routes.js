@@ -288,8 +288,13 @@ router.get('/runs/:id/download', asyncH(async (req, res) => {
   res.setHeader('Content-Type', FORMAT_MIME[ext] || 'application/octet-stream');
   res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
   res.setHeader('Content-Length', fs.statSync(file).size);
-  fs.createReadStream(file).pipe(res);
+  res.setHeader('Accept-Ranges', 'none'); // probes get 200 + full headers, never 206/416
+  if (req.method === 'HEAD') return res.end();
+  const stream = fs.createReadStream(file);
+  stream.on('error', () => { if (!res.headersSent) res.status(500).json({ error: 'file read failed' }); else res.destroy(); });
+  stream.pipe(res);
 }));
+
 
 /** GET /files/:name — serve materialised artifact files (download dock). */
 router.get('/files/:name', asyncH(async (req, res) => {
@@ -330,5 +335,14 @@ router.get('/builders', asyncH(async (req, res) => {
   const { listBuilders } = await import('./builders/index.js');
   res.json({ builders: listBuilders() });
 }));
+
+// 2026-07-23: terminal JSON error middleware — every unexpected throw in an
+// ODA route yields JSON {error}, never Express's HTML error page.
+// eslint-disable-next-line no-unused-vars
+router.use((err, req, res, next) => {
+  console.error('[oda/routes] unhandled:', err.message);
+  if (!res.headersSent) res.status(500).json({ error: err.message || 'internal error' });
+  else res.destroy();
+});
 
 export default router;

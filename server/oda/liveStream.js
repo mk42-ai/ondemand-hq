@@ -22,6 +22,7 @@
 import { streamQuery, createOdSession } from '../ondemand.js';
 import { emitRunEvent } from './events.js';
 import { interpreterCall, FINAL_DOC_ENDPOINT_ID, assertFinalDocEndpoint } from './models.js';
+import { isSubstantiveEvidence } from './liveDeck.js';
 
 const CHUNK_TOKENS = 200;
 
@@ -33,8 +34,12 @@ const CHUNK_TOKENS = 200;
 const DIGEST_PROMPT = 'You are a live-render condenser. From the document fragment, emit ONLY JSON '
   + '{"headline":"<=70 chars what this section establishes","points":["<=80 chars",".. max 2"],'
   + '"evidence":["<=90 chars concrete fact/figure/name stated in the fragment",".. max 2"]}. '
-  + 'evidence items MUST be verbatim-grounded facts from the fragment (numbers, dates, named entities); '
-  + 'if the fragment contains none, use []. Use only what is IN the fragment. No prose, no fences.';
+  + 'evidence items MUST be substantive facts about the SUBJECT MATTER (figures, dates, named '
+  + 'organisations, commitments) verbatim-grounded in the fragment. NEVER return document/run meta or '
+  + "status lines — e.g. 'Status: …', 'source content not received', 'verification pending/remains "
+  + "open', '[VERIFY AGAINST WAM …]', 'not provided', 'no attachments' — those are NOT evidence; "
+  + 'return [] instead. If the fragment contains no substantive facts, use []. '
+  + 'Use only what is IN the fragment. No prose, no fences.';
 
 function parseDigest(raw, seq) {
   try {
@@ -44,7 +49,7 @@ function parseDigest(raw, seq) {
     return {
       headline: String(j.headline || '').slice(0, 70),
       points: (Array.isArray(j.points) ? j.points : []).map((p) => String(p).slice(0, 80)).slice(0, 2),
-      evidence: (Array.isArray(j.evidence) ? j.evidence : []).map((e) => String(e).slice(0, 90)).slice(0, 2),
+      evidence: (Array.isArray(j.evidence) ? j.evidence : []).map((e) => String(e).slice(0, 90)).filter(isSubstantiveEvidence).slice(0, 2),
     };
   } catch {
     return { headline: `Section ${seq + 1} drafted`, points: [], evidence: [] };
@@ -111,6 +116,19 @@ export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query,
     }
   };
 
+  // 2026-07-23 perf: cap concurrent Cerebras digest calls (FIFO queue; the
+  // seq-ordered ready-map already handles out-of-order completion).
+  const MAX_INFLIGHT = 4;
+  let active = 0;
+  const waitQueue = [];
+  const pump = () => {
+    while (active < MAX_INFLIGHT && waitQueue.length) {
+      const job = waitQueue.shift();
+      active += 1;
+      job().finally(() => { active -= 1; pump(); });
+    }
+  };
+
   const dispatchChunk = (text, seq, isTail) => {
     if (!feedSessionId || !text.trim()) {
       ready.set(seq, { headline: '', points: [] });
@@ -122,14 +140,21 @@ export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query,
       note: `live feed: chunk ${seq + 1}${isTail ? ' (tail)' : ''} → cerebras (${text.length} chars)`,
       feed: 'cerebras', chunkSeq: seq,
     });
-    const p = interpreterCall({ sessionId: feedSessionId, query: text.slice(0, 6000), systemPrompt: DIGEST_PROMPT })
-      .then((raw) => { ready.set(seq, parseDigest(raw, seq)); applyReadyInOrder(); })
-      .catch((err) => {
-        console.warn(`[oda-livefeed] chunk ${seq} digest failed: ${err.message}`);
-        ready.set(seq, { headline: '', points: [] });
-        applyReadyInOrder();
-      });
-    inflight.push(p);
+    let release;
+    const gate = new Promise((r) => { release = r; });
+    waitQueue.push(() => {
+      const call = interpreterCall({ sessionId: feedSessionId, query: text.slice(0, 6000), systemPrompt: DIGEST_PROMPT })
+        .then((raw) => { ready.set(seq, parseDigest(raw, seq)); applyReadyInOrder(); })
+        .catch((err) => {
+          console.warn(`[oda-livefeed] chunk ${seq} digest failed: ${err.message}`);
+          ready.set(seq, { headline: '', points: [] });
+          applyReadyInOrder();
+        });
+      call.finally(release);
+      return call;
+    });
+    pump();
+    inflight.push(gate);
   };
 
   // ---- The opus-4.8 authoring stream (OnDemand submitquery, responseMode stream) ----

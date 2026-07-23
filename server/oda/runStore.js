@@ -138,6 +138,27 @@ export function loadAllRuns() {
 
 loadAllRuns();
 
+// 2026-07-23 durability sweep: a pod that died mid-run leaves runs frozen in a
+// non-terminal status with no engine attached — on the UI they look alive but
+// nothing will ever move them. Mark them failed HONESTLY at boot so the user
+// sees the truth (and can retry) instead of an eternal 'Executing…' badge.
+const ORPHANABLE = new Set(['interpreting', 'planning', 'executing', 'verifying', 'revising']);
+for (const run of runs.values()) {
+  if (ORPHANABLE.has(run.status)) {
+    run.status = 'failed';
+    run.error = 'interrupted: server restarted while the run was in flight — start a new run';
+    run.events.push({
+      seq: run.events.length + 1,
+      runId: run.runId,
+      type: 'run.failed',
+      ts: new Date().toISOString(),
+      data: { error: run.error, orphanSweep: true },
+    });
+    try { fs.writeFileSync(path.join(RUNS_DIR, `${run.runId}.json`), JSON.stringify(run, null, 2)); } catch { /* best effort */ }
+    console.warn(`[oda/runStore] orphan sweep: run ${run.runId} (${run.intent || 'no intent'}) marked failed after restart`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Status graph (M12)
 // ---------------------------------------------------------------------------
@@ -256,7 +277,16 @@ export function createRun({ text, attachments = [], externalUserId, brain = null
  * @returns {ODARun|null}
  */
 export function getRun(runId) {
-  return runs.get(runId) || null;
+  const hit = runs.get(runId);
+  if (hit) return hit;
+  // 2026-07-23: lazy disk fallback — a run file that landed after boot (or
+  // failed to parse once) is hydrated on demand instead of 404ing forever.
+  try {
+    const raw = fs.readFileSync(path.join(RUNS_DIR, `${runId}.json`), 'utf8');
+    const run = JSON.parse(raw);
+    if (run && run.runId) { runs.set(run.runId, run); return run; }
+  } catch { /* not on disk either */ }
+  return null;
 }
 
 /**
