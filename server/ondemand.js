@@ -161,7 +161,7 @@ export async function createOdSession(externalUserId, pluginIds = []) {
  * suffixed ids like 'gpt-5.6-sol-medium' are a proven HTTP 400). Main chat default:
  * predefined-gpt-5.6-sol + 'low' (2026-07-20 streaming fix). Streaming always ON.
  */
-export async function streamQuery({ odSessionId, query, pluginIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false }) {
+export async function streamQuery({ odSessionId, query, pluginIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false, modelConfigs: modelConfigOverrides }) {
   assertApiKey('query stream');
   const body = {
     query,
@@ -170,11 +170,26 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
                                           // NOTE: `reasoningEffort` is not in the documented submitquery schema but is
                                           // accepted by the live API — live-accepted extension beyond the documented schema.
     responseMode: 'stream',
-    chatMode: 'standard', // ALWAYS standard — 'plan' is rejected by the public API ("not supported")
-                          // and standard avoids the agentic planning/step decomposition frames.
+    // ALWAYS standard. Re-verified live 2026-07-25 against the public API: chatMode 'plan'
+    // (the playground's "Plan mode") returns HTTP 400 invalid_request
+    // "chatMode 'plan' is not supported on the public API". Do not retry it.
+    chatMode: 'standard',
+    // Planning/step decomposition frames (planning_thinking, planning_output, step_thinking,
+    // step_output) are gated on ATTACHED AGENTS, not on chatMode — verified live 2026-07-25:
+    // the same query with agentIds=[] emitted only fulfillment_thinking, while
+    // agentIds=[agent-1713924030] emitted the full set. An empty pluginIds here means the
+    // playground's Thinking/plan panels will have nothing to render.
     agentIds: toAgentIds(pluginIds),
     ...(fulfillmentOnly ? { fulfillmentOnly: true } : {}),
-    modelConfigs: systemPrompt ? { fulfillmentPrompt: systemPrompt, temperature: 0.4 } : { temperature: 0.4 },
+    // Documented modelConfigs surface (live OpenAPI submitquery spec, NOTES.md §2026-07-17):
+    // fulfillmentPrompt, stopSequences (≤4), temperature, topP, presencePenalty, frequencyPenalty.
+    // No max-token parameter is documented; the playground's `maxTokens`/`stopTokens` names are
+    // client-API-only and are deliberately NOT sent here.
+    modelConfigs: {
+      temperature: 0.4,
+      ...(systemPrompt ? { fulfillmentPrompt: systemPrompt } : {}),
+      ...(modelConfigOverrides || {}),
+    },
   };
   // odFetch retry is safe here ONLY because no bytes have been consumed yet (pre-stream).
   // Once reading begins below, the existing watchdog/error paths — not retry — handle failures.

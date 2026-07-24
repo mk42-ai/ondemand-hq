@@ -186,6 +186,10 @@ textarea, input { font-family: inherit; }
 }
 .composer .send:disabled { background: var(--ink-12); cursor: default; }
 .composer .send:not(:disabled):hover { background: var(--btn-primary-bg-hover); }
+/* Generating state: send button becomes the in-place stop button (matches playground). */
+.composer .send--stop { background: var(--od-green); cursor: pointer; }
+.composer .send--stop:hover { background: #0f7c62; }
+.composer .send--stop .send__sq { width: 11px; height: 11px; border-radius: 2.5px; background: #fff; display: block; }
 .composer--stacked {
   flex-direction: column;
   align-items: stretch;
@@ -578,9 +582,6 @@ textarea, input { font-family: inherit; }
 .md blockquote { border-inline-start: 3px solid var(--gold); margin: .8em 0; padding: 2px 14px; color: var(--ink-70); }
 .md a { color: var(--teal); }
 .md [dir="auto"] { unicode-bidi: plaintext; }
-
-.cursor-blink { display: inline-block; width: 8px; height: 17px; background: var(--gold); vertical-align: -3px; margin-left: 2px; animation: blink 0.9s steps(2) infinite; border-radius: 2px; }
-@keyframes blink { 50% { opacity: 0; } }
 
 /* Thinking accordion */
 .think {
@@ -2103,22 +2104,11 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
 .copybtn:focus-visible { outline: 2px solid var(--od-green); outline-offset: 1px; }
 .copybtn--ok { color: var(--od-green); border-color: var(--od-green); }
 .copybtn__t:empty { display: none; }
-.stopgen {
-  display: inline-flex; align-items: center; gap: 7px; margin: 8px auto 0;
-  padding: 5px 14px; border: 1px solid var(--border); border-radius: 9999px;
-  background: #fff; color: var(--ink); font-size: 12px; cursor: pointer;
-}
-.stopgen:hover { border-color: #b91c1c; color: #b91c1c; }
-.stopgen__sq { width: 9px; height: 9px; border-radius: 2px; background: currentColor; }
 /* RTL safety (i): toolbars & buttons use flow-relative gaps only — plus bubble copy
    alignment flips automatically under [dir=rtl] via flex-end → logical end. */
 [dir='rtl'] .msg-actions--user { justify-content: flex-start; }
 @media (prefers-reduced-motion: reduce) {
   .msg-actions, .copybtn { transition: none; }
-}
-@media (prefers-color-scheme: dark) {
-  .copybtn, .stopgen { background: #16181a; border-color: #2f3336; color: #9aa4ad; }
-  .copybtn:hover, .copybtn--ok { color: var(--od-green-bright, #ffffff); border-color: var(--od-green-bright, #ffffff); }
 }
 
 
@@ -2446,3 +2436,122 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
   0% { transform: translateX(-120%); }
   100% { transform: translateX(320%); }
 }
+
+/* ============================================================================
+   OnDemand playground parity — reasoning panels matched to the live playground's
+   LAYOUT / rows / loaders / texts, kept in the HQ app's light theme. All colours are
+   driven by the --pg-* vars on .msg-asst below, so the scheme is a one-block change.
+   ============================================================================ */
+.msg-asst {
+  --pg-panel:      #F7F8F9;   /* thinking / fulfillment panel */
+  --pg-log:        #FAFBFC;   /* status-log panel */
+  --pg-head:       #EEF0F2;   /* collapsible header band */
+  --pg-green:      #159a7a;
+  --pg-fg:         rgba(29,37,44,0.62);
+  --pg-fg-strong:  rgba(29,37,44,0.92);
+  --pg-fg-muted:   rgba(29,37,44,0.42);
+  --pg-border:     #E6E8EB;
+  --pg-yellow:     #C28A2C;
+  --pg-gray:       rgba(29,37,44,0.30);
+  --pg-red:        #B14545;
+}
+
+/* ---- shared collapsible thinking panels (ThinkingProcess + FulfilmentThinking) ---- */
+.pgthink, .pgfulfil {
+  width: 100%; max-width: 840px; margin: 6px 0;
+  border-radius: 12px; background: var(--pg-panel); padding: 4px;
+  border: 1px solid var(--pg-border);
+}
+.pgthink__head, .pgfulfil__head {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 16px; background: none; border: none; cursor: pointer; text-align: left;
+  border-radius: 9px;
+}
+.pgthink__head { background: var(--pg-head); }
+.pgthink__head:disabled { cursor: default; }
+.pgthink__label, .pgfulfil__label { font-size: 13.5px; color: var(--pg-fg); }
+.pgthink__chev, .pgfulfil__chev { flex-shrink: 0; color: var(--pg-fg-muted); transition: transform .3s ease; }
+.pgthink__chev.open, .pgfulfil__chev.open { transform: rotate(180deg); }
+.pgthink__wrap, .pgfulfil__wrap { position: relative; }
+.pgthink__body, .pgfulfil__body {
+  max-height: 0; overflow: hidden; opacity: 0;
+  transition: max-height .3s ease-in-out, opacity .3s ease-in-out;
+}
+.pgthink__body.open, .pgfulfil__body.open { max-height: 40vh; overflow-y: auto; opacity: 1; padding: 10px 16px 4px; }
+.pgthink__content { min-width: 0; }
+.pgthink__body .md, .pgfulfil__body .md { font-size: 13px; line-height: 1.65; color: var(--pg-fg); }
+.pgthink__body .md :is(h1,h2,h3,strong,b), .pgfulfil__body .md :is(h1,h2,h3,strong,b) { color: var(--pg-fg-strong); font-weight: 600; }
+.pgthink__body .md pre, .pgfulfil__body .md pre {
+  font-size: 11.5px; background: #F0F2F4; border: 1px solid var(--pg-border); border-radius: 8px; padding: 8px 10px;
+}
+.pgthink__shadow, .pgfulfil__shadow {
+  position: absolute; inset-inline: 0; bottom: 0; height: 30px; pointer-events: none;
+  background: linear-gradient(to top, var(--pg-panel), transparent);
+}
+
+/* ---- status-log panel ---- */
+.pglog2 {
+  width: 100%; max-width: 840px; margin: 8px 0; padding: 16px;
+  border-radius: 12px; background: var(--pg-log); border: 1px solid var(--pg-border);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.pglog2__rowwrap { display: flex; flex-direction: column; gap: 4px; }
+.pglog2__row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: none; border: none; padding: 0; text-align: left; color: inherit;
+}
+.pglog2__row.expandable { cursor: pointer; }
+.pglog2__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.pglog2__dot--green  { background: var(--pg-green); }
+.pglog2__dot--yellow { background: var(--pg-yellow); }
+.pglog2__dot--gray   { background: var(--pg-gray); }
+.pglog2__dot--red    { background: var(--pg-red); }
+.pglog2__dot.blink   { animation: pglog-pulse 1.3s ease-in-out infinite; }
+@keyframes pglog-pulse { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
+.pglog2__label { font-size: 13.5px; color: var(--pg-green); flex: 1 1 auto; }
+.pglog2__chev { flex-shrink: 0; color: var(--pg-fg-muted); transition: transform .25s ease; }
+.pglog2__chev.open { transform: rotate(180deg); }
+
+/* step-query line + accordion detail */
+.pglog2__stepq { padding-inline-start: 19px; font-size: 13px; line-height: 1.6; color: var(--pg-fg-muted); word-break: break-word; }
+.pglog2__stepq--flush { margin-top: 2px; }
+.pglog2__detail { padding-inline-start: 19px; border-inline-start: 1px solid var(--pg-border); margin-inline-start: 4px; display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+.pglog2__section { font-size: 13px; color: var(--pg-green); }
+.pglog2__agent { display: flex; align-items: center; gap: 8px; }
+.pglog2__avatar {
+  width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+  background: linear-gradient(135deg, #3bb795, #2b7a86); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+
+/* live step-reasoning strip */
+.pglog2__thinking { position: relative; display: flex; gap: 12px; padding: 4px 0; }
+.pglog2__thinking-body { position: relative; max-height: 100px; overflow-y: auto; width: 100%; font-size: 13px; color: var(--pg-fg); }
+.pglog2__thinking-body .md { font-size: 12.5px; line-height: 1.55; color: var(--pg-fg); }
+.pglog2__thinking-fade { position: absolute; inset-inline: 0; height: 24%; pointer-events: none; }
+.pglog2__thinking-fade--top { top: 0; background: linear-gradient(to bottom, var(--pg-log), transparent); }
+.pglog2__thinking-fade--bottom { bottom: 0; background: linear-gradient(to top, var(--pg-log), transparent); }
+
+/* ---- loaders ---- */
+/* Generating loader: OnDemand mark spinning (1.5s linear) with a 1s green<->neutral colour
+   toggle — a faithful port of the playground's components/Loader. */
+.pgspin {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  color: var(--od-green, #159a7a);
+  animation: pgspin-rotate 1.5s linear infinite; transform-origin: 50% 50%;
+  transition: color 1s ease; will-change: transform;
+}
+.pgspin--neutral { color: #9aa4ad; }
+.pgspin svg { display: block; }
+@keyframes pgspin-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .pgspin { animation: none; } }
+/* Generating loader placements */
+.skel--spin { display: flex; align-items: center; gap: 10px; padding: 2px 0; }
+.answer-spin { display: inline-flex; vertical-align: -3px; margin-left: 4px; }
+.pgloader-shimmer {
+  background: linear-gradient(90deg, var(--pg-fg-muted, #8d8d8d) 0%, var(--pg-green, #3bb795) 50%, var(--pg-fg-muted, #8d8d8d) 100%);
+  background-size: 200% auto; -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; animation: pg-shimmer 2.2s linear infinite; font-size: 13.5px;
+}
+@keyframes pg-shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }

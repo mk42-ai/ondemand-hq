@@ -226,6 +226,14 @@ app.post('/api/chat', async (req, res) => {
   // The reliable disconnect signal is the RESPONSE 'close' with writableEnded === false.
   res.on('close', onClientClose);
 
+  // Reasoning channels are reconstructed read-only from the streamed frames so a reloaded
+  // conversation renders the thinking/status panels instead of the bare answer. Declared
+  // out here because the catch block persists them alongside a partial answer.
+  const reasoning = {
+    thinking: '', planningAnswer: '', pluginThinking: '', pluginAnswer: '', fulfillmentThinking: '',
+    statusLogs: [], metrics: null,
+  };
+
   try {
     const file = fileId ? store.getFile(fileId) : null;
     store.addMessage(conv, { role: 'user', text, fileName: file?.name || null });
@@ -329,7 +337,25 @@ app.post('/api/chat', async (req, res) => {
     // filtering, no re-synthesis. The browser parses eventType itself (planning_thinking,
     // planning_output, step_thinking, step_output, fulfillment, statusLog, metricsLog,
     // heartbeat frames, and the [DONE] sentinel all pass through).
+    const accumulate = (rawData) => {
+      if (rawData === '[DONE]') return;
+      let evt;
+      try { evt = JSON.parse(rawData); } catch { return; }
+      switch (evt.eventType) {
+        case 'planning_thinking': reasoning.thinking += evt.thinking?.delta || ''; break;
+        case 'planning_output': reasoning.planningAnswer += evt.output?.delta || ''; break;
+        case 'step_thinking': reasoning.pluginThinking += evt.thinking?.delta || ''; break;
+        case 'step_output': reasoning.pluginAnswer += evt.output?.delta || ''; break;
+        case 'fulfillment_thinking': reasoning.fulfillmentThinking += evt.thinking?.delta || ''; break;
+        case 'metricsLog': if (evt.publicMetrics) reasoning.metrics = evt.publicMetrics; break;
+        case 'statusLog':
+          if (evt.currentStatusLog) reasoning.statusLogs.push(evt.currentStatusLog);
+          break;
+        default: break;
+      }
+    };
     const sendRaw = (evName, rawData) => {
+      accumulate(rawData); // read-only; never mutates what is forwarded below
       if (clientClosed) return;
       if (evName && evName !== 'message') res.write(`event:${evName}\n`);
       res.write(`data:${rawData}\n\n`);
@@ -348,7 +374,7 @@ app.post('/api/chat', async (req, res) => {
 
     // 5) Persist + finish
     const asstMsg = store.addMessage(conv, {
-      role: 'assistant', text: fullAnswer,
+      role: 'assistant', text: fullAnswer, ...reasoning,
       routing: { feature, mode, plugins: pluginLabels, model: `${ENDPOINT_ID}+${REASONING_EFFORT}`, reason: route.reason },
     });
     if (conv.title === 'New chat' && text.trim()) {
@@ -361,7 +387,7 @@ app.post('/api/chat', async (req, res) => {
     console.error('[FAIL] [chat] stream failed:', e.message);
     if (e.partialAnswer) {
       store.addMessage(conv, {
-        role: 'assistant', text: e.partialAnswer,
+        role: 'assistant', text: e.partialAnswer, ...reasoning,
         routing: { incomplete: true, note: 'Stream was interrupted before completion; partial answer persisted.' },
       });
     }
@@ -437,8 +463,15 @@ if (fs.existsSync(DIST)) {
 // forbid binding a port — only bind when running as a standalone long-lived server.
 const ON_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 if (!ON_SERVERLESS) {
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[oda-suite] listening on 0.0.0.0:${PORT} · model ${ENDPOINT_ID}+${REASONING_EFFORT} · plugins: ${Object.keys(ADOPTED).length} adopted`);
+  });
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[oda-suite] port ${PORT} is already in use — stop the other instance (lsof -nP -iTCP:${PORT} -sTCP:LISTEN) or run with PORT=<other> yarn dev`);
+      process.exit(1);
+    }
+    throw err;
   });
 }
 

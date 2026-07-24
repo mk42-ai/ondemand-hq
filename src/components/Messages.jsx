@@ -2,7 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Markdown, dissect } from '../markdown.jsx';
 import BilingualLoader from './BilingualLoader.jsx';
 import AudioPlayer from './AudioPlayer.jsx';
-import { Cog, Check, ChevronRight, AlertTriangle, Paperclip, Copy, RotateCcw } from 'lucide-react';
+import { Check, ChevronRight, AlertTriangle, Paperclip, Copy, RotateCcw } from 'lucide-react';
+import ThinkingProcess from './playground/ThinkingProcess.jsx';
+import StatusLogBlock from './playground/StatusLogBlock.jsx';
+import FulfilmentThinking from './playground/FulfilmentThinking.jsx';
+import { SpinningLogo, ShimmerText } from './playground/loaders.jsx';
 
 /* ---------- copy button (2026-07-20 UX pass) ----------
  * Copies text to clipboard with a 1.5s icon-swap + 'Copied' feedback.
@@ -32,111 +36,6 @@ export function CopyButton({ text, label = 'Copy' }) {
       {copied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
       <span className="copybtn__t">{copied ? 'Copied' : ''}</span>
     </button>
-  );
-}
-
-/* ---------- tool-call lines (driven ONLY by real step_output SSE events) ---------- */
-/** Slim inline line per plugin call: '[gear] <name> -> <query>' with spinner-to-check,
- *  expandable to the raw args payload parsed from the step_output deltas. */
-/** Extract a website domain from a tool-call query/target string.
- *  Handles 'site:<domain>' prefixes and full http(s) URLs; returns null when none. */
-export function domainFromToolArg(s) {
-  if (!s || typeof s !== 'string') return null;
-  const site = s.match(/site:([a-z0-9.-]+\.[a-z]{2,})(?:\/[^\s]*)?/i);
-  if (site) return site[1].toLowerCase();
-  const url = s.match(/https?:\/\/([a-z0-9.-]+\.[a-z]{2,})/i);
-  if (url) return url[1].toLowerCase();
-  const bare = s.match(/(?:^|\s)((?:[a-z0-9-]+\.)+(?:org|com|net|io|gov|edu|int|ae))(?:\/[^\s]*)?(?:\s|$)/i);
-  if (bare) return bare[1].toLowerCase();
-  return null;
-}
-
-/** Official data-source logo matcher — locally hosted assets in public/logos/.
- *  World Bank → worldbank.png · WHO/WHO GHO → who.svg · UN SDG → unsdg.svg.
- *  Falls back to the site favicon, then to the gear icon for unmatched sources. */
-const SOURCE_LOGOS = [
-  { test: /world\s*bank/i, src: '/logos/worldbank.png', label: 'World Bank' },
-  { test: /\bWHO\b|WHO\s*GHO/i, src: '/logos/who.svg', label: 'World Health Organization' },
-  { test: /UN\s*SDG|\bSDG\b/i, src: '/logos/unsdg.svg', label: 'UN Sustainable Development Goals' },
-];
-export function matchSourceLogo(text) {
-  if (!text) return null;
-  for (const m of SOURCE_LOGOS) if (m.test.test(text)) return m;
-  return null;
-}
-
-function ToolIcon({ domain, sourceText }) {
-  const [failed, setFailed] = useState(false);
-  const matched = matchSourceLogo(sourceText);
-  if (matched && !failed) {
-    return (
-      <img className="toolline__srclogo" src={matched.src} alt={matched.label} title={matched.label}
-        width="16" height="16" loading="lazy" onError={() => setFailed(true)} />
-    );
-  }
-  if (!domain || failed) return <span className="toolline__gear" aria-hidden><Cog size={14} strokeWidth={1.9} /></span>;
-  return (
-    <img
-      className="toolline__favicon"
-      src={`https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(domain)}`}
-      alt=""
-      width="16" height="16"
-      loading="lazy"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
-export function ToolCallLine({ call, index = 0 }) {
-  const [open, setOpen] = useState(false);
-  const running = call.status === 'running';
-  const argSummary = call.args?.query || Object.values(call.args || {})[0] || '';
-  const sourceText = `${call.name || ''} ${String(argSummary)} ${call.raw?.description || ''}`;
-  const domain = domainFromToolArg(String(argSummary)) || domainFromToolArg(JSON.stringify(call.args || ''));
-  return (
-    <div className="toolline toolline--animate" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
-      <button className="toolline__head" onClick={() => setOpen(o => !o)} title="Show raw plugin-call payload">
-        <span className="toolline__iconslot"><ToolIcon domain={domain} sourceText={sourceText} /></span>
-        <span className="toolline__name">{call.name}</span>
-        {argSummary && <><span className="toolline__arrow" aria-hidden><ChevronRight size={12} strokeWidth={2} /></span><span className="toolline__arg" title={String(argSummary)}>{String(argSummary)}</span></>}
-        <span className="toolline__spacer" />
-        <span className="toolline__stateslot">
-          {running
-            ? <span className="toolline__spin" aria-label="running" />
-            : <span className="toolline__check" aria-label="done"><Check size={13} strokeWidth={2.6} /></span>}
-        </span>
-      </button>
-      {open && (
-        <pre className="toolline__raw">{JSON.stringify(call.raw || call.args, null, 2)}</pre>
-      )}
-    </div>
-  );
-}
-
-/* ---------- STEP 4: thinking accordion ---------- */
-export function ThinkingAccordion({ thinking, live, forceOpenWhileLive }) {
-  const [open, setOpen] = useState(false);
-  const [userToggled, setUserToggled] = useState(false);
-  const bodyRef = useRef(null);
-
-  // Live-streaming while open by default; auto-collapse when the answer starts (live=false)
-  const effectiveOpen = userToggled ? open : (live && forceOpenWhileLive);
-
-  useEffect(() => {
-    if (effectiveOpen && bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
-  }, [thinking, effectiveOpen]);
-
-  if (!thinking) return null;
-  return (
-    <div className="think">
-      <button className="think__head" onClick={() => { setUserToggled(true); setOpen(!effectiveOpen); }}>
-        <span className={`think__dot${live ? '' : ' idle'}`} />
-        {live ? 'Thinking…' : 'Thought process'}
-        <span style={{ flex: 1 }} />
-        <span className={`chev${effectiveOpen ? ' open' : ''}`}><ChevronRight size={13} strokeWidth={2} aria-hidden /></span>
-      </button>
-      {effectiveOpen && <div className="think__body" ref={bodyRef}>{thinking}</div>}
-    </div>
   );
 }
 
@@ -195,11 +94,12 @@ export function ArtifactCard({ artifact }) {
 
 /* ---------- STEP 8: skeleton naming the actual plugin ---------- */
 export function PluginSkeleton({ label }) {
-  // Workstream-2: bilingual rotating-word loader COEXISTS with the named plugin
-  // status line (label) on the same row; static spinner removed.
+  // Playground parity: the generating indicator is the OnDemand mark spinning (components/Loader)
+  // beside a shimmering status label.
   return (
-    <div className="skel">
-      <BilingualLoader size="md" label={label} />
+    <div className="skel skel--spin">
+      <SpinningLogo size={18} />
+      <ShimmerText>{label}</ShimmerText>
     </div>
   );
 }
@@ -221,15 +121,21 @@ export function AssistantMessage({ msg, live, onOption, onExport, exportBusy, ar
           )}
         </div>
       )}
-      {/* Layer 1 — thinking line (live planning_thinking/step_thinking deltas; auto-collapses on first answer token) */}
-      <ThinkingAccordion thinking={msg.thinking} live={Boolean(live && !msg.answerStarted)} forceOpenWhileLive={true} />
-      {/* Layer 2 — tool-call lines (real step_output plugin-call events only) */}
-      {(msg.toolCalls || []).map((tc, i) => <ToolCallLine key={tc.id} call={tc} index={i} />)}
+      {/* Playground parity: the whole reasoning stack renders ABOVE the answer, in this
+          order (see on-demand-frontend ChatComponent). FulfilmentThinking is a pre-answer
+          panel — it disappears once answer text exists, which is why it sits here too. */}
+      <ThinkingProcess message={msg} />
+      <StatusLogBlock message={msg} isStreaming={Boolean(live)} />
+      {!body.trim() && <FulfilmentThinking message={msg} />}
       {/* Loader vanishes on the FIRST streamed token of any kind. */}
-      {live && !msg.answerStarted && !msg.thinking && !(msg.toolCalls || []).length && <PluginSkeleton label={msg.pluginStatus || 'Routing your request…'} />}
-      {/* Layer 3 — streamed answer */}
+      {live && !msg.answerStarted && !msg.thinking && !msg.planningAnswer
+        && !(msg.statusLogs || []).length && !msg.pluginThinking
+        && <PluginSkeleton label={msg.pluginStatus || 'Routing your request…'} />}
+      {/* Streamed answer */}
       <Markdown text={body} />
-      {live && <span className="cursor-blink" />}
+      {/* Playground parity: while the answer streams, the OnDemand mark keeps spinning
+          (replaces the old green blinking caret). */}
+      {live && body.trim() && <span className="answer-spin"><SpinningLogo size={16} /></span>}
       {!live && options.length > 0 && (
         <div className="options">
           {options.map((o, i) => <button key={i} onClick={() => onOption?.(o)}>{o}</button>)}

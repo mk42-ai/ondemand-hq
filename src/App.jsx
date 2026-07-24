@@ -29,6 +29,24 @@ const CHIPS = [
 
 const WIZARD_FEATURES = new Set(['design', 'summary', 'media']);
 
+// Detect a document-deliverable request in the user's prompt so we can auto-generate it
+// after the answer (playground parity: "draft a pdf report…" produces a downloadable file).
+// Requires an explicit creation verb OR the words report/document to avoid firing on
+// incidental mentions ("what is a pdf?"). Returns a buildExport format or null.
+function detectDeliverableFormat(prompt) {
+  const t = (prompt || '').toLowerCase();
+  // Require an explicit creation verb so we don't fire on "title these slides" / "what is a pdf".
+  const wantsCreate = /\b(draft|create|generate|make|build|write|prepare|produce|export|compile|design|assemble)\b/.test(t);
+  if (!wantsCreate) return null;
+  if (/\b(pptx|powerpoint|slides?|deck|presentation)\b/.test(t)) return 'pptx';
+  if (/\b(xlsx|excel|spreadsheet|workbook)\b/.test(t)) return 'xlsx';
+  if (/\b(docx|word\s+doc(?:ument)?|\.docx)\b/.test(t)) return 'docx';
+  if (/\bpdf\b/.test(t)) return 'pdf';
+  // A "report"/"document"/"whitepaper" with no explicit format defaults to PDF, like the playground.
+  if (/\b(report|document|whitepaper|one[- ]?pager)\b/.test(t)) return 'pdf';
+  return null;
+}
+
 export default function App() {
   const [convs, setConvs] = useState([]);
   const [activeId, setActiveId] = useState(null);
@@ -251,7 +269,17 @@ export default function App() {
     draftRef.current = { text, fileId, fileName, extra };
     const userMsg = { id: `u-${Date.now()}`, role: 'user', text, fileName };
     const liveMsg = {
-      id: `a-${Date.now()}`, role: 'assistant', text: '', thinking: '',
+      id: `a-${Date.now()}`, role: 'assistant', text: '',
+      // Five independent reasoning channels, one per upstream eventType, mirroring the
+      // OnDemand playground's BotMessageType. Collapsing them into one string loses the
+      // plan/step/answer distinction the status-log and thinking panels render from.
+      thinking: '',             // planning_thinking.thinking.delta
+      planningAnswer: '',       // planning_output.output.delta
+      pluginThinking: '',       // step_thinking.thinking.delta
+      pluginAnswer: '',         // step_output.output.delta
+      fulfillmentThinking: '',  // fulfillment_thinking.thinking.delta
+      statusLogs: [], executedAgents: [], retrievedAgents: [], executionLog: null,
+      metrics: null, isOpenLogs: true,
       routing: null, pluginStatus: null, answerStarted: false, artifactIds: [], live: true,
     };
     liveMsgRef.current = liveMsg;
@@ -284,29 +312,38 @@ export default function App() {
       msmVideoId: extra.msmVideoId || undefined,
       pluginIds: ids.length ? ids : undefined,
     };
-    // 2026-07-17 passthrough refactor: raw upstream eventTypes arrive directly.
-    //  planning_thinking / step_thinking → live Thinking… accordion (thinking.delta)
-    //  step_output → tool-call lines (deltas assemble {"plugins":[{pluginId,name,api_request_parameters,…}]})
-    //  fulfillment → answer tokens (evt.answer)
-    //  statusLog / metricsLog → status line / metrics (also to debug bus)
+    // 2026-07-17 passthrough refactor: raw upstream eventTypes arrive directly. Each one
+    // owns exactly one field on the live message (playground parity — see liveMsg above):
+    //  planning_thinking  → thinking            step_thinking → pluginThinking
+    //  planning_output    → planningAnswer      step_output   → pluginAnswer (+ tool-call lines)
+    //  fulfillment_thinking → fulfillmentThinking
+    //  fulfillment → answer tokens (evt.answer) → text
+    //  statusLog → statusLogs[] + executed/retrievedAgents · metricsLog → metrics
     //  routing / plugin_status / status / error / done remain locally-synthesized frames.
     const onStreamEvent = (type, evt) => {
       lastFrameRef.current = Date.now(); // stall watchdog heartbeat (any frame)
       if (type === 'routing') patchLive({ routing: evt });
       else if (type === 'plugin_status') patchLive({ pluginStatus: `${evt.message}` });
       else if (type === 'status') { if (!liveMsgRef.current.answerStarted) patchLive({ pluginStatus: evt.message }); }
-      else if (type === 'planning_thinking' || type === 'step_thinking' || type === 'fulfillment_thinking') {
-        // (2026-07-20 fix) GLM 4.7 BYOI in max mode emits fulfillment_thinking deltas
-        // (92 frames in the live eritrea/sudan capture) — previously dropped here, so
-        // the accordion looked stalled while real reasoning streamed. All three
-        // thinking channels now feed the same accordion; answer rendering below is
-        // fully independent of this branch.
+      else if (type === 'planning_thinking') {
         const delta = evt?.thinking?.delta;
         if (typeof delta === 'string' && delta.length) patchLive(prev => ({ thinking: (prev.thinking || '') + delta }));
+      } else if (type === 'planning_output') {
+        const delta = evt?.output?.delta;
+        if (typeof delta === 'string' && delta.length) patchLive(prev => ({ planningAnswer: (prev.planningAnswer || '') + delta }));
+      } else if (type === 'step_thinking') {
+        const delta = evt?.thinking?.delta;
+        if (typeof delta === 'string' && delta.length) patchLive(prev => ({ pluginThinking: (prev.pluginThinking || '') + delta }));
+      } else if (type === 'fulfillment_thinking') {
+        // (2026-07-20) GLM 4.7 BYOI in max mode emits these during the answer itself,
+        // which is why they render below the answer rather than in the thinking panel.
+        const delta = evt?.thinking?.delta;
+        if (typeof delta === 'string' && delta.length) patchLive(prev => ({ fulfillmentThinking: (prev.fulfillmentThinking || '') + delta }));
       } else if (type === 'step_output') {
         // Accumulate raw deltas; parse the plugin-call JSON opportunistically as it completes.
         patchLive(prev => {
-          const rawArgs = (prev.toolRaw || '') + (evt?.output?.delta || '');
+          const delta = evt?.output?.delta || '';
+          const rawArgs = (prev.toolRaw || '') + delta;
           let toolCalls = prev.toolCalls || [];
           try {
             const parsed = JSON.parse(rawArgs);
@@ -319,7 +356,7 @@ export default function App() {
               }));
             }
           } catch { /* JSON still assembling — keep accumulating */ }
-          return { toolRaw: rawArgs, toolCalls };
+          return { toolRaw: rawArgs, toolCalls, pluginAnswer: (prev.pluginAnswer || '') + delta };
         });
       } else if (type === 'fulfillment') {
         if (typeof evt.answer === 'string') {
@@ -333,15 +370,27 @@ export default function App() {
         }
       } else if (type === 'statusLog') {
         const sl = evt.currentStatusLog;
-        if (sl && !liveMsgRef.current.answerStarted) patchLive({ pluginStatus: sl.statusMessage });
-        // fulfillment_completed → ensure tool lines show done
-        if (sl?.statusType === 'fulfillment_completed') {
-          patchLive(prev => ({ toolCalls: (prev.toolCalls || []).map(tc => ({ ...tc, status: 'done' })) }));
-        }
+        if (!sl) return;
+        if (!liveMsgRef.current.answerStarted) patchLive({ pluginStatus: sl.statusMessage });
+        patchLive(prev => ({
+          // A summarize_history.completed supersedes its own .initialized entry rather
+          // than stacking a second row for the same operation.
+          statusLogs: sl.statusType === 'summarize_history.completed'
+            ? (prev.statusLogs || []).filter(x => x.statusType !== 'summarize_history.initialized')
+            : [...(prev.statusLogs || []), sl],
+          executedAgents: sl.executedAgents?.length
+            ? [...(prev.executedAgents || []), ...sl.executedAgents] : prev.executedAgents,
+          retrievedAgents: sl.retrievedAgents?.length
+            ? [...(prev.retrievedAgents || []), ...sl.retrievedAgents] : prev.retrievedAgents,
+          executionLog: sl.statusType === 'execution_log_created' && sl.executionLog
+            ? sl.executionLog : prev.executionLog,
+          toolCalls: sl.statusType === 'fulfillment_completed'
+            ? (prev.toolCalls || []).map(tc => ({ ...tc, status: 'done' })) : prev.toolCalls,
+        }));
       } else if (type === 'metricsLog') {
         if (evt.publicMetrics) patchLive({ metrics: evt.publicMetrics });
-      } else if (type === 'planning_output' || type === 'stream_end') {
-        // planning_output: internal plan JSON — debug bus only; stream_end: [DONE] passthrough marker
+      } else if (type === 'stream_end') {
+        // [DONE] passthrough marker — terminal handling lives in the stream loop below
       } else if (type === 'error') {
         // (2026-07-20 fix) Server error frames were ALWAYS fatal+non-retryable, which
         // killed the first typed prompt of a new conversation on the transient
@@ -390,6 +439,12 @@ export default function App() {
       if (wizard.active && wizard.step < 4) setWizard(w => ({ ...w, step: Math.min(w.step + 1, 4) }));
       draftRef.current = null;
       await refreshConvs();
+      // Playground parity: when the user asked for a document deliverable ("draft a pdf
+      // report…"), auto-generate it and attach the download card — instead of leaving it
+      // behind the manual Export bar. The answer text is now persisted server-side, so
+      // buildExport has real content to render.
+      const deliverableFmt = detectDeliverableFormat(text);
+      if (deliverableFmt) doExport(liveMsgRef.current.id, deliverableFmt).catch(() => { /* toast handled in doExport */ });
     } catch (e) {
       // UX fix (b): user pressed Stop — end cleanly, keep whatever streamed, no error toast
       if (e && e.errorCode === 'ABORTED' && userStoppedRef.current) {
@@ -551,15 +606,10 @@ export default function App() {
                 )}
                 <div className="composer-wrap">
                   {busy && !messages.some(m => m.live && (m.answerStarted || m.thinking)) && <div className="composer-wait"><BilingualLoader size="sm" label="Working…" /></div>}
-                  <Composer onSend={send} busy={busy} onError={(m) => setToast({ message: m })} prefill={composePrefill}
+                  <Composer onSend={send} onStop={stopGeneration} busy={busy} onError={(m) => setToast({ message: m })} prefill={composePrefill}
                     placeholder={activeFeature ? placeholderFor(activeFeature) : 'Message the ODA suite…'}
                     selectedPluginIds={selectedPluginIds} onSelectedPluginIdsChange={updateSelectedPluginIds}
                     connectors={connectors} loadingConnectors={loadingConnectors} onEnsureConnectors={ensureConnectors} />
-                  {busy && (
-                    <button type="button" className="stopgen" onClick={stopGeneration} aria-label="Stop generating" title="Stop generating">
-                      <span className="stopgen__sq" aria-hidden /> Stop generating
-                    </button>
-                  )}
                   <div className="composer-hint">glm-4.7 (Cerebras BYOI) · max reasoning · every figure sourced or flagged · one verified deliverable per run</div>
                 </div>
               </>

@@ -7,7 +7,7 @@ import ConnectorDetailModal from './ConnectorDetailModal.jsx';
 import { Cable, Paperclip, SendHorizontal, X } from 'lucide-react';
 
 export default function Composer({
-  onSend, busy, onError, placeholder, prefill,
+  onSend, onStop, busy, onError, placeholder, prefill,
   selectedPluginIds = [], onSelectedPluginIdsChange,
   connectors = [], loadingConnectors = false, onEnsureConnectors,
 }) {
@@ -190,9 +190,17 @@ export default function Composer({
           <div className="composer__actions-spacer" />
           <Recorder disabled={busy} onError={() => { /* Recorder shows its own quiet note */ }}
             onTranscript={(t2) => { setText(prev => (prev ? prev + ' ' : '') + t2); taRef.current?.focus(); }} />
-          <button className="send" onClick={submit} disabled={busy || uploading || (!text.trim() && !attached)} title="Send" aria-label="Send">
-            <SendHorizontal size={18} strokeWidth={2} aria-hidden />
-          </button>
+          {/* Playground parity: while generating, the send button becomes the stop button
+              (green square) in place — no separate pill below the composer. */}
+          {busy ? (
+            <button className="send send--stop" onClick={() => onStop?.()} title="Stop generating" aria-label="Stop generating">
+              <span className="send__sq" aria-hidden />
+            </button>
+          ) : (
+            <button className="send" onClick={submit} disabled={uploading || (!text.trim() && !attached)} title="Send" aria-label="Send">
+              <SendHorizontal size={18} strokeWidth={2} aria-hidden />
+            </button>
+          )}
         </div>
       </div>
     </div>
