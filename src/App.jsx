@@ -9,6 +9,8 @@ import DebugDrawer from './components/DebugDrawer.jsx';
 import BilingualLoader from './components/BilingualLoader.jsx';
 import IntelDashboard from './intel/IntelDashboard.jsx';
 import MsmDashboard from './msm/MsmDashboard.jsx';
+// ODA Workspace (Phase 3) — lazy-loaded so the suite home bundle stays lean.
+const OdaWorkspace = React.lazy(() => import('./oda/OdaWorkspace.jsx'));
 import { ArrowDown, X, AlertTriangle } from 'lucide-react';
 import { dissect } from './markdown.jsx';
 
@@ -47,12 +49,25 @@ export default function App() {
   const [msmOpen, setMsmOpen] = useState(() => {
     try { return window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'; } catch { return false; }
   });
+  // ODA Workspace (Phase 3) — /oda route, deep-linkable; the suite home
+  // (executive brief + per-skill quick starts) is preserved untouched at '/'.
+  // One universal workspace: /oda (legacy /oda/live deep links land here too —
+  // the separate Live Render screen was removed 2026-07-23).
+  const [odaOpen, setOdaOpen] = useState(() => {
+    try { return /^\/oda(\/live)?$/.test(window.location.pathname.replace(/\/+$/, '')); } catch { return false; }
+  });
   useEffect(() => {
-    const want = msmOpen ? '/msm-analysis' : '/';
+    const want = odaOpen ? '/oda' : (msmOpen ? '/msm-analysis' : '/');
     try { if (window.location.pathname !== want) window.history.pushState({}, '', want); } catch { /* noop */ }
-  }, [msmOpen]);
+  }, [msmOpen, odaOpen]);
   useEffect(() => {
-    const onPop = () => { try { setMsmOpen(window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'); } catch { /* noop */ } };
+    const onPop = () => {
+      try {
+        const p = window.location.pathname.replace(/\/+$/, '');
+        setMsmOpen(p === '/msm-analysis');
+        setOdaOpen(/^\/oda(\/live)?$/.test(p));
+      } catch { /* noop */ }
+    };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
@@ -163,6 +178,7 @@ export default function App() {
       text,
       fileId,
       feature: extra.feature || pendingTool || undefined,
+      mode: extra.mode || undefined, // explicit FAST/FULL override (e.g. MSM 'Analyse deeper' → one-shot FAST)
       wizard: wizard.active ? { active: true, step: wizard.step } : undefined,
       editTarget: extra.editTarget || undefined,
       msmVideoId: extra.msmVideoId || undefined, // MSM 'Analyse deeper': server injects the stored transcript as context
@@ -363,7 +379,9 @@ export default function App() {
     const title = video.title || `YouTube ${video.videoId}`;
     send(
       `Analyse this broadcast segment in depth for ODA leadership: "${title}" (${video.videoId}). Assess the framing, the implications for UAE/Gulf development narratives, and any follow-up ODA should consider. Ground everything in the attached transcript.`,
-      null, null, { msmVideoId: video.videoId },
+      // Force problem-solve in FAST mode: deliver ONE complete analysis workbook in a single
+      // reply, not the interactive stepwise FULL flow ("shall we proceed to step 2?").
+      null, null, { msmVideoId: video.videoId, feature: 'problem-solve', mode: 'FAST' },
     );
   };
 
@@ -371,13 +389,18 @@ export default function App() {
     <div className="app">
       <LightboxHost />
       <Sidebar conversations={convs} activeId={activeId}
-        onSelect={(id) => { setIntelOpen(false); setMsmOpen(false); loadConversation(id); }}
-        onNew={() => { setIntelOpen(false); setMsmOpen(false); newChat('chat'); }}
-        onTool={startTool}
-        onIntel={() => { setMsmOpen(false); setIntelOpen(true); }} intelActive={intelOpen}
-        onMsm={() => { setIntelOpen(false); setMsmOpen(true); }} msmActive={msmOpen}
+        onSelect={(id) => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(false); loadConversation(id); }}
+        onNew={() => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(false); newChat('chat'); }}
+        onTool={(k) => { setOdaOpen(false); startTool(k); }}
+        onIntel={() => { setMsmOpen(false); setOdaOpen(false); setIntelOpen(true); }} intelActive={intelOpen}
+        onMsm={() => { setIntelOpen(false); setOdaOpen(false); setMsmOpen(true); }} msmActive={msmOpen}
+        onOda={() => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(true); }} odaActive={odaOpen}
         open={sidebarOpen} />
-      {msmOpen ? (
+      {odaOpen ? (
+        <React.Suspense fallback={<div className="main main--intel" style={{ display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 13 }}>Opening the ODA workspace…</div>}>
+          <OdaWorkspace onExit={() => setOdaOpen(false)} />
+        </React.Suspense>
+      ) : msmOpen ? (
         <div className="main main--intel">
           <MsmDashboard onExit={() => setMsmOpen(false)} onAnalyseDeeper={analyseDeeper} />
         </div>
