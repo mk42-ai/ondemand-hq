@@ -21,6 +21,12 @@ const ON_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCT
 
 export const DATA_DIR = ON_SERVERLESS ? '/tmp/oda-data' : BUNDLE_DATA;
 
+// ODA application data (durable runs + packaged artifact files). The ODA modules
+// live under server/oda/ and historically wrote to server/oda/data — a READ-ONLY
+// path on Vercel. Same serverless rule as DATA_DIR: writable /tmp on Vercel, the
+// original in-tree location locally (so nothing changes for a normal host).
+export const ODA_DATA_DIR = ON_SERVERLESS ? path.join(DATA_DIR, 'oda') : path.join(__dirname, 'oda', 'data');
+
 if (ON_SERVERLESS) {
   try {
     if (!fs.existsSync(DATA_DIR)) fs.cpSync(BUNDLE_DATA, DATA_DIR, { recursive: true });
