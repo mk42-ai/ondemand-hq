@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Sidebar from './components/Sidebar.jsx';
+import LightboxHost from './components/Lightbox.jsx';
 import Composer from './components/Composer.jsx';
 import PreviewPane from './components/PreviewPane.jsx';
 import { AssistantMessage, UserMessage } from './components/Messages.jsx';
@@ -8,6 +9,8 @@ import DebugDrawer from './components/DebugDrawer.jsx';
 import BilingualLoader from './components/BilingualLoader.jsx';
 import IntelDashboard from './intel/IntelDashboard.jsx';
 import MsmDashboard from './msm/MsmDashboard.jsx';
+// ODA Workspace (Phase 3) — lazy-loaded so the suite home bundle stays lean.
+const OdaWorkspace = React.lazy(() => import('./oda/OdaWorkspace.jsx'));
 import { ArrowDown, X, AlertTriangle } from 'lucide-react';
 import { dissect } from './markdown.jsx';
 
@@ -37,18 +40,34 @@ export default function App() {
   const [exportBusy, setExportBusy] = useState(false);
   const [atBottom, setAtBottom] = useState(true);
   const [sidebarOpen] = useState(false);
-  const [intelOpen, setIntelOpen] = useState(false); // ODA Intelligence module view
+  const [intelOpen, setIntelOpen] = useState(() => {
+    // deep link: /correlation-engine opens Intelligence → country → Correlation tab
+    try { return window.location.pathname.replace(/\/+$/, '') === '/correlation-engine'; } catch { return false; }
+  }); // ODA Intelligence module view
   const [composePrefill, setComposePrefill] = useState(null); // 'oda:compose' handoff (Correlation Engine 'Send to chat' / Quick Query 'Continue in chat')
   // MSM Analysis module view — /msm-analysis route (deep-linkable + history-integrated)
   const [msmOpen, setMsmOpen] = useState(() => {
     try { return window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'; } catch { return false; }
   });
+  // ODA Workspace (Phase 3) — /oda route, deep-linkable; the suite home
+  // (executive brief + per-skill quick starts) is preserved untouched at '/'.
+  // One universal workspace: /oda (legacy /oda/live deep links land here too —
+  // the separate Live Render screen was removed 2026-07-23).
+  const [odaOpen, setOdaOpen] = useState(() => {
+    try { return /^\/oda(\/live)?$/.test(window.location.pathname.replace(/\/+$/, '')); } catch { return false; }
+  });
   useEffect(() => {
-    const want = msmOpen ? '/msm-analysis' : '/';
+    const want = odaOpen ? '/oda' : (msmOpen ? '/msm-analysis' : '/');
     try { if (window.location.pathname !== want) window.history.pushState({}, '', want); } catch { /* noop */ }
-  }, [msmOpen]);
+  }, [msmOpen, odaOpen]);
   useEffect(() => {
-    const onPop = () => { try { setMsmOpen(window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'); } catch { /* noop */ } };
+    const onPop = () => {
+      try {
+        const p = window.location.pathname.replace(/\/+$/, '');
+        setMsmOpen(p === '/msm-analysis');
+        setOdaOpen(/^\/oda(\/live)?$/.test(p));
+      } catch { /* noop */ }
+    };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
@@ -73,6 +92,12 @@ export default function App() {
   const streamRef = useRef(null);
   const draftRef = useRef(null);   // keeps the in-flight user text so an error never loses it
   const liveMsgRef = useRef(null);
+  // 2026-07-20 UX pass: stop-generation + stall watchdog + composer refocus
+  const abortRef = useRef(null);         // AbortController for the in-flight stream
+  const lastFrameRef = useRef(0);        // ms timestamp of the last received frame (stall detection)
+  const composerFocus = () => { try { document.querySelector('.composer textarea')?.focus(); } catch { /* noop */ } };
+  const userStoppedRef = useRef(false); // distinguishes user Stop (clean end) from stall-abort (retryable)
+  const stopGeneration = () => { userStoppedRef.current = true; try { abortRef.current?.abort(); } catch { /* done */ } };
 
   /* ---------- data loading ---------- */
   const refreshConvs = useCallback(async () => {
@@ -153,6 +178,7 @@ export default function App() {
       text,
       fileId,
       feature: extra.feature || pendingTool || undefined,
+      mode: extra.mode || undefined, // explicit FAST/FULL override (e.g. MSM 'Analyse deeper' → one-shot FAST)
       wizard: wizard.active ? { active: true, step: wizard.step } : undefined,
       editTarget: extra.editTarget || undefined,
       msmVideoId: extra.msmVideoId || undefined, // MSM 'Analyse deeper': server injects the stored transcript as context
@@ -164,10 +190,16 @@ export default function App() {
     //  statusLog / metricsLog → status line / metrics (also to debug bus)
     //  routing / plugin_status / status / error / done remain locally-synthesized frames.
     const onStreamEvent = (type, evt) => {
+      lastFrameRef.current = Date.now(); // stall watchdog heartbeat (any frame)
       if (type === 'routing') patchLive({ routing: evt });
       else if (type === 'plugin_status') patchLive({ pluginStatus: `${evt.message}` });
       else if (type === 'status') { if (!liveMsgRef.current.answerStarted) patchLive({ pluginStatus: evt.message }); }
-      else if (type === 'planning_thinking' || type === 'step_thinking') {
+      else if (type === 'planning_thinking' || type === 'step_thinking' || type === 'fulfillment_thinking') {
+        // (2026-07-20 fix) GLM 4.7 BYOI in max mode emits fulfillment_thinking deltas
+        // (92 frames in the live eritrea/sudan capture) — previously dropped here, so
+        // the accordion looked stalled while real reasoning streamed. All three
+        // thinking channels now feed the same accordion; answer rendering below is
+        // fully independent of this branch.
         const delta = evt?.thinking?.delta;
         if (typeof delta === 'string' && delta.length) patchLive(prev => ({ thinking: (prev.thinking || '') + delta }));
       } else if (type === 'step_output') {
@@ -209,14 +241,38 @@ export default function App() {
         if (evt.publicMetrics) patchLive({ metrics: evt.publicMetrics });
       } else if (type === 'planning_output' || type === 'stream_end') {
         // planning_output: internal plan JSON — debug bus only; stream_end: [DONE] passthrough marker
-      } else if (type === 'error') throw new Error(evt.message); // explicit server error — never retried
+      } else if (type === 'error') {
+        // (2026-07-20 fix) Server error frames were ALWAYS fatal+non-retryable, which
+        // killed the first typed prompt of a new conversation on the transient
+        // session-create 404 — thinking had streamed, then rendering just stopped.
+        // Now: transient upstream session errors (404/5xx) are surfaced as a
+        // RETRYABLE error so the existing backoff loop re-sends the same payload;
+        // anything else stays fatal. If answer text already streamed, the retry loop
+        // is skipped (retryable=false below) and the partial answer is preserved.
+        const err = new Error(evt.userMessage || evt.message);
+        if (/^UPSTREAM_HTTP_(404|5\d\d)$/.test(evt.errorCode || '') && !liveMsgRef.current.answerStarted) {
+          err.errorCode = 'STREAM_DROPPED'; // reuse the bounded 1/2/4/8s backoff path
+        }
+        throw err;
+      }
     };
 
     try {
       // eslint-disable-next-line no-constant-condition
       while (true) {
         try {
-          await streamChat(payload, onStreamEvent);
+          const ac = new AbortController();
+          abortRef.current = ac;
+          lastFrameRef.current = Date.now();
+          userStoppedRef.current = false;
+          // Retry-on-stall (UX fix e): if NO frame of any kind arrives for 60s the
+          // stream is considered stalled — abort locally; the catch path offers Retry.
+          const stallTimer = setInterval(() => {
+            if (Date.now() - lastFrameRef.current > 60000) { clearInterval(stallTimer); try { ac.abort(); } catch { /* done */ } }
+          }, 5000);
+          try {
+            await streamChat(payload, onStreamEvent, ac.signal);
+          } finally { clearInterval(stallTimer); abortRef.current = null; }
           break; // clean end of stream — leave the retry loop
         } catch (err) {
           const retryable = err && (err.errorCode === 'STREAM_DROPPED' || err.errorCode === 'NETWORK') && attempt < MAX_RECONNECT_ATTEMPTS;
@@ -234,6 +290,17 @@ export default function App() {
       draftRef.current = null;
       await refreshConvs();
     } catch (e) {
+      // UX fix (b): user pressed Stop — end cleanly, keep whatever streamed, no error toast
+      if (e && e.errorCode === 'ABORTED' && userStoppedRef.current) {
+        patchLive({ live: false });
+        draftRef.current = null;
+        await refreshConvs().catch(() => {});
+        return;
+      }
+      // Stall-abort (watchdog) surfaces as ABORTED too — reframe it as a stall with Retry
+      if (e && e.errorCode === 'ABORTED' && !userStoppedRef.current) {
+        e = Object.assign(new Error('The stream stalled (no data for 60s).'), { errorCode: 'STALLED' });
+      }
       // STEP 8: graceful error — keep the draft, offer retry
       // (only reached once all reconnect attempts are exhausted, or for a
       // non-retryable error — a STREAM_DROPPED being retried never lands here)
@@ -247,7 +314,15 @@ export default function App() {
       });
     } finally {
       setBusy(false);
+      // UX fix (f): focus returns to the composer after the stream completes
+      requestAnimationFrame(composerFocus);
     }
+  };
+
+  /* ---------- regenerate (hover toolbar retry) ---------- */
+  const regenerate = () => {
+    const lastUser = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUser && !busy) send(lastUser.text, null, lastUser.fileName || null);
   };
 
   /* ---------- wizard option tap ---------- */
@@ -304,20 +379,28 @@ export default function App() {
     const title = video.title || `YouTube ${video.videoId}`;
     send(
       `Analyse this broadcast segment in depth for ODA leadership: "${title}" (${video.videoId}). Assess the framing, the implications for UAE/Gulf development narratives, and any follow-up ODA should consider. Ground everything in the attached transcript.`,
-      null, null, { msmVideoId: video.videoId },
+      // Force problem-solve in FAST mode: deliver ONE complete analysis workbook in a single
+      // reply, not the interactive stepwise FULL flow ("shall we proceed to step 2?").
+      null, null, { msmVideoId: video.videoId, feature: 'problem-solve', mode: 'FAST' },
     );
   };
 
   return (
     <div className="app">
+      <LightboxHost />
       <Sidebar conversations={convs} activeId={activeId}
-        onSelect={(id) => { setIntelOpen(false); setMsmOpen(false); loadConversation(id); }}
-        onNew={() => { setIntelOpen(false); setMsmOpen(false); newChat('chat'); }}
-        onTool={startTool}
-        onIntel={() => { setMsmOpen(false); setIntelOpen(true); }} intelActive={intelOpen}
-        onMsm={() => { setIntelOpen(false); setMsmOpen(true); }} msmActive={msmOpen}
+        onSelect={(id) => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(false); loadConversation(id); }}
+        onNew={() => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(false); newChat('chat'); }}
+        onTool={(k) => { setOdaOpen(false); startTool(k); }}
+        onIntel={() => { setMsmOpen(false); setOdaOpen(false); setIntelOpen(true); }} intelActive={intelOpen}
+        onMsm={() => { setIntelOpen(false); setOdaOpen(false); setMsmOpen(true); }} msmActive={msmOpen}
+        onOda={() => { setIntelOpen(false); setMsmOpen(false); setOdaOpen(true); }} odaActive={odaOpen}
         open={sidebarOpen} />
-      {msmOpen ? (
+      {odaOpen ? (
+        <React.Suspense fallback={<div className="main main--intel" style={{ display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 13 }}>Opening the ODA workspace…</div>}>
+          <OdaWorkspace onExit={() => setOdaOpen(false)} />
+        </React.Suspense>
+      ) : msmOpen ? (
         <div className="main main--intel">
           <MsmDashboard onExit={() => setMsmOpen(false)} onAnalyseDeeper={analyseDeeper} />
         </div>
@@ -353,7 +436,7 @@ export default function App() {
                   <div className="stream__inner">
                     {messages.map(m => m.role === 'user'
                       ? <UserMessage key={m.id} msg={m} />
-                      : <AssistantMessage key={m.id} msg={m} live={m.live} onOption={onOption} onExport={doExport} exportBusy={exportBusy} artifacts={artifacts} />)}
+                      : <AssistantMessage key={m.id} msg={m} live={m.live} onOption={onOption} onExport={doExport} exportBusy={exportBusy} artifacts={artifacts} onRetry={regenerate} />)}
                   </div>
                 </div>
                 {!atBottom && (
@@ -365,7 +448,12 @@ export default function App() {
                   {busy && !messages.some(m => m.live && (m.answerStarted || m.thinking)) && <div className="composer-wait"><BilingualLoader size="sm" label="Working…" /></div>}
                   <Composer onSend={send} busy={busy} onError={(m) => setToast({ message: m })} prefill={composePrefill}
                     placeholder={activeFeature ? placeholderFor(activeFeature) : 'Message the ODA suite…'} />
-                  <div className="composer-hint">gpt-5.6-sol-medium · every figure sourced or flagged · one verified deliverable per run</div>
+                  {busy && (
+                    <button type="button" className="stopgen" onClick={stopGeneration} aria-label="Stop generating" title="Stop generating">
+                      <span className="stopgen__sq" aria-hidden /> Stop generating
+                    </button>
+                  )}
+                  <div className="composer-hint">glm-4.7 (Cerebras BYOI) · max reasoning · every figure sourced or flagged · one verified deliverable per run</div>
                 </div>
               </>
             )}

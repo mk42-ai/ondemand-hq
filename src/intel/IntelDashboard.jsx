@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Globe from './Globe.jsx';
+import RealtimeVoiceMode from '../voice/RealtimeVoiceMode.jsx'; // OpenAI Realtime (WebRTC) — replaces the OnDemand turn-based VoiceMode (2026-07-21)
 import CountryPage from './CountryPage.jsx';
 import { getOverview, nlSearch, generateBrief } from './api.js';
 import BilingualLoader from '../components/BilingualLoader.jsx';
@@ -24,11 +25,38 @@ function StatCard({ label, value, tone, delay = 0 }) {
 export default function IntelDashboard({ onExit }) {
   const [ov, setOv] = useState(null);
   const [err, setErr] = useState(null);
-  const [countryIso, setCountryIso] = useState(null);
+  const [voiceState, setVoiceState] = useState('Idle');
+  const [discussedIso, setDiscussedIso] = useState(null);
+  const cameraApiRef = React.useRef(null);
+  // validated voice commands → world actions (allowlist enforced upstream in commands.js)
+  const onVoiceCommand = React.useCallback((cmd) => {
+    const cam = cameraApiRef.current;
+    switch (cmd.action) {
+      case 'rotateTo': cam?.rotateTo(cmd.args.lat, cmd.args.lng); break;
+      case 'zoom': cam?.zoom(cmd.args.level); break;
+      case 'resetView': cam?.resetView(); break;
+      case 'showCountry': setDiscussedIso(cmd.args.iso); setCountryIso(cmd.args.iso); break;
+      case 'openLayer': setCountryIso(prev => prev); window.dispatchEvent(new CustomEvent('oda:open-layer', { detail: cmd.args.layer })); break;
+      case 'compare': window.dispatchEvent(new CustomEvent('oda:compare', { detail: cmd.args })); break;
+      case 'setTimeline': window.dispatchEvent(new CustomEvent('oda:set-timeline', { detail: cmd.args })); break;
+      case 'openPanel': case 'closePanel': window.dispatchEvent(new CustomEvent('oda:panel', { detail: cmd })); break;
+      default: break; // schema-rejected commands never reach here
+    }
+  }, []);
+  const [countryIso, setCountryIso] = useState(() => {
+    // deep link: /correlation-engine[?iso=KE] jumps straight to the country page
+    try {
+      if (window.location.pathname.replace(/\/+$/, '') === '/correlation-engine') {
+        return (new URLSearchParams(window.location.search).get('iso') || 'KE').toUpperCase();
+      }
+    } catch { /* noop */ }
+    return null;
+  });
   const [q, setQ] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
   const [briefBusy, setBriefBusy] = useState(false);
+  const [evidencePop, setEvidencePop] = useState(null); // {kind:'risk'|'opp', row} — evidence popover
 
   const load = async () => {
     try { setErr(null); setOv(await getOverview()); }
@@ -64,7 +92,7 @@ export default function IntelDashboard({ onExit }) {
   return (
     <motion.div className="ig-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
       <div className="ig-head">
-        <h1><Globe2 size={22} aria-hidden style={{ verticalAlign: '-3px', marginRight: 8, color: 'var(--gold, #b08d3c)' }} />ODA Intelligence</h1>
+        <h1><span className="ig-mark" aria-hidden><Globe2 size={19} strokeWidth={1.9} /></span>ODA Intelligence</h1>
         <span className="ig-head__sub">{ov.countriesWithData}/{ov.countriesMonitored} countries with live intelligence{ov.workflow?.id ? ` · 12-hour workflow ${ov.workflow.active ? 'active' : 'configured'}` : ''}</span>
         <span style={{ flex: 1 }} />
         <button className="ig-briefbtn" onClick={onBrief} disabled={briefBusy || !ov.countriesWithData}>{briefBusy ? 'Generating…' : 'Generate Executive Brief'}</button>
@@ -105,7 +133,15 @@ export default function IntelDashboard({ onExit }) {
 
       {/* Globe landing */}
       <ErrorBoundary name="intel-globe">
-        <Globe countries={ov.perCountry} onOpenCountry={setCountryIso} />
+        <>
+        <Globe countries={ov.perCountry} onOpenCountry={setCountryIso}
+          voiceState={voiceState} discussedIso={discussedIso}
+          onCameraApi={(api) => { cameraApiRef.current = api; }} />
+        <RealtimeVoiceMode
+          worldContext={{ selectedCountry: countryIso, cameraFocus: cameraApiRef.current?.getFocus?.() ?? null }}
+          onCommand={onVoiceCommand}
+          onVoiceStateChange={setVoiceState} />
+        </>
       </ErrorBoundary>
 
       {/* Trending intelligence + risks/opportunities strips */}
@@ -130,7 +166,13 @@ export default function IntelDashboard({ onExit }) {
           <div>
             <h2>Risk Engine</h2>
             {ov.risks.map((r, i) => (
-              <div key={i} className="ig-minirow ig-minirow--risk">
+              <div key={i}
+                className={`ig-minirow ig-minirow--risk${r.evidence?.url ? ' ig-minirow--linked' : ''}`}
+                role={r.evidence?.url ? 'button' : undefined}
+                tabIndex={r.evidence?.url ? 0 : undefined}
+                onClick={() => r.evidence?.url && setEvidencePop({ kind: 'risk', row: r })}
+                onKeyDown={(e) => { if (e.key === 'Enter' && r.evidence?.url) setEvidencePop({ kind: 'risk', row: r }); }}
+                title={r.evidence?.url ? `Evidence: ${r.evidence.publisher}` : undefined}>
                 <span className={`ig-impact ig-impact--${(r.severity || 'low').toLowerCase()}`}>{r.severity}</span>
                 <span className="ig-minirow__t">{r.title}</span>
                 <span className="ig-minirow__c">{r.country}</span>
@@ -140,7 +182,13 @@ export default function IntelDashboard({ onExit }) {
           <div>
             <h2>Opportunity Engine</h2>
             {ov.opportunities.map((o, i) => (
-              <div key={i} className="ig-minirow ig-minirow--opp">
+              <div key={i}
+                className={`ig-minirow ig-minirow--opp${o.evidence?.url ? ' ig-minirow--linked' : ''}`}
+                role={o.evidence?.url ? 'button' : undefined}
+                tabIndex={o.evidence?.url ? 0 : undefined}
+                onClick={() => o.evidence?.url && setEvidencePop({ kind: 'opp', row: o })}
+                onKeyDown={(e) => { if (e.key === 'Enter' && o.evidence?.url) setEvidencePop({ kind: 'opp', row: o }); }}
+                title={o.evidence?.url ? `Evidence: ${o.evidence.publisher}` : undefined}>
                 <span className="ig-conf">{o.confidence}</span>
                 <span className="ig-minirow__t">{o.title}</span>
                 <span className="ig-minirow__c">{o.country}</span>
@@ -148,6 +196,35 @@ export default function IntelDashboard({ onExit }) {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Evidence popover (2026-07-20): lightbox-style overlay showing the cited
+          source for a Risk/Opportunity row — publisher + date + link out. */}
+      {evidencePop && (
+        <div className="lightbox" role="dialog" aria-modal="true" aria-label="Evidence source"
+          onClick={() => setEvidencePop(null)}>
+          <div className="ig-evpop" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="lightbox__close ig-evpop__close" aria-label="Close evidence"
+              onClick={() => setEvidencePop(null)}><X size={16} aria-hidden /></button>
+            <span className={evidencePop.kind === 'risk'
+              ? `ig-impact ig-impact--${(evidencePop.row.severity || 'low').toLowerCase()}`
+              : 'ig-conf'}>
+              {evidencePop.kind === 'risk' ? evidencePop.row.severity : evidencePop.row.confidence}
+            </span>
+            <h3 className="ig-evpop__title">{evidencePop.row.title}</h3>
+            <p className="ig-evpop__meta">
+              <b>{evidencePop.row.evidence.publisher}</b>
+              {evidencePop.row.evidence.date ? ` · ${evidencePop.row.evidence.date}` : ''}
+              {evidencePop.row.country ? ` · ${evidencePop.row.country}` : ''}
+            </p>
+            {evidencePop.row.detail && <p className="ig-evpop__detail">{evidencePop.row.detail}</p>}
+            <a className="ig-evpop__link" href={evidencePop.row.evidence.url}
+              target="_blank" rel="noopener noreferrer">
+              Open original article ↗
+            </a>
+            <p className="ig-evpop__cycle">Evidence gathered {evidencePop.row.evidence.gatheredAt?.slice(0, 16).replace('T', ' ')} UTC · refreshed each 24h enrichment cycle</p>
+          </div>
+        </div>
       )}
 
       {/* Latest Executive Brief */}

@@ -11,10 +11,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { weighFact } from './intelligence/weighting.js';
 import { resolveWindow, DEFAULT_WINDOW } from './intelligence/windows.js';
+import { DATA_DIR as DATA_BASE } from './paths.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CORPUS_PATH = path.join(__dirname, 'data', 'evidence-corpus-v2.json');
-const SNAP_DIR = path.join(__dirname, 'data', 'snapshots');
+const CORPUS_PATH = path.join(DATA_BASE, 'evidence-corpus-v2.json');
+const SNAP_DIR = path.join(DATA_BASE, 'snapshots');
 
 let _corpus = null;
 export function loadCorpus() {
@@ -93,7 +94,9 @@ export function registerEvidenceRoutes(app) {
     const corpus = loadCorpus();
     const win = resolveWindow(req.query.window);
     const offset = Math.max(0, parseInt(req.query.offset || '0', 10));
-    const limit = Math.min(500, Math.max(1, parseInt(req.query.limit || '100', 10)));
+    // UNCAPPED (2026-07-21 v3): default = the FULL corpus, no 100-record default and
+    // no 500 ceiling — preload as much country data as possible in one response.
+    const limit = Math.max(1, parseInt(req.query.limit || String(corpus.length || 1), 10));
     const now = Date.now();
     const page = corpus.slice(offset, offset + limit).map(rec => ({ ...rec, weighting: weighFact(rec, { nowTs: now, win }) }));
     res.json({ total: corpus.length, offset, limit, window: win.id, evidence: page });

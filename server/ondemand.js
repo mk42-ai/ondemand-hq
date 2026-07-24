@@ -6,6 +6,23 @@ import { ONDEMAND_API_KEY, ONDEMAND_BASE_URL, ENDPOINT_ID, REASONING_EFFORT, STR
 
 const H = { apikey: ONDEMAND_API_KEY, 'Content-Type': 'application/json' };
 
+// ---------- API-key fail-fast guard (2026-07-22 HTTP-500 root-cause fix) ----------
+// ROOT CAUSE (verified live 2026-07-22 against POST /chat/v1/sessions):
+//   • apikey header EMPTY  -> upstream HTTP 500 "An unexpected error occurred"
+//   • apikey header ABSENT -> HTTP 401 "No API key header"
+//   • apikey header INVALID-> HTTP 401 "Invalid API Key"
+// A deployment that omits ONDEMAND_API_KEY/ON_DEMAND_API_KEY therefore surfaces as
+// an opaque 500 on EVERY OnDemand call. Fail fast with an actionable error instead
+// of sending an empty header upstream.
+function assertApiKey(op) {
+  if (!ONDEMAND_API_KEY) {
+    const err = new Error(`OnDemand ${op} blocked: ONDEMAND_API_KEY (or ON_DEMAND_API_KEY) is not set in this deployment — an empty apikey header would return upstream HTTP 500 "An unexpected error occurred". Set the env var and restart.`);
+    err.status = 503;
+    err.errorCode = 'MISSING_ONDEMAND_API_KEY';
+    throw err;
+  }
+}
+
 // 2026-07-19 live-verified platform change: the chat API now rejects `pluginIds`
 // at query time with HTTP 400 "One or more agents are invalid: agent-XXXX"
 // (details.invalidAgentIds). The working form — verified live today against
@@ -50,6 +67,27 @@ async function odFetch(url, options, { retries = 3, baseDelayMs = 500 } = {}) {
 }
 
 /**
+ * 2026-07-23 (incident 2bc9fe01): the live gateway intermittently returns
+ * HTTP 401/403 "Unauthorized" on a small fraction of calls made with a VALID
+ * apikey — a production run died when the verifier's sync query hit one
+ * (run.failed UPSTREAM_HTTP_403, 0.7s into verification). Same shape as the
+ * empirically-transient 404 on session create: a bounded, logged,
+ * auth-specific retry — deliberately NOT folded into odFetch's generic
+ * policy, and a PERSISTENT 401/403 still throws once attempts are exhausted.
+ * @param {() => Promise<Response>} doFetch re-invocable fetch thunk
+ * @param {string} label log label
+ */
+async function odFetchAuthRetry(doFetch, label) {
+  let r = await doFetch();
+  for (let extra = 1; (r.status === 401 || r.status === 403) && extra <= 2; extra++) {
+    console.error(`[od-retry] ${label} transient HTTP ${r.status} (attempt ${extra}/3) — retrying in ${600 * extra}ms`);
+    await new Promise((res) => setTimeout(res, 600 * extra));
+    r = await doFetch();
+  }
+  return r;
+}
+
+/**
  * Parse a failed OnDemand response per the documented error envelope — both the 4XX
  * ClientErrorResponse and 5XX ServerErrorResponse are shaped {errorCode, message}.
  * Falls back to a raw text slice (300 chars) if the body isn't valid JSON.
@@ -65,23 +103,50 @@ async function parseUpstreamError(r) {
 }
 
 export async function createOdSession(externalUserId, pluginIds = []) {
-  const r = await odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions`, {
-    method: 'POST', headers: H,
-    body: JSON.stringify({ externalUserId, agentIds: toAgentIds(pluginIds) }),
-  });
-  // Docs label success 200; the live API returns 201 Created — r.ok covers the whole 200-299
-  // range, so any 2xx (200 or 201) is treated as success here.
-  if (!r.ok) {
+  assertApiKey('session create');
+  // Session-create contract re-verified against the LIVE public docs 2026-07-22
+  // (GET /config/v1/public/docs/reference/api/createchatsession):
+  //   POST {base}/chat/v1/sessions · header `apikey` · body requires externalUserId;
+  //   docs schema lists pluginIds[]; the live API also accepts agentIds[] (201-proven
+  //   2026-07-22 with a real session id) — agentIds retained per the 2026-07-19
+  //   platform change where query-time pluginIds returned HTTP 400.
+  // (2026-07-20 streaming-bug fix) The gateway INTERMITTENTLY answers session-create
+  // with 404 "no Route matched with those values" (observed live: first typed-prompt
+  // call 404s, immediate identical retry 201s). odFetch only retries network/5xx, so
+  // this transient 404 previously killed the whole first turn of every NEW
+  // conversation right after thinking had streamed — the "typed prompt stops after
+  // Thought process" bug. Conversation starters worked because their conversations
+  // already held an odSessionId. Fix: up to 2 extra attempts on 404 with a short
+  // backoff — bounded, logged, and only for this specific route-miss signature.
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise(res => setTimeout(res, 400 * attempt));
+    const r = await odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions`, {
+      method: 'POST', headers: H,
+      body: JSON.stringify({ externalUserId, agentIds: toAgentIds(pluginIds) }),
+    });
+    // Docs label success 200; the live API returns 201 Created — r.ok covers the whole 200-299
+    // range, so any 2xx (200 or 201) is treated as success here.
+    if (r.ok) {
+      const j = await r.json();
+      return j?.data?.id;
+    }
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
-    console.error(`[FAIL] [HARD-FAIL] OnDemand session create HTTP ${r.status}: ${message}`);
-    const err = new Error(`OnDemand session create failed (HTTP ${r.status}): ${message}`);
+    const hint = r.status === 500 && /unexpected error/i.test(message)
+      ? ' [hint: upstream returns this exact 500 when the apikey header is EMPTY — check ONDEMAND_API_KEY wiring]' : '';
+    const err = new Error(`OnDemand session create failed (HTTP ${r.status}): ${message}${hint}`);
     err.status = r.status;
     err.errorCode = `UPSTREAM_HTTP_${r.status}`;
     err.upstreamErrorCode = upstreamErrorCode;
+    lastErr = err;
+    if ((r.status === 404 || r.status === 401 || r.status === 403) && attempt < 2) {
+      console.error(`[WARN] OnDemand session create transient HTTP ${r.status} (attempt ${attempt + 1}/3) — retrying: ${message} (upstreamErrorCode=${upstreamErrorCode || 'n/a'})`);
+      continue;
+    }
+    console.error(`[FAIL] [HARD-FAIL] OnDemand session create HTTP ${r.status}: ${message}`);
     throw err;
   }
-  const j = await r.json();
-  return j?.data?.id;
+  throw lastErr;
 }
 
 /**
@@ -92,9 +157,12 @@ export async function createOdSession(externalUserId, pluginIds = []) {
  * no filtering, no buffering beyond SSE line assembly, no re-synthesis.
  * The server still PARSES frames read-only for: fullAnswer accumulation (persistence),
  * error-frame detection, [DONE] termination, and STREAM_DEBUG logging.
- * EVERY call uses gpt-5.6-sol-medium (ENDPOINT_ID + REASONING_EFFORT) with streaming ON.
+ * Default model policy: ENDPOINT_ID + TOP-LEVEL reasoningEffort (decomposed form —
+ * suffixed ids like 'gpt-5.6-sol-medium' are a proven HTTP 400). Main chat default:
+ * predefined-gpt-5.6-sol + 'low' (2026-07-20 streaming fix). Streaming always ON.
  */
 export async function streamQuery({ odSessionId, query, pluginIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false }) {
+  assertApiKey('query stream');
   const body = {
     query,
     endpointId: endpointOverride || ENDPOINT_ID,
@@ -102,18 +170,21 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
                                           // NOTE: `reasoningEffort` is not in the documented submitquery schema but is
                                           // accepted by the live API — live-accepted extension beyond the documented schema.
     responseMode: 'stream',
+    chatMode: 'standard', // ALWAYS standard — 'plan' is rejected by the public API ("not supported")
+                          // and standard avoids the agentic planning/step decomposition frames.
     agentIds: toAgentIds(pluginIds),
     ...(fulfillmentOnly ? { fulfillmentOnly: true } : {}),
     modelConfigs: systemPrompt ? { fulfillmentPrompt: systemPrompt, temperature: 0.4 } : { temperature: 0.4 },
   };
   // odFetch retry is safe here ONLY because no bytes have been consumed yet (pre-stream).
   // Once reading begins below, the existing watchdog/error paths — not retry — handle failures.
-  const r = await odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions/${odSessionId}/query`, {
+  // 2026-07-23: pre-stream fetches also get the bounded 401/403 auth retry.
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions/${odSessionId}/query`, {
     method: 'POST',
     headers: { ...H, Accept: 'text/event-stream' },
     body: JSON.stringify(body),
     signal,
-  });
+  }), 'stream query');
   if (!r.ok || !r.body) {
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
     console.error(`[FAIL] [HARD-FAIL] OnDemand stream HTTP ${r.status} on ${ENDPOINT_ID}+${REASONING_EFFORT}: ${message} — NO silent model fallback; surfacing to caller.`);
@@ -239,7 +310,8 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
 
 /** Non-streaming helper for internal calls (router classification, title generation). Same model policy. */
 export async function syncQuery({ odSessionId, query, systemPrompt, pluginIds = [], endpointId, reasoningEffort }) {
-  const r = await odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions/${odSessionId}/query`, {
+  assertApiKey('sync query');
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions/${odSessionId}/query`, {
     method: 'POST', headers: H,
     body: JSON.stringify({
       query,
@@ -247,13 +319,14 @@ export async function syncQuery({ odSessionId, query, systemPrompt, pluginIds = 
       // reasoningEffort: live-accepted extension beyond the documented submitquery schema (see streamQuery note above).
       reasoningEffort: reasoningEffort || REASONING_EFFORT,
       responseMode: 'sync',
+      chatMode: 'standard', // ALWAYS standard (see streamQuery note) — 'plan' is rejected by the public API.
       agentIds: toAgentIds(pluginIds),
       modelConfigs: systemPrompt ? { fulfillmentPrompt: systemPrompt, temperature: 0.2 } : { temperature: 0.2 },
     }),
-  });
+  }), 'sync query');
   if (!r.ok) {
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
-    console.error(`[FAIL] [HARD-FAIL] OnDemand sync HTTP ${r.status}: ${message}`);
+    console.error(`[FAIL] [HARD-FAIL] OnDemand sync HTTP ${r.status}: ${message} (upstreamErrorCode=${upstreamErrorCode || 'n/a'})`);
     const err = new Error(`OnDemand sync query failed (HTTP ${r.status}): ${message}`);
     err.status = r.status;
     err.errorCode = `UPSTREAM_HTTP_${r.status}`;

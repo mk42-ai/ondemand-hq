@@ -9,32 +9,53 @@
 // evidence ids).
 //
 // Model policy (config, not hardcoded — see env.js):
-//   plugins/evidence-gathering  → CE_PLUGIN_ENDPOINT_ID (gpt-5.6-sol; Claude
+//   plugins/evidence-gathering  → CE_PLUGIN_ENDPOINT_ID (Kimi K3; Claude
 //                                 endpoints reject plugin attachment — live 400s
 //                                 logged 2026-07-19, PLUGIN_TESTS.md)
 //   analysis/extraction/narrative → CE_ANALYSIS_ENDPOINT_ID + reasoningEffort
 //                                 (prod default claude-fable-5 medium; build/test
 //                                 claude-sonnet-5 via env override)
-//   Quick Query                 → GLM 4.7 Cerebras BYOI endpoint only.
+//   data-fetch (deep-v2)        → hard-forced minimum data points per run
+//                                 (see intelligence/dataFetch.js — fable-5 only;
+//                                 CEREBRAS-FREE per the 2026-07-21 v3 policy); a
+//                                 run-level backstop in this file retries once and
+//                                 rejects the run rather than persist below-minimum.
+//   Quick Query / quick summaries → Cerebras (GLM 4.7 BYOI) — the ONLY surfaces
+//                                 where Cerebras is permitted (2026-07-21 v3).
+//
+// Latest-result persistence (2026-07-20): every completed run (round-1 or deep-v2)
+// writes a `latest.json` pointer per country so the UI always has an immediate,
+// O(1) "current result" to display without scanning/loading every run file.
+// POST /api/correlation/regenerate/:iso now delegates to the hard-forced deep-v2
+// job (runDeepJob) instead of the legacy round-1 runPipeline, so every entry
+// point — the "Start Correlation Engine" button included — goes through the
+// ≥100-data-point path; round-1 runPipeline is kept only for reference/back-compat.
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createOdSession, syncQuery, streamQuery } from './ondemand.js';
 import {
-  CE_PLUGIN_ENDPOINT_ID, CE_ANALYSIS_ENDPOINT_ID, CE_ANALYSIS_REASONING_EFFORT,
+  CE_PLUGIN_ENDPOINT_ID, CE_ANALYSIS_ENDPOINT_ID, CE_ANALYSIS_REASONING_EFFORT, CE_STREAM_REASONING_EFFORT,
   GLM_ENDPOINT_ID, QUICK_QUERY_MAX_TOKENS,
+  GLM_47_QUICK_ENDPOINT_ID, GLM_47_QUICK_REASONING_EFFORT, GLM_47_QUICK_LABEL,
 } from './env.js';
 import * as log from './log.js';
 // DEEP PIPELINE v2 (2026-07-19 rewrite): windows / weighting / 16-source retrieval /
 // 10 specialists / AI correlation layer / prediction mode / UAE impact engine.
 import { runDeepPipeline, RESEARCH_WINDOWS, DEFAULT_WINDOW } from './intelligence/deepPipeline.js';
+// Data-fetch layer (2026-07-20): hard-forced minimum evidence data points per run
+// (see intelligence/dataFetch.js — fable-5 only, Cerebras-free per 2026-07-21 v3);
+// enforced again as a run-level backstop in runDeepJob below.
+import { MIN_DATA_POINTS, backgroundDeltaFetch, buildExtractionMaterial } from './intelligence/dataFetch.js';
+// Serverless-safe data root (main's FUNCTION_INVOCATION_FAILED fix): /tmp on Vercel, bundle dir locally.
+import { DATA_DIR as DATA_BASE } from './paths.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_ROOT = path.join(__dirname, 'data', 'correlation');
-const SEED_ROOT = path.join(__dirname, 'data', 'correlation-seed');
-const MEDIA_ROOT = path.join(__dirname, 'data', 'correlation-media');
-for (const d of [DATA_ROOT, MEDIA_ROOT]) fs.mkdirSync(d, { recursive: true });
+const DATA_ROOT = path.join(DATA_BASE, 'correlation');
+const SEED_ROOT = path.join(DATA_BASE, 'correlation-seed');
+const MEDIA_ROOT = path.join(DATA_BASE, 'correlation-media');
+try { for (const d of [DATA_ROOT, MEDIA_ROOT]) fs.mkdirSync(d, { recursive: true }); } catch (e) { console.error('[correlation] mkdir failed:', e.message); }
 
 export const PLUGINS = {
   perplexity: 'plugin-1722260873',
@@ -122,6 +143,41 @@ export function getRun(iso, runId) {
   hydrateRuns(iso);
   const safe = String(runId).replace(/[^A-Za-z0-9-]/g, '');
   return readJson(path.join(countryDir(iso), `run-${safe}.json`), null);
+}
+
+// ---------- latest-result persistence (2026-07-20) ----------
+// Every completed run (round-1 or deep-v2) persists a small `latest.json` pointer
+// per country so the UI always has an immediate, O(1) "current result" to display
+// without scanning/loading every run-*.json file on disk.
+function latestPointerPath(iso) { return path.join(countryDir(iso), 'latest.json'); }
+
+function persistLatestPointer(iso, run) {
+  writeJson(latestPointerPath(iso), {
+    runId: run.runId,
+    generated_at: run.generated_at,
+    evidenceCount: run.stats?.evidenceCount ?? run.evidence?.length ?? 0,
+    edgeCount: run.stats?.edgeCount ?? run.edges?.length ?? 0,
+    pipeline: run.pipeline || 'round-1',
+    persistedAt: new Date().toISOString(),
+  });
+  log.info('correlation.latest_persisted', { iso, runId: run.runId });
+}
+
+// Always resolves to the LATEST completed run for a country: pointer-first, with a
+// self-healing fallback to the newest run-*.json (listRuns already excludes latest.json
+// via its /^run-.+\.json$/ filter) if the pointer is missing or stale.
+export function getLatestRun(iso) {
+  hydrateRuns(iso);
+  const pointer = readJson(latestPointerPath(iso), null);
+  if (pointer?.runId) {
+    const run = getRun(iso, pointer.runId);
+    if (run) return run;
+  }
+  const runs = listRuns(iso);
+  if (!runs.length) return null;
+  const newest = getRun(iso, runs[runs.length - 1].runId);
+  if (newest) persistLatestPointer(iso, newest); // self-heal a missing/stale pointer
+  return newest;
 }
 
 // ---------- markdown media/url extraction (real payload shape, mirrors intel.js) ----------
@@ -252,16 +308,19 @@ export async function runPipeline(iso, countryName) {
   if (jobs.get(iso)?.status === 'running') return jobs.get(iso);
   const startedAt = new Date();
   const runId = `${iso}-${startedAt.toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '')}`;
-  const job = { status: 'running', stage: 'gather', runId, startedAt: startedAt.toISOString(), error: null, narrativeTokens: '' };
+  const job = { status: 'running', stage: 'gather', runId, startedAt: startedAt.toISOString(), error: null, narrativeTokens: '', minDataPoints: MIN_DATA_POINTS };
   jobs.set(iso, job);
   (async () => {
     const pluginsCalled = [];
     try {
       // ---- Stage 1: gather (3 plugins in parallel; plugin-execution model policy) ----
+      // (2026-07-22 ODA bilateral mandate) every plugin query DEMANDS UAE↔country
+      // CONNECTIONS across the 8 ODA categories — never isolated single-country data.
+      const BILATERAL = `FOCUS STRICTLY ON UAE↔${countryName} BILATERAL CONNECTIONS across: bilateral investment; CEPA/trade agreements and flows; development aid & ODA flows; sovereign fund deployments (ADQ, Mubadala, ADFD); energy & infrastructure projects (Masdar, DP World, AD Ports); the remittance corridor; diplomatic/strategic frameworks; multilateral programs. Name the entities on BOTH sides of every connection; single-country items with no UAE link are out of scope.`;
       const queries = {
-        perplexity: `Latest (June-July 2026) official announcements and news on relations between the United Arab Emirates and ${countryName}: investments, trade agreements, development aid, infrastructure, energy, technology, defence and diplomacy involving UAE entities (ODA, MOFA, ADQ, Mubadala, G42, Core42, ADNOC, AD Ports, Presight, ADFD, Masdar, Etihad, DP World, EDGE). For EACH item give the date, the entities involved, a one-line description and the source URL.`,
-        xsearch: `Posts from 2026-06-19 to 2026-07-19 about UAE and ${countryName} cooperation: investments, aid, agreements, visits. Prioritize official accounts (ministries, embassies, state media, UAE entities). Include each post's x.com URL, author handle, and date.`,
-        reddit: `Fetch recent posts from subreddits about ${countryName} and the UAE (e.g. r/unitedarabemirates, country subreddits): aid, investments, ADNOC, Mubadala, DP World, partnerships. Include post titles, URLs, subreddit names and dates.`,
+        perplexity: `Latest (June-July 2026) official announcements and news on relations between the United Arab Emirates and ${countryName}. ${BILATERAL} UAE entities of interest: ODA, MOFA, ADQ, Mubadala, G42, Core42, ADNOC, AD Ports, Presight, ADFD, Masdar, Etihad, DP World, EDGE. For EACH item give the date, the entities involved on both sides, a one-line description of the CONNECTION and the source URL.`,
+        xsearch: `Posts from 2026-06-19 to 2026-07-19 about UAE and ${countryName} cooperation. ${BILATERAL} Prioritize official accounts (ministries, embassies, state media, UAE entities). Include each post's x.com URL, author handle, and date.`,
+        reddit: `Fetch recent posts from subreddits about ${countryName} and the UAE (e.g. r/unitedarabemirates, country subreddits). ${BILATERAL} Include post titles, URLs, subreddit names and dates.`,
       };
       const gather = {};
       const gatherResults = await Promise.allSettled(Object.entries(queries).map(async ([key, q]) => {
@@ -474,6 +533,7 @@ No headings, no bullets — flowing prose only. Never state anything not in the 
       };
       run.diffFromPrevious = diffRuns(prev, run);
       writeJson(path.join(countryDir(iso), `run-${runId}.json`), run);
+      persistLatestPointer(iso, run);
       job.status = 'done'; job.stage = 'complete'; job.finishedAt = new Date().toISOString();
       job.run = { runId, evidence: run.stats.evidenceCount, edges: run.stats.edgeCount };
       log.info('correlation.run_done', { iso, runId, evidence: run.stats.evidenceCount, edges: run.stats.edgeCount, ms: run.stats.durationMs });
@@ -510,8 +570,9 @@ id(s) it relies on in square brackets, e.g. [E3][E7]. Flowing prose only; nothin
   });
 }
 
-// ---------- Quick Query (GLM 4.7 Cerebras ONLY; hard ~150-token stop; latency stamp) ----------
-// Session pooling: a fresh session costs ~2.3s — reused it drops to the GLM answer's
+// ---------- Quick Query (Cerebras ONLY — one of the two permitted Cerebras
+// surfaces per the 2026-07-21 v3 policy; hard ~150-token stop; latency stamp) ----------
+// Session pooling: a fresh session costs ~2.3s — reused it drops to the answer's
 // own ~1.3s (200-proven 2026-07-19). Recreated once automatically on any session error.
 let qqSessionId = null;
 export async function quickQuery({ context, question }, res) {
@@ -534,7 +595,7 @@ export async function quickQuery({ context, question }, res) {
   try {
     await streamQuery({
       odSessionId: sid, query: q, pluginIds: [], systemPrompt,
-      endpointId: GLM_ENDPOINT_ID, reasoningEffort: 'low', fulfillmentOnly: true,
+      endpointId: GLM_47_QUICK_ENDPOINT_ID, reasoningEffort: GLM_47_QUICK_REASONING_EFFORT, fulfillmentOnly: true, // GLM 4.7 — quick-query surface (2026-07-22 model fix)
       signal: controller.signal,
       onRaw: (event, data) => {
         if (event === 'message' || event === 'thinking') res.write(`event: ${event}\ndata: ${data}\n\n`);
@@ -556,7 +617,8 @@ export async function quickQuery({ context, question }, res) {
     if (m && m[0].length > 40) answer = m[0];
   }
   const latencyMs = Date.now() - t0;
-  return { answer: answer.trim(), latencyMs, ttftMs, approxTokens: Math.ceil(answer.length / 4), stoppedEarly, model: GLM_ENDPOINT_ID };
+  log.info('quickquery.done', { model: GLM_47_QUICK_LABEL, endpointId: GLM_47_QUICK_ENDPOINT_ID, latencyMs, ttftMs });
+  return { answer: answer.trim(), latencyMs, ttftMs, approxTokens: Math.ceil(answer.length / 4), stoppedEarly, model: GLM_47_QUICK_ENDPOINT_ID, modelLabel: GLM_47_QUICK_LABEL };
 }
 
 // ---------- routes ----------
@@ -568,24 +630,96 @@ export async function quickQuery({ context, question }, res) {
 // EMPTY-UPSTREAM RESILIENT: an empty evidence set still yields a valid snapshot.
 export async function runDeepJob(iso, countryName, { window: windowId, offline = false, seedEvidence = null, seedStatedEdges = null } = {}) {
   if (jobs.get(iso)?.status === 'running') return jobs.get(iso);
-  const job = { status: 'running', stage: 'deep:init', runId: null, startedAt: new Date().toISOString(), error: null, pipeline: 'deep-v2', window: windowId || DEFAULT_WINDOW };
+  const job = { status: 'running', stage: 'deep:init', runId: null, startedAt: new Date().toISOString(), error: null, pipeline: 'deep-v2', window: windowId || DEFAULT_WINDOW, minDataPoints: MIN_DATA_POINTS };
   jobs.set(iso, job);
+  // INCREMENTAL RUNS (2026-07-21 v3): subsequent 'run' executions only fetch
+  // new/missing data. The previous run's evidence (if any) seeds the data-fetch
+  // delta exclusion so nothing already captured is re-fetched.
+  let priorEvidence = null;
+  try {
+    const prevRun = getLatestRun(iso);
+    if (Array.isArray(prevRun?.evidence) && prevRun.evidence.length) priorEvidence = prevRun.evidence;
+  } catch { /* first run for this country — full preload */ }
+  const pipelineArgs = {
+    iso, countryName, window: windowId,
+    plugins: PLUGINS, registry: UAE_REGISTRY, relationshipTypes: RELATIONSHIP_TYPES,
+    offline, seedEvidence, seedStatedEdges, priorEvidence,
+    onStage: (name) => { job.stage = name; },
+  };
   const work = (async () => {
     try {
-      const run = await runDeepPipeline({
-        iso, countryName, window: windowId,
-        plugins: PLUGINS, registry: UAE_REGISTRY, relationshipTypes: RELATIONSHIP_TYPES,
-        offline, seedEvidence, seedStatedEdges,
-        onStage: (name) => { job.stage = name; },
-      });
+      let run = await runDeepPipeline(pipelineArgs);
+
+      // ---------- latest-result persistence (2026-07-20): run-level hard-force backstop ----------
+      // Non-offline runs must clear MIN_DATA_POINTS (evidence data points), mirroring the
+      // hard-force inside runDeepPipeline itself. If a run still comes back below minimum,
+      // reject + retry the pipeline ONCE at the run level; if the retry is STILL below
+      // minimum, error the job rather than ever persist a below-minimum run. offline/seeded
+      // runs (used by tests/workflows) are exempt — they intentionally control their own
+      // evidence set.
+      if (!offline && (run.stats?.evidenceCount ?? 0) < MIN_DATA_POINTS) {
+        log.error('correlation.run_below_minimum', { iso, runId: run.runId, count: run.stats?.evidenceCount, min: MIN_DATA_POINTS });
+        job.stage = 'deep:retry-below-minimum';
+        run = await runDeepPipeline(pipelineArgs);
+        if ((run.stats?.evidenceCount ?? 0) < MIN_DATA_POINTS) {
+          throw new Error(`Run rejected: ${run.stats?.evidenceCount ?? 0} < ${MIN_DATA_POINTS} data points after retry`);
+        }
+      }
+
       job.runId = run.runId;
       const runs = listRuns(iso);
       const prev = runs.length ? getRun(iso, runs[runs.length - 1].runId) : null;
       run.diffFromPrevious = diffRuns(prev, run); // daily diff — newEdgeIds drive the frontend pulse
       writeJson(path.join(countryDir(iso), `run-${run.runId}.json`), run);
+      persistLatestPointer(iso, run);
       job.status = 'done'; job.stage = 'complete'; job.finishedAt = new Date().toISOString();
-      job.run = { runId: run.runId, evidence: run.stats.evidenceCount, edges: run.stats.edgeCount, emptyUpstream: run.stats.emptyUpstream };
+      job.run = { runId: run.runId, evidence: run.stats.evidenceCount, edges: run.stats.edgeCount, emptyUpstream: run.stats.emptyUpstream, dataFetch: run.stats?.dataFetch || null };
       log.info('correlation.deep_run_done', { iso, runId: run.runId, ...run.stats });
+      // ---------- BACKGROUND Fable delta backfill (2026-07-21 v3, Cerebras-free) ----------
+      // fable-5 is the ONLY population model. If its pass came back short
+      // (corpusBackfilled > 0 marks the shortfall), the fable artifacts are
+      // KEPT and already persisted above; now a server-side FABLE delta job
+      // fetches ONLY the missing delta (exclusion prompt), merges + dedupes
+      // into the run, re-persists, and the UI auto-refreshes via its backfill
+      // poll — no user action needed. Fire-and-forget: never blocks the job.
+      if (!offline && (run.stats?.dataFetch?.corpusBackfilled ?? 0) > 0) {
+        run.stats.dataFetch.backgroundBackfill = { status: 'running', startedAt: new Date().toISOString() };
+        writeJson(path.join(countryDir(iso), `run-${run.runId}.json`), run);
+        persistLatestPointer(iso, run);
+        (async () => {
+          try {
+            const captured = run.evidence.filter(e => e.origin !== 'corpus-backfill');
+            const material = buildExtractionMaterial({ iso, countryName });
+            const fresh = await backgroundDeltaFetch({
+              iso, countryName, phrase: 'the last 2 years', material,
+              captured, sessionTag: `bgfill-${iso}-${run.runId}`,
+            });
+            if (fresh.length) {
+              const seen = new Set(run.evidence.map(e => (e.claim || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 120)));
+              let nextIdx = run.evidence.length;
+              for (const f of fresh) {
+                const key = (f.claim || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 120);
+                if (!key || seen.has(key)) continue;
+                seen.add(key);
+                nextIdx += 1;
+                run.evidence.push({ ...f, id: `E${nextIdx}` });
+              }
+              run.stats.evidenceCount = run.evidence.length;
+            }
+            run.stats.dataFetch.backgroundBackfill = {
+              status: 'done', added: fresh.length, completedAt: new Date().toISOString(),
+              endpoint: 'fable-5-delta', mergedTotal: run.evidence.length,
+            };
+            writeJson(path.join(countryDir(iso), `run-${run.runId}.json`), run);
+            persistLatestPointer(iso, run);
+            log.info('correlation.bg_backfill_done', { iso, runId: run.runId, added: fresh.length, total: run.evidence.length });
+          } catch (e) {
+            run.stats.dataFetch.backgroundBackfill = { status: 'error', error: String(e?.message || e).slice(0, 200), completedAt: new Date().toISOString() };
+            try { writeJson(path.join(countryDir(iso), `run-${run.runId}.json`), run); persistLatestPointer(iso, run); } catch { /* best-effort */ }
+            log.error('correlation.bg_backfill_failed', { iso, runId: run.runId, error: String(e?.message || e).slice(0, 200) });
+          }
+        })();
+      }
       return run;
     } catch (e) {
       job.status = 'error'; job.error = e.message;
@@ -629,7 +763,20 @@ export function registerCorrelationRoutes(app, { countries }) {
   app.get('/api/correlation/runs/:iso', (req, res) => {
     const iso = req.params.iso.toUpperCase();
     if (!countryOf(iso)) return res.status(404).json({ error: 'Unknown country' });
-    res.json({ iso, runs: listRuns(iso), pipeline: pipelineStatus(iso) });
+    const runs = listRuns(iso);
+    // Read the pointer file directly (not getLatestRun) to avoid loading the full run JSON
+    // on every list call; falls back to the newest listed run if the pointer is absent.
+    const latestRunId = readJson(latestPointerPath(iso), null)?.runId ?? (runs.length ? runs[runs.length - 1].runId : null);
+    res.json({ iso, runs, pipeline: pipelineStatus(iso), latestRunId });
+  });
+
+  // Latest correlation result is ALWAYS persisted and is what the UI displays by default.
+  app.get('/api/correlation/latest/:iso', (req, res) => {
+    const iso = req.params.iso.toUpperCase();
+    if (!countryOf(iso)) return res.status(404).json({ error: 'Unknown country' });
+    const run = getLatestRun(iso);
+    if (!run) return res.status(404).json({ error: 'No correlation runs yet', iso });
+    res.json({ iso, latest: true, run });
   });
 
   app.get('/api/correlation/run/:iso/:runId', (req, res) => {
@@ -656,12 +803,18 @@ export function registerCorrelationRoutes(app, { countries }) {
     res.json({ a: a.runId, b: b.runId, diff: diffRuns(a, b) });
   });
 
+  // Legacy regenerate route — repointed to the HARD-FORCED deep pipeline (2026-07-20) so
+  // EVERY entry point ('Start Correlation Engine' button, legacy callers) goes through the
+  // ≥MIN_DATA_POINTS path. Round-1 runPipeline is retained above for reference only — it is
+  // no longer routed from any HTTP endpoint.
   app.post('/api/correlation/regenerate/:iso', async (req, res) => {
     const iso = req.params.iso.toUpperCase();
     const c = countryOf(iso);
     if (!c) return res.status(404).json({ error: 'Unknown country' });
-    try { res.json({ job: await runPipeline(iso, c.name) }); }
-    catch (e) { res.status(400).json({ error: e.message }); }
+    try {
+      const job = await runDeepJob(iso, c.name, {});
+      res.json({ job: { status: job.status, stage: job.stage, runId: job.runId, pipeline: job.pipeline, window: job.window, minDataPoints: job.minDataPoints } });
+    } catch (e) { res.status(400).json({ error: e.message }); }
   });
 
   app.get('/api/correlation/status/:iso', (req, res) => res.json(pipelineStatus(req.params.iso.toUpperCase())));
@@ -685,6 +838,84 @@ export function registerCorrelationRoutes(app, { countries }) {
       if (fs.existsSync(p)) { res.setHeader('Cache-Control', 'public, max-age=86400'); return res.sendFile(p); }
     }
     res.status(404).json({ error: 'Media not found' });
+  });
+
+  // ---------- V2 inspector support (restored 2026-07-19, expand-mode fix) ----------
+  // Streamed article summary for one evidence record — Fable 5 MAX (prefilled CE model).
+  app.post('/api/correlation/summarize', async (req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+    try {
+      const { iso, runId, evidenceId } = req.body || {};
+      const run = getRun(String(iso || '').toUpperCase(), runId);
+      const ev = run?.evidence.find(v => v.id === evidenceId);
+      if (!ev) throw new Error('Evidence record not found');
+      const sid = await createOdSession(`ce-sum-${iso}-${evidenceId}`, []);
+      // model-name proof (2026-07-22): first SSE frame declares the quick-summary model
+      res.write(`event: model\ndata: ${JSON.stringify({ model: GLM_47_QUICK_LABEL, endpointId: GLM_47_QUICK_ENDPOINT_ID })}\n\n`);
+      log.info('quicksummary.model', { model: GLM_47_QUICK_LABEL, endpointId: GLM_47_QUICK_ENDPOINT_ID, iso, evidenceId });
+      await streamQuery({
+        odSessionId: sid,
+        endpointId: GLM_47_QUICK_ENDPOINT_ID, reasoningEffort: GLM_47_QUICK_REASONING_EFFORT, // GLM 4.7 — quick-summary surface (2026-07-22 model fix)
+        query: `Evidence record from the ODA Correlation Engine run on ${run.country} (${run.generated_at}):
+CLAIM: ${ev.claim}
+SOURCE: ${ev.source} (${ev.platform || ev.source_type || 'unknown'})${ev.publish_date ? ' · ' + ev.publish_date : ''}${ev.url ? '\nURL: ' + ev.url : ''}
+SNIPPET: ${ev.snippet || '(none)'}
+
+Produce EXACTLY these sections, grounded ONLY in the record above (no outside facts):
+## 50-word summary
+## 100-word summary
+## Key points
+## Named entities
+## Risk level (Low/Medium/High + one line why)
+## Importance (Low/Medium/High + one line why)
+## UAE relevance (one line)`,
+        pluginIds: [],
+        systemPrompt: 'You are the ODA Correlation Engine article summarizer. Ground everything in the given record only; never invent facts, dates, or URLs.',
+        onRaw: (event, data) => res.write(`event: ${event}\ndata: ${data}\n\n`),
+      });
+      res.write('data: [DONE]\n\n');
+    } catch (e) {
+      res.write(`event: error\ndata: ${JSON.stringify({ error: e.message })}\n\n`);
+    }
+    res.end();
+  });
+
+  // One-click Story Mode — GLM 4.7 BYOI, streamed SSE.
+  app.get('/api/correlation/story/:iso/:runId/stream', async (req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+    try {
+      const iso = req.params.iso.toUpperCase();
+      const run = getRun(iso, req.params.runId);
+      if (!run) throw new Error('Run not found');
+      const evList = run.evidence.map(v => `${v.id}: [${v.platform || v.source_type}/${v.source}${v.publish_date ? '/' + v.publish_date : ''}] ${v.claim}`).join('\n') || '(no evidence this run)';
+      const edgeList = run.edges.map(e => `${e.id}: ${e.entity_a} -[${e.relationship_type}${e.verification ? '/' + e.verification : ''}]-> ${e.entity_b} :: ${e.claim}`).join('\n') || '(no edges this run)';
+      const sid = await createOdSession(`ce-story-${iso}-${run.runId}`, []);
+      await streamQuery({
+        odSessionId: sid,
+        endpointId: GLM_ENDPOINT_ID, reasoningEffort: CE_STREAM_REASONING_EFFORT, // validated low|medium|max (2026-07-20 mode audit)
+        query: `ODA Correlation Engine intelligence picture for UAE ↔ ${run.country} (run ${run.runId}).
+EVIDENCE:
+${evList}
+
+GRAPH EDGES:
+${edgeList}
+
+Narrate in EXACTLY these sections, 2-4 sentences each, every factual sentence ending with its evidence id(s) in square brackets; mark forecasts as (forecast):
+## Beginning
+## Key actors
+## Major developments
+## Current situation
+## Risks
+## Future outlook`,
+        pluginIds: [],
+        systemPrompt: 'You are the ODA Correlation Engine story narrator. Evidence-traceable sentences only; forecasts explicitly marked; never invent facts.',
+        onRaw: (event, data) => res.write(`event: ${event}\ndata: ${data}\n\n`),
+      });
+      res.write('data: [DONE]\n\n');
+    } catch (e) {
+      res.write(`event: error\ndata: ${JSON.stringify({ error: e.message })}\n\n`);
+    }
+    res.end();
   });
 
   // Quick Query — GLM 4.7 Cerebras only, SSE frames + final metrics with latency stamp.

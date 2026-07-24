@@ -349,3 +349,60 @@ emitted in the metrics frame and rendered in the UI. Thinking frames
 | `GET /api/correlation/media/KE/KE-20260719024409-ig1.jpg` | 03:13Z (local) | **200**, 90,698 B JPEG |
 | `GET /api/correlation/narrative/KE/…/stream` | 03:15:40Z | **200 SSE** — real fable-5 `fulfillment_thinking` frames |
 | `GET /api/correlation/diff/KE` | 03:13Z | **200** — diff payload above |
+
+## 2026-07-19T22:05Z — session-create 500 fix: deployed-backend HTTP proof (key redacted)
+
+Sandbox sbx_R55145h4CHwH6qmX1r9uWb3GVsY8 · https://sb-6003r3hmhyfy.vercel.run · HEAD 144b6b3 + env-wiring fix.
+ONDEMAND_API_KEY injected at server-start env only (never written to files/git/logs; boot log `key=****JZuA`).
+
+| Check | Result | Latency | Timestamp (UTC) |
+|---|---|---|---|
+| GET / | HTTP 200 | 0.299s | 2026-07-19T22:04:44Z |
+| GET /api/correlation/runs/KE | HTTP 200 | 0.047s | 2026-07-19T22:04:44Z |
+| GET /api/correlation/run/KE/KE-20260719072125 | 200 — ED1 **Verified** / ED2 **Likely** / ED3 **Possible** / ED4 **Possible** | — | 2026-07-19T22:04:44Z |
+| GET /api/health | `{"ok":true,"keyLoaded":true,"model":"predefined-gpt-5.6-sol+medium"}` | — | 2026-07-19T22:04:44Z |
+| POST /api/conversations | HTTP 200 | 0.057s | 2026-07-19T22:05:00Z |
+| POST /api/chat (session-create + streamed query) | **HTTP 200** (was 500) | 25.375s total stream | started 2026-07-19T22:05:00Z · ended 22:05:25Z |
+
+Streamed-query proof (gpt-5.6-sol-medium = predefined-gpt-5.6-sol + reasoningEffort medium):
+OnDemand session `6a5d4a0ef400726bb9845c6f` created via POST /chat/v1/sessions (through the
+deployed backend); SSE stream delivered **73 fulfillment token frames** — first tokens
+`"The"`, `" UAE"`, `"–"` … — plus planning/step thinking frames; terminal frame
+`{"type":"done","sawAnswer":true}`. Session-create HTTP 500 is FIXED.
+
+## 2026-07-20 — Final-verification turn (local production server :8081, pre-deploy)
+
+Per the 200-test rule: every plugin/API call logged with id, query, status, latency, verdict.
+
+| # | id / endpoint | query | status | latency | verdict |
+|---|---|---|---|---|---|
+| FV-1 | GET / | landing HTML | 200 | <0.3s | PASS |
+| FV-2 | GET /api/correlation/runs/KE | list runs | 200 | <0.1s | PASS — run KE-20260719072125 hydrated from seed |
+| FV-3 | GET /api/correlation/run/KE/KE-20260719072125 | full run | 200 | <0.1s | PASS — 5 evidence · 4 edges · ED1 Verified |
+| FV-4 | GET /api/correlation/runs/BD | list runs | 200 | <0.1s | PASS — dense run present |
+| FV-5 | GET /api/correlation/run/BD/BD-20260720021500 | full run | 200 | <0.2s | PASS — 200 evidence · 188 edges verified in-browser |
+| FV-6 | POST /api/voice/session | activation | 200 | <0.5s | PASS — model byoi-6e314690-4eaf-4def-a33c-380809acf1f5 returned (QA check 23, 2026-07-20T03:53Z) |
+| FV-7 | STT/TTS upstream (speech_to_text / text_to_speech) | degrade probe | 402 upstream → 402 surfaced | — | EXPECTED — "Please subscribe" on this key; graceful degrade verified (documented, not a failure) |
+
+Deployment-time verification (sandbox) appended below after deploy.
+
+### Deployment verification — sandbox sb-msp3d77eqbhq.vercel.run (sbx_WXSK3NuiWMH14nxGQLRaHkeYurU7, node22, 2026-07-20T04:04Z)
+
+Key injected at server start via `--env ONDEMAND_API_KEY` on `sandbox exec` (never in files/git/logs). `/api/health` → `keyLoaded:true`.
+
+| # | endpoint | status | latency | timestamp | verdict |
+|---|---|---|---|---|---|
+| DV-1 | GET / | 200 | 0.051s | 2026-07-20T04:04:42Z | PASS (1349 B) |
+| DV-2 | GET /api/health | 200 | 0.092s | 2026-07-20T04:04:42Z | PASS — keyLoaded:true |
+| DV-3 | GET /api/correlation/runs/KE | 200 | 0.070s | 2026-07-20T04:04:42Z | PASS |
+| DV-4 | GET /api/correlation/run/KE/KE-20260719072125 | 200 | 0.055s | 2026-07-20T04:04:42Z | PASS (47,042 B) |
+| DV-5 | GET /api/correlation/runs/BD | 200 | 0.056s | 2026-07-20T04:04:43Z | PASS |
+| DV-6 | GET /api/correlation/run/BD/BD-20260720021500 | 200 | 0.066s | 2026-07-20T04:04:43Z | PASS (200,738 B — dense run) |
+| DV-7 | POST /api/voice/session | 200 | 0.277s | 2026-07-20T04:04:43Z | PASS — model byoi-6e314690-4eaf-4def-a33c-380809acf1f5, workflowId 6a5d90228a845853270b9b53 |
+| DV-8 | POST /api/voice/turn (SSE) | 200 stream | 4.367s total | start 04:04:43.468Z → end 04:04:47.909Z | **PASS — 11 SSE frames: model → ttft 2326ms → 8 real GLM 4.7 token frames → done (482 chars), 0 interrupted** |
+
+Live-stream bug found & fixed during this verification (commit 89c7602): `req.on('close')`
+fires on request-body consumption under Node ≥16, so every deployed turn aborted ~3ms in
+(`interrupted` immediately after `model`). Abort now keys off `res.on('close')` (real
+connection teardown) — barge-in semantics preserved, normal turns stream fully.
+First deployed token: `"The MoU"` at 2026-07-20T04:04:45.847Z.
