@@ -7,6 +7,7 @@
 import PptxGenJS from 'pptxgenjs';
 import fs from 'node:fs';
 import { COLORS, FONTS, PPTX_LAYOUT, GEOMETRY, sourcesLine, truncateAtWord, isRtl, isBilingual } from './theme.js';
+import { ODA_LOGO_PATH } from './brandAsset.js';
 
 const MAX_TITLE = 110;
 const MAX_BULLETS = 8;
@@ -21,8 +22,9 @@ function planSlides(spec) {
   let revised = 0;
   const rtl = isRtl(spec.lang);
 
-  // Cover: exactly four elements (gold rule/wordmark · title · subtitle · date).
-  slides.push({ kind: 'cover', title: spec.title, subtitle: spec.subtitle || 'Office of Development Affairs — Abu Dhabi', date: spec.date, boxes: 4 });
+  // Cover: exactly four elements (gold rule/wordmark · title · subtitle · date)
+  // plus an optional hero image on the right panel.
+  slides.push({ kind: 'cover', title: spec.title, subtitle: spec.subtitle || 'Office of Development Affairs — Abu Dhabi', date: spec.date, boxes: 4, heroImage: spec.heroImage || null });
 
   const pushContent = (sec, part, ofParts) => {
     const idx = slides.length;
@@ -77,6 +79,9 @@ function planSlides(spec) {
       slide.bullets = bulletPages[p] || [];
       slide.table = tablePages[p] || null;
       slide.bigNumbers = p === 0 ? (sec.bigNumbers || []).slice(0, 4) : [];
+      // Section image rides the first part only, and only when there's no table
+      // to avoid crowding (the writer places it in a right-hand figure column).
+      slide.image = (p === 0 && !slide.table) ? (sec.image || null) : null;
       slide.boxes += (slide.paragraphs.length ? 1 : 0) + (slide.bullets.length ? 1 : 0)
         + (slide.table ? 1 : 0) + slide.bigNumbers.length + 1; // +1 sources line
       const slideIdx = slides.length - 1;
@@ -109,19 +114,34 @@ async function writeDeck(spec, plan, outPath) {
     const slide = pptx.addSlide();
     slide.background = { color: COLORS.WHITE };
 
+    // ODA logo — top-right on every slide (guarded: skipped if the asset is absent).
+    if (ODA_LOGO_PATH) {
+      slide.addImage({ path: ODA_LOGO_PATH, x: W - M - 1.9, y: 0.32, w: 1.9, h: 0.55, sizing: { type: 'contain', w: 1.9, h: 0.55 } });
+    }
+
     if (s.kind === 'cover') {
-      // Four elements only: gold rule + wordmark · title · subtitle · date.
+      // Four elements only: gold rule + wordmark · title · subtitle · date,
+      // plus an optional hero image on the right panel.
+      const hero = s.heroImage && s.heroImage.dataUri ? s.heroImage : null;
+      const heroX = W * 0.56;
+      const coverTextW = hero ? heroX - M - 0.3 : W - 2 * M;
+      if (hero) {
+        try {
+          const hw = W - M - heroX;
+          slide.addImage({ data: hero.dataUri, x: heroX, y: 1.15, w: hw, h: 5.1, sizing: { type: 'cover', w: hw, h: 5.1 } });
+        } catch { /* skip on any image error */ }
+      }
       slide.addShape('rect', { x: M, y: 1.15, w: 1.7, h: 0.06, fill: { color: COLORS.GOLD } });
       slide.addText('OFFICE OF DEVELOPMENT AFFAIRS', {
-        x: M, y: 1.28, w: W - 2 * M, h: 0.35, fontFace: FONTS.BODY, fontSize: 12,
+        x: M, y: 1.28, w: coverTextW, h: 0.35, fontFace: FONTS.BODY, fontSize: 12,
         color: COLORS.INK70, charSpacing: 3, bold: true,
       });
       slide.addText(s.title, {
-        x: M, y: 2.6, w: W - 2 * M, h: 1.6, fontFace: titleFont, fontSize: 40,
+        x: M, y: 2.6, w: coverTextW, h: 1.6, fontFace: titleFont, fontSize: 40,
         color: COLORS.INK, bold: true, align: rtl ? 'right' : 'left', rtlMode: rtl,
       });
       slide.addText(s.subtitle, {
-        x: M, y: 4.35, w: W - 2 * M, h: 0.6, fontFace: bodyFont, fontSize: 18,
+        x: M, y: 4.35, w: coverTextW, h: 0.6, fontFace: bodyFont, fontSize: 18,
         color: COLORS.INK70, align: rtl ? 'right' : 'left', rtlMode: rtl,
       });
       slide.addText(s.date || '', {
@@ -142,12 +162,24 @@ async function writeDeck(spec, plan, outPath) {
       rtlMode: rtl, valign: 'top',
     });
 
+    // A section figure occupies a right-hand column (only when there's no table,
+    // so it never crowds tabular data). Text elements reflow to the left column.
+    const bodyW = W - 2 * M;
+    const contentImg = (!s.table && s.image && s.image.dataUri) ? s.image : null;
+    const textW = contentImg ? bodyW * 0.58 : bodyW;
+    if (contentImg) {
+      try {
+        const iw = bodyW * 0.38;
+        slide.addImage({ data: contentImg.dataUri, x: M + bodyW * 0.62, y: GEOMETRY.bodyStartY, w: iw, h: 3.9, sizing: { type: 'cover', w: iw, h: 3.9 } });
+      } catch { /* skip on any image error */ }
+    }
+
     let y = GEOMETRY.bodyStartY;
 
     // Big numbers: up to 4 across (Lora gold value + label).
     if (s.bigNumbers.length) {
       const cols = Math.min(4, s.bigNumbers.length);
-      const bw = (W - 2 * M - (cols - 1) * 0.3) / cols;
+      const bw = (textW - (cols - 1) * 0.3) / cols;
       s.bigNumbers.forEach((bn, i) => {
         const x = M + i * (bw + 0.3);
         slide.addText(bn.value, { x, y, w: bw, h: 0.85, fontFace: FONTS.TITLE, fontSize: 40, color: COLORS.GOLD, bold: true, align: 'left' });
@@ -158,7 +190,7 @@ async function writeDeck(spec, plan, outPath) {
 
     for (const p of s.paragraphs) {
       slide.addText(p, {
-        x: M, y, w: W - 2 * M, h: 0.6, fontFace: bodyFont, fontSize: 14,
+        x: M, y, w: textW, h: 0.6, fontFace: bodyFont, fontSize: 14,
         color: COLORS.INK, align: rtl ? 'right' : 'left', rtlMode: rtl, valign: 'top',
       });
       y += 0.62;
@@ -174,7 +206,7 @@ async function writeDeck(spec, plan, outPath) {
             align: rtl ? 'right' : 'left', rtlMode: rtl,
           },
         })),
-        { x: M, y, w: (W - 2 * M) * (s.table ? 0.48 : 1), h: Math.min(4.6, 0.42 * s.bullets.length + 0.2), valign: 'top' },
+        { x: M, y, w: s.table ? bodyW * 0.48 : textW, h: Math.min(4.6, 0.42 * s.bullets.length + 0.2), valign: 'top' },
       );
     }
 

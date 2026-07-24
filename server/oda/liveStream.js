@@ -21,7 +21,7 @@
 //     is dispatched as the final chunk, then all in-flight digests settle.
 import { streamQuery, createOdSession } from '../ondemand.js';
 import { emitRunEvent } from './events.js';
-import { interpreterCall, FINAL_DOC_ENDPOINT_ID, assertFinalDocEndpoint } from './models.js';
+import { interpreterCall, FINAL_DOC_ENDPOINT_ID, assertEndpointAllowed } from './models.js';
 import { isSubstantiveEvidence } from './liveDeck.js';
 
 const CHUNK_TOKENS = 200;
@@ -57,12 +57,15 @@ function parseDigest(raw, seq) {
 }
 
 /**
- * Stream the opus-4.8 authoring while feeding 200-token chunks to Cerebras in
- * parallel; Cerebras digests patch slide 3 (core findings) progressively.
- * Returns the FULL opus-4.8 draft text (the final document source).
+ * Stream the deliverable authoring (on `endpointId` — the routed author model,
+ * chosen for the terminal node, fast for intermediate nodes) while feeding
+ * 200-token chunks to Cerebras in parallel; Cerebras digests patch slide 3
+ * progressively. Returns the FULL draft text (the final document source).
+ * @param {{reasoningEffort?: 'low'|'medium'|'max'|null}} p pass null to omit effort (e.g. Fable).
  */
-export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query, systemPrompt, persist = () => {} }) {
-  assertFinalDocEndpoint(FINAL_DOC_ENDPOINT_ID); // no silent downgrades — throws otherwise
+export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query, systemPrompt, endpointId, reasoningEffort = 'low', persist = () => {} }) {
+  const authorEndpoint = endpointId || FINAL_DOC_ENDPOINT_ID;
+  assertEndpointAllowed(authorEndpoint, 'worker'); // GLM/forbidden endpoints rejected for authoring — no silent downgrades
 
   // Dedicated Cerebras feed session so parallel digest calls never contend
   // with the authoring session.
@@ -73,6 +76,7 @@ export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query,
   let full = '';
   let chunkBuf = '';
   let chunkTokens = 0;
+  let thinkBuf = '';           // reasoning/thinking tokens, flushed in ~120-char bursts
   let chunkSeq = 0;
   let nextApply = 0;
   const ready = new Map();     // seq -> digest (completed, awaiting ordered apply)
@@ -163,12 +167,20 @@ export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query,
     query,
     systemPrompt,
     pluginIds: [],
-    endpointId: FINAL_DOC_ENDPOINT_ID,
-    reasoningEffort: 'medium',
+    endpointId: authorEndpoint,
+    reasoningEffort,
     fulfillmentOnly: true,
     // streamQuery invokes onEvent('answer', <delta>) per fulfillment frame
     // (see server/ondemand.js parseFrame) — positional args, not an object.
     onEvent: (kind, delta) => {
+      // Live "thinking" streaming: surface the model's reasoning tokens as
+      // skill.thinking run events (throttled to ~120-char bursts so the SSE
+      // stream isn't flooded). Never mixed into the deliverable text.
+      if (kind === 'thinking' && typeof delta === 'string') {
+        thinkBuf += delta;
+        if (thinkBuf.length >= 120) { emitRunEvent(run, 'skill.thinking', { nodeId: node.nodeId, delta: thinkBuf }); thinkBuf = ''; }
+        return;
+      }
       if (kind !== 'answer' || typeof delta !== 'string') return;
       full += delta;
       chunkBuf += delta;
@@ -186,6 +198,9 @@ export async function streamAuthoringWithLiveFeed({ run, node, sessionId, query,
       }
     },
   });
+
+  // Flush any remaining thinking tokens.
+  if (thinkBuf.trim()) { emitRunEvent(run, 'skill.thinking', { nodeId: node.nodeId, delta: thinkBuf }); thinkBuf = ''; }
 
   // ---- Tail flush: remaining <200-token tail when the OnDemand stream ends ----
   if (chunkBuf.trim()) {

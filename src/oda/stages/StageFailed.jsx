@@ -1,10 +1,16 @@
 // StageFailed.jsx — failed-run canvas (Phase 3).
 // Shows the real error, the failed node, and the last events; recovery is via
 // the sidebar lifecycle controls (retry re-queues the failed node).
-import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertTriangle, RotateCcw } from 'lucide-react';
 
-export default function StageFailed({ run }) {
+export default function StageFailed({ run, onRetry }) {
+  const [busy, setBusy] = useState(false);
+  const doRetry = async () => {
+    if (busy || !onRetry) return;
+    setBusy(true);
+    try { await onRetry(); } finally { setBusy(false); }
+  };
   const failedNode = Object.entries(run.nodeStates || {}).find(([, s]) => s.status === 'failed');
   const lastEvents = (run.events || []).slice(-5);
   return (
@@ -30,7 +36,14 @@ export default function StageFailed({ run }) {
           ))}
         </div>
       )}
-      <p className="oda-muted" style={{ fontSize: 12.5, marginTop: 10 }}>Use Retry in the sidebar to re-run the failed stage, or start a new task.</p>
+      <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <button type="button" className="oda-btn" onClick={doRetry} disabled={busy || !onRetry}
+          data-testid="retry-run"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+          <RotateCcw size={13} aria-hidden /> {busy ? 'Retrying…' : 'Retry'}
+        </button>
+        <span className="oda-muted" style={{ fontSize: 12 }}>Re-runs this request as a fresh task, or start a new one from the composer.</span>
+      </div>
     </div>
   );
 }

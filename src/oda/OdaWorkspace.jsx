@@ -15,12 +15,12 @@ import { installDownloadDelegationListener, downloadFile } from './downloadFinal
 import './oda.css';
 
 export default function OdaWorkspace({ onExit }) {
-  const { run, connected, start, attach, resolveGate, lifecycle, reset, fetchArtifact } = useOdaRun();
+  const { run, connected, start, retry, attach, resolveGate, lifecycle, reset, fetchArtifact } = useOdaRun();
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [history, setHistory] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-  const [controls, setControls] = useState({ lang: 'en', output: 'auto', depth: 'fast', brain: 'sonnet-5' });
+  const [controls, setControls] = useState({ lang: 'en', output: 'auto', depth: 'full', brain: 'sonnet-5' });
   // ODA Live Widgets: one widget = one card = one task context (new task
   // NEVER reuses an old card — each entry is its own immutable prompt).
   const [widgets, setWidgets] = useState([]);
@@ -54,15 +54,17 @@ export default function OdaWorkspace({ onExit }) {
       if (controls.output !== 'auto') extras.push(`Output: ${controls.output}`);
       if (controls.depth !== 'fast') extras.push('Depth: full engagement with approval gates');
       if (extras.length) finalText += ` — ${extras.join('; ')}`;
-      await start({ text: finalText, attachments: files.map((f) => ({ name: f.name, size: f.size })), brain: controls.brain || 'sonnet-5' });
+      await start({ text: finalText, attachments: files.map((f) => ({ name: f.name, size: f.size })), brain: controls.brain || 'sonnet-5', output: controls.output });
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   }, [start, controls]);
 
   const onLifecycle = useCallback(async (op) => {
     setError(null);
-    try { await lifecycle(op); } catch (e) { setError(e.message); }
-  }, [lifecycle]);
+    // 'retry' is not a backend lifecycle op — it re-runs the request as a fresh
+    // run (reliable recovery from a restart-orphaned failure).
+    try { await (op === 'retry' ? retry() : lifecycle(op)); } catch (e) { setError(e.message); }
+  }, [lifecycle, retry]);
 
   const onDownload = useCallback((a) => {
     // 2026-07-24: webview-safe — window.open is popup-blocked in the embedded
@@ -95,7 +97,7 @@ export default function OdaWorkspace({ onExit }) {
             ))}
           </div>
         )}
-        <Canvas run={run} resolveGate={resolveGate} fetchArtifact={fetchArtifact} />
+        <Canvas run={run} resolveGate={resolveGate} fetchArtifact={fetchArtifact} onRetry={() => onLifecycle('retry')} />
       </div>
       <ArtifactRail
         run={run}

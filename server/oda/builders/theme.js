@@ -79,6 +79,21 @@ export function truncateAtWord(text, maxLen) {
   return `${safe.trim()}…`;
 }
 
+/**
+ * A compact ODA house-style brief for off-box document tools (the OnDemand
+ * Agent) so a plugin-built deliverable matches the local builders' branding.
+ * @returns {string}
+ */
+export function brandBrief() {
+  return [
+    'ODA (Office of Development Affairs, Abu Dhabi) house style — apply strictly:',
+    `- Colours: ink #${COLORS.INK} for body text; gold #${COLORS.GOLD} for accents, kickers, dividers and page numbers; cream #${COLORS.CREAM} and mist #${COLORS.MIST_SOFT} for soft boxes/cards; a WHITE slide/page background (never a dark background behind content).`,
+    `- Fonts: "${FONTS.TITLE}" (serif) SemiBold for titles and big numbers; "${FONTS.BODY}" (sans) for body; ONE body size per deck.`,
+    '- Layout: generous margins, one idea per slide/page, restrained bold, sentence case, no emoji; a small gold kicker line above each title; a "Sources:" line in muted ink at the foot of content slides.',
+    '- Tables: transparent fill, horizontal rules only, a gold bold header row and first column.',
+  ].join('\n');
+}
+
 /** True when the spec/section language calls for right-to-left rendering. */
 export function isRtl(lang) {
   return lang === 'ar';

@@ -7,7 +7,7 @@
 // through the runStore's validated transition graph.
 
 import { createOdSession } from '../ondemand.js';
-import { workerCall, interpreterCall, FINAL_DOC_BRAIN, FINAL_DOC_ENDPOINT_ID, assertFinalDocEndpoint } from './models.js';
+import { workerCall, interpreterCall, assertEndpointAllowed } from './models.js';
 import { interpretRequest } from './interpreter.js';
 import { getManifest } from './manifests.js';
 import { validatePipeline, nextRunnableNodes } from './sequencing.js';
@@ -72,6 +72,69 @@ function nodeArtifactSpec(node) {
   return { logicalId: `${node.nodeId}-${node.skill}`, ...m };
 }
 
+/**
+ * Deliverable length target (2026-07-24 product rule): a DECK is authored at
+ * ~10 slides and a DOCUMENT at ~5 pages. Both final builders create one
+ * slide/page per top-level "## " section, so the target is expressed in those
+ * sections. Deliverables with a FIXED shape (one-pager, action titles, Excel
+ * models/data) keep their native size and take no target. Depth must come from
+ * real analysis, structure and stated assumptions — never from padded or
+ * invented content (the shared no-invent rule still binds).
+ */
+const DECK_SIZING =
+  'LENGTH TARGET — author a SUBSTANTIAL deck of AT LEAST 10 slides: after the "# " title, write 9–11 distinct '
+  + '"## " section headings (each becomes one slide) and develop every section with real content — a short lead '
+  + 'line plus bullets, a small table, or 3–4 big numbers. Do not compress the story into a handful of slides. '
+  + 'Cite the source for every figure (hyperlinked entity name). Relevant photography is added automatically, so '
+  + 'design slides that leave room for one supporting image. ';
+const DOC_SIZING =
+  'LENGTH TARGET — author a substantial document of ABOUT 5 pages: after the "# " title, write AT LEAST 5 distinct '
+  + '"## " section headings (the document renders roughly one section per page) and develop each with real depth — '
+  + 'multiple paragraphs and/or bullets, plus a table where it fits — never a single line per section. ';
+
+const XLSX_LIGHT =
+  'KEEP IT LIGHT — this is a quick data deliverable, not a report. Gather ONLY the key figures/series and lay '
+  + 'them out as clean markdown tables with a source per row (ISO dates, real numbers). No narrative, no deep '
+  + 'research — the spreadsheet file is generated downstream from these tables. ';
+
+function deliverableSizing(spec) {
+  const t = spec.type;
+  if (['deck-html', 'deck-pptx', 'arabic-pptx'].includes(t)) return DECK_SIZING;
+  // Data/model: a light, tables-only pass — the .xlsx is built by the terminal tool.
+  if (['xlsx-model', 'xlsx-data'].includes(t)) return XLSX_LIGHT;
+  // Other fixed-shape deliverables: their format defines their length.
+  if (['one-pager-summary', 'action-titles-md', 'image'].includes(t)) return '';
+  // Everything else ships as a multi-page document (→ PDF).
+  return DOC_SIZING;
+}
+
+// Format-NEUTRAL label for the worker brief. The raw artifact type "deck-html"
+// nudged the model into emitting a full HTML document (raw <!DOCTYPE> tags then
+// rendered as slide text) — the brief must describe WHAT to make, never a markup.
+const DELIVERABLE_LABEL = Object.freeze({
+  'deck-html': 'slide deck', 'deck-pptx': 'slide deck', 'arabic-pptx': 'slide deck (Arabic)',
+  'workbook-md': 'problem-solving workbook', 'benchmark-report-md': 'benchmarking report',
+  'insight-pack-md': 'evidence pack', 'fast-facts-md': 'fast-facts brief', 'storyline-md': 'storyline',
+  'one-pager-summary': 'one-page executive summary', 'action-titles-md': 'action titles',
+  'media-bilingual-md': 'bilingual media pack', 'xlsx-model': 'quantitative model',
+  'xlsx-data': 'data workbook', markdown: 'document', docx: 'document', pdf: 'document',
+});
+const labelFor = (type) => DELIVERABLE_LABEL[type] || 'document';
+
+// MODEL ROUTING (2026-07-24): ALL node authoring (plus interpret and verify)
+// runs on a FAST model; the CHOSEN model (UI Brain selection) is reserved for the
+// LAST call — the terminal plugin that produces the final file (see autoArtifact).
+// Claude endpoints DO accept plugins, so the chosen model can drive that call.
+// This replaces the blanket opus-4.8 authoring enforcement; the no-GLM/forbidden
+// guard is kept via assertEndpointAllowed.
+const FAST_AUTHOR_BRAIN = (process.env.ODA_FAST_BRAIN && BRAINS[process.env.ODA_FAST_BRAIN]) ? process.env.ODA_FAST_BRAIN : 'sonnet-5';
+
+/** Authoring model for every node — the fast model. The chosen model is applied
+ *  only at the terminal plugin call in autoArtifact. */
+function authoringModelFor() {
+  return { brainId: FAST_AUTHOR_BRAIN, endpointId: BRAINS[FAST_AUTHOR_BRAIN].endpointId, reasoningEffort: 'low' };
+}
+
 /** Live-deck hooks accessor — re-attaches after resume/restart (functions don't persist). */
 function liveOf(run) {
   if (!run._live || typeof run._live.onInterpreted !== 'function') {
@@ -111,6 +174,7 @@ export async function startRun(run) {
       sessionId,
       text: run.request.text,
       attachmentsSummary: (run.request.attachments || []).map((a) => a.artifactId || a.name || '').join(', '),
+      output: run.request.output || 'auto',
     });
     run.intent = control.intent;
     run.mode = control.mode;
@@ -318,42 +382,42 @@ async function executeNode(run, node) {
   emitRunEvent(run, 'skill.progress', { nodeId: node.nodeId, note: 'context assembled', loadedRefs, safeStatus: safeStatusFor(node) });
 
   // ---- WORKER (Sonnet 5 — the only author of deliverable content) ----
-  const query = `${contextBlock}\n\n--- PRODUCE ---\n${spec.title} (${spec.type}) in mode ${node.mode.toUpperCase()}. Objective: ${handoff.objective}\nReturn ONLY the deliverable content in markdown (or HTML for deck-html) — no preamble, no self-commentary; append a final "Self-report" section (what you did, assumed, could not resolve).`;
-  // FINAL-DOCUMENT ENFORCEMENT (2026-07-22): every substantive authoring call
-  // runs on opus-4.8, whatever brain was requested. The requested brain stays
-  // recorded on the run; enforcement is surfaced on the event stream with the
-  // REAL endpoint id (proof logging). assertFinalDocEndpoint throws on any
-  // substitution — no silent downgrades.
-  const requestedBrain = run.brain || DEFAULT_BRAIN;
-  run.enforcedBrain = FINAL_DOC_BRAIN;
-  assertFinalDocEndpoint(BRAINS[FINAL_DOC_BRAIN].endpointId);
+  const sizing = deliverableSizing(spec);
+  const query = `${contextBlock}\n\n--- PRODUCE ---\nA ${labelFor(spec.type)} in mode ${node.mode.toUpperCase()}. Objective: ${handoff.objective}\n${sizing}Author the deliverable as MARKDOWN ONLY — a single "# " title then "## " section headings (each "## " renders as one slide/page), with "- " bullets and GitHub-style pipe tables where they add clarity. Do NOT output HTML, <tags>, <!DOCTYPE>, CSS or code fences — markdown only. Return ONLY the deliverable content — no preamble, no self-commentary; append a final "Self-report" section (what you did, assumed, could not resolve).`;
+  // MODEL ROUTING (2026-07-24): the CHOSEN brain (UI selection, default opus-4.8)
+  // authors ONLY the terminal deliverable node; every earlier node authors on a
+  // fast model. GLM interprets; the terminal plugin call packages on a fast
+  // plugin-compatible endpoint. assertEndpointAllowed still rejects GLM/forbidden
+  // endpoints for the worker role — no silent downgrades to a non-author model.
+  const author = authoringModelFor();
+  run.enforcedBrain = author.brainId;
+  assertEndpointAllowed(author.endpointId, 'worker');
   emitRunEvent(run, 'skill.progress', {
     nodeId: node.nodeId,
-    note: `authoring endpoint ${BRAINS[FINAL_DOC_BRAIN].endpointId} (final-doc policy: opus-4.8 enforced${requestedBrain !== FINAL_DOC_BRAIN ? `; requested ${requestedBrain}` : ''})`,
-    endpointId: BRAINS[FINAL_DOC_BRAIN].endpointId,
-    enforcedBrain: FINAL_DOC_BRAIN,
-    requestedBrain,
+    note: `drafting on ${author.brainId} (${author.endpointId}) — fast model; your selected model builds the final file`,
+    endpointId: author.endpointId,
+    authoringBrain: author.brainId,
   });
-  // Concurrent Cerebras live feed (2026-07-23): the opus-4.8 authoring runs as
-  // a TOKEN STREAM; every 200 tokens the chunk is dispatched to Cerebras in
-  // parallel and its digest patches the live-render cards progressively.
-  // Falls back to the blocking brainCall only if streaming itself fails.
+  // Concurrent Cerebras live feed (2026-07-23): the authoring runs as a TOKEN
+  // STREAM; every 200 tokens the chunk is dispatched to Cerebras in parallel and
+  // its digest patches the live-render cards. Falls back to the blocking brainCall.
   let draftText;
   try {
     draftText = await streamAuthoringWithLiveFeed({
       run, node, sessionId, query, systemPrompt,
+      endpointId: author.endpointId, reasoningEffort: author.reasoningEffort,
       persist: () => _flushSync(run),
     });
   } catch (streamErr) {
-    console.warn(`[oda-live] streaming authoring failed (${streamErr.message}) — falling back to sync opus-4.8 call`);
+    console.warn(`[oda-live] streaming authoring failed (${streamErr.message}) — falling back to sync ${author.brainId} call`);
     try {
-      draftText = await brainCall({ brainId: FINAL_DOC_BRAIN, sessionId, query, systemPrompt });
+      draftText = await brainCall({ brainId: author.brainId, sessionId, query, systemPrompt });
     } catch (authErr) {
       // 2026-07-23: one extra spaced retry — the transport layer already
       // retries 401/403/5xx/network, so this only fires on longer blips.
       console.warn(`[oda-live] sync authoring failed too (${authErr.message}) — one spaced retry in 5s`);
       await new Promise((res) => setTimeout(res, 5000));
-      draftText = await brainCall({ brainId: FINAL_DOC_BRAIN, sessionId, query, systemPrompt });
+      draftText = await brainCall({ brainId: author.brainId, sessionId, query, systemPrompt });
     }
   }
 
@@ -401,6 +465,29 @@ function safeStatusFor(node) {
 async function verifyNodeArtifact(run, node, artifact, definitionOfDone, manifest) {
   const ns = run.nodeStates[node.nodeId];
   const sessionId = await ensureSession(run);
+
+  // VERIFICATION BY DEPTH (2026-07-24): the verifier is a full Sonnet pass +
+  // revise loop (the slowest stage). FAST depth SKIPS it for speed; FULL depth
+  // KEEPS it (the no-invent / sourcing / brand quality gate). Override with
+  // ODA_VERIFY=1 (always verify) or ODA_VERIFY=0 (never verify). When skipped the
+  // artifact ships immediately as verified with a recorded 'skipped' note.
+  const verifyOn = process.env.ODA_VERIFY === '1' ? true
+    : process.env.ODA_VERIFY === '0' ? false
+    : (node.mode === 'full');
+  if (!verifyOn) {
+    setArtifactStatus(run, artifact.artifactId, 'verified', {
+      status: 'skipped', artifactId: artifact.artifactId, nodeId: node.nodeId,
+      verifiedAt: new Date().toISOString(), findings: [],
+      note: 'verification skipped (speed mode; set ODA_VERIFY=1 to enable)',
+    });
+    addDecision(run, { summary: `Verification skipped for ${artifact.artifactId} (speed mode) — set ODA_VERIFY=1 to restore the no-invent quality gate`, decidedBy: 'system' });
+    liveOf(run).onVerificationPassed(artifact.artifactId);
+    ns.status = 'completed';
+    ns.completedAt = new Date().toISOString();
+    emitRunEvent(run, 'skill.completed', { nodeId: node.nodeId, skill: node.skill, artifactId: artifact.artifactId });
+    _flushSync(run);
+    return;
+  }
 
   for (let round = 0; ; round++) {
     ns.status = 'verifying';
@@ -497,14 +584,15 @@ async function verifyNodeArtifact(run, node, artifact, definitionOfDone, manifes
     transition(run, 'revising');
     const groups = planRevision(findings, { producedBy: node.skill });
     let revisedText = artifact.content;
+    const reviser = authoringModelFor(); // same fast model that authored this node
     try {
     for (const group of groups) {
       const owningSurface = SKILL_SURFACE[group.owningSkill] || SKILL_SURFACE[node.skill];
       emitRunEvent(run, 'skill.progress', { nodeId: node.nodeId, note: `revision by ${group.owningSkill}`, defects: group.findings.length });
       const { systemPrompt } = buildContextBundle({ run, node: { ...node, skill: group.owningSkill in SKILL_SURFACE ? group.owningSkill : node.skill }, handoff: null, attachments: [], projectMemory: [], stepHint: 'revision' });
-      emitRunEvent(run, 'skill.progress', { nodeId: node.nodeId, note: `revision authoring endpoint ${BRAINS[FINAL_DOC_BRAIN].endpointId} (final-doc policy)`, endpointId: BRAINS[FINAL_DOC_BRAIN].endpointId, owningSurface });
+      emitRunEvent(run, 'skill.progress', { nodeId: node.nodeId, note: `revision authoring on ${reviser.brainId} (${reviser.endpointId})`, endpointId: reviser.endpointId, owningSurface });
       revisedText = await brainCall({
-        brainId: FINAL_DOC_BRAIN,
+        brainId: reviser.brainId,
         sessionId,
         systemPrompt,
         query: `--- ARTIFACT UNDER REVISION (${artifact.type}) ---\n${revisedText}\n\n--- VERIFIER FINDINGS (fix ONLY these; you own defects of your discipline) ---\n${group.findings.map((f, i) => `${i + 1}. [${f.severity}/${f.category}] at ${f.location}: ${f.message} → ${f.requiredAction}`).join('\n')}\n\nReturn the FULL corrected artifact content — no commentary.`,
@@ -546,7 +634,7 @@ async function completeRun(run) {
   const verified = run.artifacts.filter((a) => a.status === 'verified');
   try {
     const synthesis = await brainCall({
-      brainId: FINAL_DOC_BRAIN,
+      brainId: FAST_AUTHOR_BRAIN, // a short completion note — fast model, not the deep one
       sessionId,
       systemPrompt: 'You are the ODA orchestrator. Synthesise ONE short answer-first completion note (≤150 words, British English, ODA voice) telling the user what was produced, which artifacts are ready, and any assumptions to note. No new claims, no new figures.',
       query: `Request: ${run.request.text}\nIntent: ${run.intent}\nVerified artifacts:\n${verified.map((a) => `• ${a.title} (${a.type}, v${a.version})`).join('\n')}\nAssumptions: ${run.assumptions.join('; ') || '(none)'}`,
@@ -563,6 +651,10 @@ async function completeRun(run) {
   // MANDATORY download URL (live-render upgrade): package the primary verified
   // artifact into a downloadable file BEFORE completing; surface it in the SSE
   // stream (artifact.download.ready + run.completed payload) and the run state.
+  // The final document is authored by the OnDemand Agent plugin (hosted output),
+  // which can take ~30–60s — keep the UI honest with a status ping first so the
+  // completion step doesn't look hung.
+  emitRunEvent(run, 'skill.progress', { nodeId: 'oda', safeStatus: 'Preparing your document', note: 'Generating the final document' });
   const pkg = await packageRunArtifact(run);
   if (pkg.downloadUrl) {
     emitRunEvent(run, 'artifact.download.ready', {

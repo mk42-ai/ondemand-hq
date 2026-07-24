@@ -2,7 +2,7 @@
 // Stays mounted for the whole run (identity, history, composer, controls,
 // lifecycle) regardless of which canvas stage is currently active.
 import React, { useRef, useState } from 'react';
-import { ArrowLeft, Plus, Paperclip, X, Send, PauseCircle, PlayCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Paperclip, X, Send, PauseCircle, PlayCircle, XCircle, RotateCcw } from 'lucide-react';
 
 const SUGGESTIONS = [
   'Build a briefing deck',
@@ -19,7 +19,7 @@ const STATUS_DOT = {
   waiting_for_user: 'var(--oda-gold)',
 };
 
-const DEFAULT_CONTROLS = { lang: 'en', output: 'auto', depth: 'fast' };
+const DEFAULT_CONTROLS = { lang: 'en', output: 'auto', depth: 'full' };
 const LANG_LABEL = { en: 'English', ar: 'Arabic', bilingual: 'Bilingual' };
 const OUTPUT_LABEL = { auto: 'Auto', deck: 'Deck', document: 'Document', data: 'Data', model: 'Model' };
 const DEPTH_LABEL = { fast: 'Fast', full: 'Full' };
@@ -49,6 +49,7 @@ export default function OdaSidebar({
   const canPause = ['executing', 'verifying', 'revising'].includes(run?.status);
   const canResume = run?.status === 'waiting_for_user' && !hasOpenGate;
   const canCancel = !!run?.runId && !TERMINAL_STATUSES.includes(run?.status);
+  const canRetry = run?.status === 'failed' && !!(run?.requestText || run?.intent);
   const canStart = !busy && text.trim().length > 0;
 
   const handleFiles = (e) => {
@@ -196,7 +197,7 @@ export default function OdaSidebar({
               <option value="fable">Fable 5</option>
             </select>
           </label>
-          <div className="oda-side__policyline">Final documents are written on Opus 4.8</div>
+          <div className="oda-side__policyline">Your selected model builds the final document; drafting steps use a faster model</div>
         </div>
 
         <div className="oda-side__submit">
@@ -230,6 +231,15 @@ export default function OdaSidebar({
               onClick={() => onLifecycle?.('cancel')}
             >
               <XCircle size={15} aria-hidden />
+            </button>
+            <button
+              type="button"
+              className="oda-btn oda-btn--ghost"
+              disabled={!canRetry}
+              title="Retry (re-run this request)"
+              onClick={() => onLifecycle?.('retry')}
+            >
+              <RotateCcw size={15} aria-hidden />
             </button>
           </div>
         </div>
