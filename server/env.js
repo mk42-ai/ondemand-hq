@@ -29,6 +29,15 @@ export const ONDEMAND_API_KEY = process.env.ONDEMAND_API_KEY || process.env.ON_D
 export const ONDEMAND_BASE_URL = (process.env.ONDEMAND_BASE_URL || process.env.ON_DEMAND_BASE_URL || 'https://api.on-demand.io').replace(/\/$/, '');
 export const PORT = parseInt(process.env.PORT || '8080', 10);
 
+// ---------- OpenAI Realtime API (voice) — server-side only ----------
+// The voice feature streams speech-to-speech via the OpenAI Realtime API over WebRTC.
+// The REAL key never ships to the browser: the server mints short-lived ephemeral
+// client secrets (POST /v1/realtime/client_secrets); the browser only holds those.
+// Model + voice are env-overridable so a rejected voice/model can be swapped without a redeploy.
+export const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+export const OPENAI_REALTIME_MODEL = process.env.OPENAI_REALTIME_MODEL || 'gpt-realtime-2.1';
+export const OPENAI_REALTIME_VOICE = process.env.OPENAI_REALTIME_VOICE || 'marin';
+
 // ---------- Reasoning-mode configuration (2026-07-20 streaming fix) ----------
 // The DECOMPOSED model config is the only valid form: endpointId + TOP-LEVEL
 // reasoningEffort. Suffixed model ids (e.g. 'gpt-5.6-sol-medium') are a PROVEN
@@ -98,15 +107,23 @@ export const FABLE_FALLBACK_REASONING_EFFORT = validEffort(process.env.CE_DATAFE
 // It is fully REMOVED from the correlation engine backend: no data-fetch pass,
 // no background backfill, no analysis/narrative/story call may use it. The
 // background delta backfill now runs on Fable (see dataFetch.js backgroundDeltaFetch).
-export const CEREBRAS_QUICK_ENDPOINT_ID = process.env.CEREBRAS_QUICK_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID; // quick summaries + quick queries ONLY
-export const CEREBRAS_QUICK_REASONING_EFFORT = validEffort(process.env.CEREBRAS_QUICK_REASONING_EFFORT, 'low');
+// (2026-07-22 model fix) Quick summaries + quick queries run on GLM 4.7 —
+// EXPLICITLY pinned to the GLM 4.7 Cerebras BYOI endpoint (byoi-6e314690 /
+// zai-glm-4.7). Fable 5 MAX stays the correlation model (CE_ANALYSIS_*); the
+// two 24h enrichment workflows keep their fable-medium assembler untouched.
+export const GLM_47_QUICK_ENDPOINT_ID = process.env.GLM_47_QUICK_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID; // GLM 4.7 — quick summaries + quick queries ONLY
+export const GLM_47_QUICK_REASONING_EFFORT = validEffort(process.env.GLM_47_QUICK_REASONING_EFFORT, 'low');
+export const GLM_47_QUICK_LABEL = 'GLM 4.7';
+// Back-compat aliases (previous var names) — same GLM 4.7 values.
+export const CEREBRAS_QUICK_ENDPOINT_ID = GLM_47_QUICK_ENDPOINT_ID;
+export const CEREBRAS_QUICK_REASONING_EFFORT = GLM_47_QUICK_REASONING_EFFORT;
 export const CE_DATAFETCH_REASONING_EFFORT = validEffort(process.env.CE_BACKFILL_REASONING_EFFORT, 'low');
 export const CE_MIN_DATA_POINTS = Math.max(100, parseInt(process.env.CE_MIN_DATA_POINTS || '100', 10) || 100);  // strict floor — clamped, can never be configured below 100
 
 if (!ONDEMAND_API_KEY) {
   console.error('[FAIL] [FATAL-CONFIG] ONDEMAND_API_KEY is not set. Create .env from .env.example. Refusing to start with a hardcoded or missing key.');
 } else {
-  console.log(`[env] loaded ${envPath ? envPath : 'process env'} · base=${ONDEMAND_BASE_URL} · endpoint=${ENDPOINT_ID}+${REASONING_EFFORT} · streamDebug=${STREAM_DEBUG} · key=****${ONDEMAND_API_KEY.slice(-4)}`);
+  console.log(`[env] loaded ${envPath ? envPath : 'process env'} · base=${ONDEMAND_BASE_URL} · endpoint=${ENDPOINT_ID}+${REASONING_EFFORT} · streamDebug=${STREAM_DEBUG} · key=****${ONDEMAND_API_KEY.slice(-4)} · openaiRealtime=${OPENAI_API_KEY ? `${OPENAI_REALTIME_MODEL}/${OPENAI_REALTIME_VOICE} (key ****${OPENAI_API_KEY.slice(-4)})` : 'DISABLED (no OPENAI_API_KEY)'}`);
 }
 
 // ---------- Correlation Engine model policy (2026-07-19) ----------

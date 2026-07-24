@@ -14,6 +14,7 @@ import { describeModelConfig, getCallLog, getCallStats } from './models.js';
 import { GATE_TYPES, GATE_DEFS, openGates, gateSummary } from './gates.js';
 import { interpretRequest, heuristicInterpret } from './interpreter.js';
 import { createOdSession } from '../ondemand.js';
+import { ODA_DATA_DIR } from '../paths.js'; // serverless-safe writable data root (/tmp on Vercel)
 
 const router = express.Router();
 
@@ -236,7 +237,7 @@ router.post('/runs/:id/artifacts/:artifactId/materialize', asyncH(async (req, re
   const path = await import('node:path');
   const fs = await import('node:fs');
   const { fileURLToPath } = await import('node:url');
-  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+  const dir = path.join(ODA_DATA_DIR, 'files');
   fs.mkdirSync(dir, { recursive: true });
 
   const spec = parseContentSpec(a.content || a.preview || '');
@@ -270,7 +271,7 @@ router.get('/runs/:id/download', asyncH(async (req, res) => {
   const path = await import('node:path');
   const fs = await import('node:fs');
   const { fileURLToPath } = await import('node:url');
-  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+  const dir = path.join(ODA_DATA_DIR, 'files');
 
   let rec = run.finalArtifact || null;
   let file = rec ? path.join(dir, path.basename(rec.downloadUrl)) : null;
@@ -304,7 +305,7 @@ router.get('/files/:name', asyncH(async (req, res) => {
   const path = await import('node:path');
   const fs = await import('node:fs');
   const { fileURLToPath } = await import('node:url');
-  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+  const dir = path.join(ODA_DATA_DIR, 'files');
   const name = path.basename(req.params.name); // no traversal
   const file = path.join(dir, name);
   if (!fs.existsSync(file)) return notFound(res, 'file');
