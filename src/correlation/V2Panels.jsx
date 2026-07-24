@@ -41,7 +41,7 @@ export function ArticleSummary({ iso, runId, ev }) {
       )}
       {state !== 'idle' && (
         <div className="ce2-summary__body" dir="auto">
-          {text || 'Streaming from Fable 5 MAX…'}
+          {text || 'Streaming from GLM 4.7…'}
           {state === 'streaming' && <span className="qq-caret">▍</span>}
         </div>
       )}

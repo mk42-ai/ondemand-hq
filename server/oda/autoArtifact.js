@@ -7,6 +7,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { ODA_DATA_DIR } from '../paths.js';
 
 /** Best output format per artifact type (default 'md'). */
 const FORMAT_BY_TYPE = Object.freeze({
@@ -55,7 +56,7 @@ export async function packageRunArtifact(run, { format = null, preferredFormat =
     const spec = parseContentSpec(primary.content || primary.preview || '');
     if (!spec.title) spec.title = primary.title;
 
-    const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+    const dir = path.join(ODA_DATA_DIR, 'files'); // serverless-safe (writable /tmp on Vercel)
     fs.mkdirSync(dir, { recursive: true });
     const base = `${run.runId.slice(0, 8)}-final-${primary.logicalId}`.replace(/[^a-zA-Z0-9_-]/g, '');
     let outPath = path.join(dir, `${base}.${outputFormat}`);
