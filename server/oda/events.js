@@ -37,6 +37,7 @@ export const EVENT_TYPES = Object.freeze([
   'skill.queued',
   'skill.started',
   'skill.progress',
+  'skill.thinking',        // { nodeId, delta } — live reasoning/thinking tokens during authoring
   'question.required',
   'evidence.added',
   'artifact.created',

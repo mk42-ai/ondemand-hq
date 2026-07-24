@@ -175,17 +175,32 @@ export function directorHooks(run, { persist = () => {} } = {}) {
       }
     },
 
-    /** Slide 3 locks when verification REALLY passes; slide 2 locks if filled. */
+    /**
+     * A node's verification passed. The run-level narrative slides (2 Evidence,
+     * 3 Core findings) must NOT finalise here: this hook fires once PER NODE, so
+     * in a multi-node pipeline (e.g. data-scout → model → design) finalising
+     * mid-run made the shared cards oscillate Final → Rendering → Final as the
+     * next node began streaming. They now finalise ONCE, together, at run
+     * completion (onRunCompleted) — a clean monotonic Queued → Rendering → Final.
+     * Here we only nudge slide 3's confidence to signal a verified stage without
+     * ever regressing its status.
+     */
     onVerificationPassed() {
-      patchSlide(3, { status: 'final', confidence: 1 });
-      if (slide(2).bullets.length) patchSlide(2, { status: 'final' });
+      const s3 = slide(3);
+      if (s3.status !== 'final') patchSlide(3, { confidence: Math.max(s3.confidence || 0, 0.9) });
     },
 
-    /** Slide 4 locks on REAL run completion; deck.ready closes the template. */
+    /** Run completion locks the whole template Final; deck.ready closes it. */
     onRunCompleted({ downloadUrl = null } = {}) {
       const s = slide(4);
       const bullets = downloadUrl ? [...s.bullets.slice(0, 3), 'Download ready'] : s.bullets;
       patchSlide(4, { status: 'final', bullets });
+      // Slide 3 (Core findings) finalises WITH the run — deferred from per-node
+      // verification so the card never regresses to Rendering mid-pipeline.
+      const s3 = slide(3);
+      if (s3.status !== 'final') patchSlide(3, { status: 'final', confidence: s3.confidence ?? 1 });
+      // Slide 1 is normally final at pipeline selection — guard defensively.
+      if (slide(1).status !== 'final') patchSlide(1, { status: 'final' });
       // 2026-07-23: slide 2 ALWAYS completes Queued→Rendering→Final by run end
       // via REAL frames (never skeleton forever, never junk locked as final).
       const s2 = slide(2);

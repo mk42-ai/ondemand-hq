@@ -44,7 +44,7 @@ const STATUS_PILL = {
   failed: 'Failed', cancelled: 'Cancelled',
 };
 
-export default function Canvas({ run, resolveGate, fetchArtifact }) {
+export default function Canvas({ run, resolveGate, fetchArtifact, onRetry }) {
   const stage = activeStage(run);
   const Renderer = RENDERERS[stage] || null;
   const gate = (run.gates || []).find((g) => g.status === 'open') || null;
@@ -97,6 +97,7 @@ export default function Canvas({ run, resolveGate, fetchArtifact }) {
           artifactContent={artifactContent}
           onResolveGate={resolveGate}
           fetchArtifact={fetchArtifact}
+          onRetry={onRetry}
         />
       )}
     </div>

@@ -166,9 +166,11 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
   const body = {
     query,
     endpointId: endpointOverride || ENDPOINT_ID,
-    reasoningEffort: reasoningOverride || REASONING_EFFORT,   // reasoning tokens ON (thinking frames surface when the model emits them)
-                                          // NOTE: `reasoningEffort` is not in the documented submitquery schema but is
-                                          // accepted by the live API — live-accepted extension beyond the documented schema.
+    // reasoning tokens ON by default; pass reasoningEffort: null to OMIT the field
+    // entirely (required by endpoints like predefined-claude-fable-5 that reject
+    // any reasoningEffort value). NOTE: `reasoningEffort` is a live-accepted
+    // extension beyond the documented submitquery schema.
+    ...(reasoningOverride === null ? {} : { reasoningEffort: reasoningOverride || REASONING_EFFORT }),
     responseMode: 'stream',
     chatMode: 'standard', // ALWAYS standard — 'plan' is rejected by the public API ("not supported")
                           // and standard avoids the agentic planning/step decomposition frames.
@@ -250,6 +252,10 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
     if (et === 'fulfillment' && typeof evt.answer === 'string') {
       fullAnswer += evt.answer; // server-side persistence only — browser already got the raw frame
       onEvent?.('answer', evt.answer);
+    } else if (et === 'fulfillment_thinking' && typeof evt?.thinking?.delta === 'string') {
+      // Forward reasoning/thinking tokens so callers can surface live "thinking"
+      // streaming (never accumulated into fullAnswer — thinking is not deliverable text).
+      onEvent?.('thinking', evt.thinking.delta);
     }
     return null;
   };
@@ -316,8 +322,10 @@ export async function syncQuery({ odSessionId, query, systemPrompt, pluginIds = 
     body: JSON.stringify({
       query,
       endpointId: endpointId || ENDPOINT_ID,
-      // reasoningEffort: live-accepted extension beyond the documented submitquery schema (see streamQuery note above).
-      reasoningEffort: reasoningEffort || REASONING_EFFORT,
+      // reasoningEffort: live-accepted extension beyond the documented submitquery
+      // schema. Pass null to OMIT it (endpoints like predefined-claude-fable-5
+      // reject any reasoningEffort value).
+      ...(reasoningEffort === null ? {} : { reasoningEffort: reasoningEffort || REASONING_EFFORT }),
       responseMode: 'sync',
       chatMode: 'standard', // ALWAYS standard (see streamQuery note) — 'plan' is rejected by the public API.
       agentIds: toAgentIds(pluginIds),
