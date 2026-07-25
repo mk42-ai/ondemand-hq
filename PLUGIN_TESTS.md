@@ -406,3 +406,70 @@ fires on request-body consumption under Node ≥16, so every deployed turn abort
 (`interrupted` immediately after `model`). Abort now keys off `res.on('close')` (real
 connection teardown) — barge-in semantics preserved, normal turns stream fully.
 First deployed token: `"The MoU"` at 2026-07-20T04:04:45.847Z.
+
+---
+
+## 2026-07-25 Speech Services re-probe (STT + TTS, EN + AR) — TTS NOW LIVE, STT still 400
+
+Live re-probe against `${ONDEMAND_BASE_URL}/services/v1/public/service/execute/*` with the workspace key (previous state: BOTH services HTTP 400 `{"message":"Please subscribe to the service to use it","errorCode":"invalid_request"}`).
+
+| Probe | Endpoint | Payload | HTTP | Latency (ms) | Timestamp (UTC) | Result |
+|---|---|---|---|---|---|---|
+| TTS EN | `POST /execute/text_to_speech` | `{model:"tts-1", input:"The ODA Productivity Suite verification pass.", voice:"alloy"}` | **200** | 2526 | 2026-07-25T05:15:18.843Z | `Service executed successfully` → hosted `.mp3` audioUrl returned |
+| TTS AR | `POST /execute/text_to_speech` | `{model:"tts-1", input:"مكتب شؤون التنمية — اختبار الخدمة الصوتية.", voice:"alloy"}` | **200** | 1608 | 2026-07-25T05:15:21.370Z | `Service executed successfully` → hosted `.mp3` audioUrl returned (Arabic input accepted) |
+| TTS EN (2nd, for STT source) | same | longer EN sentence | **200** | 1826 | 2026-07-25T05:15:57.254Z | audioUrl obtained |
+| TTS AR (2nd, for STT source) | same | longer AR sentence | **200** | 3510 | 2026-07-25T05:15:59.081Z | audioUrl obtained |
+| STT EN | `POST /execute/speech_to_text` | `{audioUrl:<hosted TTS mp3 (SAS)>}` | **400** | 243 | 2026-07-25T05:16:02.592Z | `{"message":"Unknown error","errorCode":"400"}` |
+| STT AR | `POST /execute/speech_to_text` | `{audioUrl:<hosted TTS mp3 (SAS)>}` | **400** | 164 | 2026-07-25T05:16:02.836Z | `{"message":"Unknown error","errorCode":"400"}` |
+| STT (base64 body variant) | `POST /execute/speech_to_text` | `{model,audio:<b64 wav>,language}` | **400** | 321/111 | 2026-07-25T05:15:22.979Z / :23.300Z | `Missing required body parameter audioUrl` — confirms `audioUrl` is the required parameter |
+| STT (plain public wav) | `POST /execute/speech_to_text` | `{audioUrl:<public .wav, no SAS>}` | **400** | 384 | 2026-07-25T05:16:28.153Z | `{"message":"Unknown error","errorCode":"400"}` — 3-attempt cap reached, stopped |
+
+**Verdict 2026-07-25T05:17Z:**
+- **TTS: SUBSCRIBED + WORKING** (both EN and AR, 200 with hosted mp3). The old "Please subscribe" block is gone for `text_to_speech`. `server/speech.js` `ttsGenerate` (documented `{model, input, voice}` body) is the correct live contract — `AudioPlayer` speaker buttons now function on this key.
+- **STT: STILL UNUSABLE** — the subscribe message is gone but every documented `audioUrl` form returns 400 `Unknown error` (SAS-signed mp3, plain public wav alike). The graceful `SERVICE_*` fallback in `server/speech.js` (`classifyServiceError`) and the frontend "speech unavailable" state **stay in place** for STT; no code change required.
+
+
+---
+
+## 2026-07-25 06:33-06:36Z re-probe — Speech EN/AR + Reddit + gpt-5.6-sol stream (ADOPT/REJECT verdicts)
+
+Hard rule applied: nothing ships without HTTP 200 + usable output.
+
+| Probe | Plugin / service id | Test query | HTTP | Latency (ms) | Sample output | Timestamp (UTC) | Verdict |
+|---|---|---|---|---|---|---|---|
+| TTS EN | `text_to_speech` (tts-1, voice alloy) | "The ODA Productivity Suite end-to-end verification pass…" | **200** | 3315 | hosted mp3 @ airevprod.blob.core.windows.net | 2026-07-25T06:33Z | **ADOPT** |
+| TTS AR | `text_to_speech` (tts-1, voice alloy) | "مكتب شؤون التنمية في أبوظبي — تحقق نهائي…" | **200** | 1686 | hosted mp3 (Arabic accepted) | 2026-07-25T06:33Z | **ADOPT** |
+| STT EN | `speech_to_text` | audioUrl = TTS-EN hosted mp3 | 400 | 508 | `{"message":"Unknown error","errorCode":"400"}` | 2026-07-25T06:34Z | REJECT |
+| STT AR | `speech_to_text` | audioUrl = TTS-AR hosted mp3 | 400 | 189 | `{"message":"Unknown error","errorCode":"400"}` | 2026-07-25T06:34Z | REJECT |
+| Reddit (generic agent id) | agent-1712327325 | top r/worldnews UAE discussion | 200 | 3951 | model disclaimed live Reddit access → unusable | 2026-07-25T06:35Z | REJECT |
+| Reddit (repo id) | plugin-1748003575 → agent-1748003575 | reddit tool fetch top post | 400 | 177 | `invalidAgentIds:["agent-1748003575"]` | 2026-07-25T06:36:01.494Z | REJECT (chat attachment); stays a CE evidence-source key only |
+| gpt-5.6-sol stream | predefined-gpt-5.6-sol + medium | capital of UAE (stream) | **200** | TTFT 1305 | 15 fulfillment frames, "The capital of the United Arab Emirates…", [DONE] | 2026-07-25T06:35Z | **ADOPT** |
+
+**Verdicts applied to the build:** TTS ships (AudioPlayer speaker buttons live, EN+AR).
+STT stays behind the graceful `SERVICE_*` 'speech unavailable' fallback (server/speech.js) —
+NOT shipped. Reddit is NOT attachable as a chat agent on this key; it remains an optional
+Correlation-Engine evidence-source key (correlation.js:60-66) whose absence degrades gracefully.
+Suite model policy re-verified live on the wire: predefined-gpt-5.6-sol + medium, streaming ON.
+
+---
+
+## 2026-07-25 22:17-22:18Z re-probe — Speech Services STT with REAL audio (EN+AR) + TTS re-confirmation
+
+Method: TTS generated REAL hosted audio files (EN + AR, tts-1/alloy), then those exact mp3 URLs were
+fed to STT `{audioUrl}` — a genuine round-trip probe, not a synthetic payload. Service:
+`POST {base}/services/v1/public/service/execute/{text_to_speech|speech_to_text}`, header `apikey`.
+
+| Probe | Service id | Test query / payload | HTTP | Latency (ms) | Sample output | Timestamp (UTC) | Verdict |
+|---|---|---|---|---|---|---|---|
+| TTS EN | `text_to_speech` (tts-1, alloy) | "The ODA Productivity Suite speech verification pass… twenty-two seventeen UTC." | **200** | 2378 | hosted mp3 `audioUrl` @ airevprod.blob.core.windows.net | 2026-07-25T22:17:56.718Z | **ADOPT** — 200 + playable hosted audio |
+| TTS AR | `text_to_speech` (tts-1, alloy) | "مكتب شؤون التنمية في أبوظبي — إعادة التحقق من الخدمات الصوتية…" | **200** | 3489 | hosted mp3 `audioUrl` (Arabic input accepted) | 2026-07-25T22:17:59.096Z | **ADOPT** — 200 + playable hosted audio |
+| STT EN | `speech_to_text` | `{audioUrl: <REAL TTS-EN mp3 just generated>}` | **400** | 396 | `{"message":"Unknown error","errorCode":"400"}` | 2026-07-25T22:18:02.585Z | **REJECT** — no 200/transcript; not the old 'Please subscribe' body, but every documented audioUrl form (incl. real platform-hosted audio) fails |
+| STT AR | `speech_to_text` | `{audioUrl: <REAL TTS-AR mp3 just generated>}` | **400** | 142 | `{"message":"Unknown error","errorCode":"400"}` | 2026-07-25T22:18:02.982Z | **REJECT** — same failure with Arabic-speech audio |
+
+**Verdicts applied (hard rule: nothing without HTTP 200 + usable output ships):**
+- **TTS EN/AR: ADOPT re-confirmed** with fresh timestamps — AudioPlayer speaker buttons remain live.
+- **STT EN/AR: REJECT re-confirmed** — the GAP STAYS EXPLICITLY FLAGGED. The subscribe-block message is
+  gone but the endpoint 400s ('Unknown error') even on the platform's own freshly-hosted TTS output,
+  so failure is service-side, not payload-side. The graceful `SERVICE_*` fallback in `server/speech.js`
+  + the frontend 'speech unavailable' state remain the shipped behaviour (mic capture still works;
+  transcription is disabled until the service accepts audio).

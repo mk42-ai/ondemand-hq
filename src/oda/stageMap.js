@@ -67,6 +67,9 @@ export function activeStage(run) {
         const n = gateNode(run, openGate);
         return n ? (SKILL_STAGE[n.skill] || 'document') : 'document';
       }
+      // Clarifying questions (Plan Mode) render on the request-understanding
+      // canvas — the question is about the request itself, not a skill artifact.
+      case 'clarification': return 'understanding';
       default: return 'routing';
     }
   }

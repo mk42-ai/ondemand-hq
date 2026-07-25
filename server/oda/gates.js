@@ -39,6 +39,7 @@ export const GATE_TYPES = Object.freeze([
   'storyline',
   'english_before_arabic',
   'verification_findings',
+  'clarification',
 ]);
 
 const DEFAULT_OPTIONS = Object.freeze(['Approve', 'Edit', 'Reject']);
@@ -110,6 +111,12 @@ export const GATE_DEFS = Object.freeze({
     title: 'Verification findings',
     prompt: 'Review the verification findings before the run proceeds.',
     defaultOptions: Object.freeze(['Accept findings — apply revisions', 'Override and proceed', 'Return to earlier stage']),
+    skillContext: 'oda',
+  }),
+  clarification: Object.freeze({
+    title: 'Clarifying question',
+    prompt: 'Answer this question so the run can be tailored to your intent.',
+    defaultOptions: Object.freeze(['Skip this question']),
     skillContext: 'oda',
   }),
 });

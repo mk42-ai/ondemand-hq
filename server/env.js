@@ -57,17 +57,19 @@ export function validEffort(effort, fallback) {
 }
 
 // MAIN CHAT model policy (2026-07-20 GLM switch): ALL non-workflow completion calls
-// run on the ACTIVE GLM 4.7 Cerebras BYOI endpoint with TOP-LEVEL reasoningEffort,
-// DEFAULT 'low' — explicitly NOT medium and NOT max (validator above enforces the
-// enum; invalid values fall back to 'low'). Decomposed form only — suffixed model
-// ids are a proven HTTP 400 (dead end D2). Workflows stay on their own platform-side
-// model config (gpt-5.6-sol) — workflow defs are NOT touched by this policy.
+// 2026-07-25 POLICY RESTORE (session directive): every suite model call runs on
+// gpt-5.6-sol at MEDIUM effort — decomposed form ONLY (endpointId
+// 'predefined-gpt-5.6-sol' + TOP-LEVEL reasoningEffort 'medium'; suffixed model
+// ids are a proven HTTP 400, dead end D2). Streaming stays ON everywhere and
+// thinking tokens are captured and rendered in the collapsed accordion. Any
+// upstream non-2xx is logged loudly as [HARD-FAIL] (server/ondemand.js:146/192/337)
+// and surfaced to the UI — NO silent model fallback exists on this path.
 // Override via CHAT_ENDPOINT_ID / CHAT_REASONING_EFFORT (validated above).
-export const ENDPOINT_ID = process.env.CHAT_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;
-export const REASONING_EFFORT = validEffort(process.env.CHAT_REASONING_EFFORT, 'low');
-// Data-gathering model (Perplexity/X plugin stages) — GLM BYOI (2026-07-20 switch;
-// GLM+agent attachment live-probed 200 "OK" at 20:58:24Z). Env-overridable.
-export const GATHER_ENDPOINT_ID = process.env.GATHER_ENDPOINT_ID || GLM_BYOI_ENDPOINT_ID;
+export const ENDPOINT_ID = process.env.CHAT_ENDPOINT_ID || 'predefined-gpt-5.6-sol';
+export const REASONING_EFFORT = validEffort(process.env.CHAT_REASONING_EFFORT, 'medium');
+// Data-gathering model (Perplexity/X plugin stages) — same gpt-5.6-sol policy
+// (plugins verified working on sol endpoints; env-overridable for test passes).
+export const GATHER_ENDPOINT_ID = process.env.GATHER_ENDPOINT_ID || 'predefined-gpt-5.6-sol';
 export const GATHER_REASONING_EFFORT = validEffort(process.env.GATHER_REASONING_EFFORT, 'medium');
 
 // ANALYSIS model policy for the ODA Intelligence pipeline (server/intel.js).

@@ -111,16 +111,13 @@ export function directorHooks(run, { persist = () => {} } = {}) {
       });
     },
 
-    /** Slide 1 finalises; slide 4 previews the REAL selected pipeline. */
-    onPipelineSelected(pipeline) {
+    /** Slide 1 finalises. ROOT_CAUSES Problem 1 fix (2026-07-25): slide 4
+     *  ("Recommendations & next steps") is NO LONGER pre-filled with the
+     *  pipeline plan at planning time — recommendations content only ever
+     *  comes from the TERMINAL node's artifact (see onArtifactPreview), so the
+     *  card can never suggest analysis completed before it ran. */
+    onPipelineSelected() {
       patchSlide(1, { status: 'final' });
-      patchSlide(4, {
-        title: 'Planned pipeline',
-        bullets: (pipeline || []).slice(0, 4).map(
-          (n) => `${n.nodeId}: ${n.skill}${n.route ? ` (${n.route})` : ''}`,
-        ),
-        status: 'filling',
-      });
     },
 
     /** Slide 2 appends REAL evidence items (cap 6, FIFO). */
@@ -165,7 +162,14 @@ export function directorHooks(run, { persist = () => {} } = {}) {
         status: 'filling',
         ...(conf != null ? { confidence: conf } : {}),
       });
-      if (s4 && (s4.title || (s4.bullets || []).length)) {
+      // ROOT_CAUSES Problem 1 fix (2026-07-25): slide 4 (Recommendations) fills
+      // ONLY from the TERMINAL node's artifact — an upstream draft (evidence
+      // pack, workbook, model) must never populate recommendations early. A
+      // node is terminal when no other pipeline node depends on it.
+      const isTerminal = !(run.pipeline || []).some(
+        (n) => Array.isArray(n.dependsOn) && n.dependsOn.includes(artifact.nodeId),
+      );
+      if (isTerminal && s4 && (s4.title || (s4.bullets || []).length)) {
         patchSlide(4, {
           ...(s4.title ? { title: clip(s4.title, 80) } : {}),
           ...(s4.bullets?.length ? { bullets: s4.bullets.slice(0, 4).map((b) => clip(b, 90)) } : {}),
@@ -203,10 +207,22 @@ export function directorHooks(run, { persist = () => {} } = {}) {
       if (slide(1).status !== 'final') patchSlide(1, { status: 'final' });
       // 2026-07-23: slide 2 ALWAYS completes Queued→Rendering→Final by run end
       // via REAL frames (never skeleton forever, never junk locked as final).
+      // ROOT_CAUSES Problem 1 fix (2026-07-25): the empty-card stamp is now
+      // HONEST — 'No external evidence required' only when the pipeline truly
+      // contained no evidence stage; when an evidence node ran but produced no
+      // extractable claims the card says so instead of implying none was needed.
       const s2 = slide(2);
       if (!s2.bullets.length) {
+        const hadEvidenceStage = (run.pipeline || []).some(
+          (n) => n.skill === 'data-scout' || n.skill === 'benchmark',
+        );
         patchSlide(2, { title: 'Evidence & analysis', status: 'filling' });
-        patchSlide(2, { title: 'No external evidence required', status: 'final' });
+        patchSlide(2, {
+          title: hadEvidenceStage
+            ? 'Evidence stage ran — no claims extracted into this card'
+            : 'No external evidence required',
+          status: 'final',
+        });
       } else if (s2.status !== 'final') {
         patchSlide(2, { status: 'final' });
       }

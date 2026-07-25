@@ -7,7 +7,7 @@
 import PDFDocument from 'pdfkit';
 import fs from 'node:fs';
 import { COLORS, GEOMETRY, sourcesLine, isRtl, isBilingual } from './theme.js';
-import { ODA_LOGO_PATH } from './brandAsset.js';
+import { ODA_LOGO_PATH, ODA_WATERMARK_PATH } from './brandAsset.js';
 
 const INK = `#${COLORS.INK}`;
 const GOLD = `#${COLORS.GOLD}`;
@@ -27,6 +27,11 @@ export function build(spec, outPath) {
     const W = doc.page.width - 112; // content width inside margins
 
     // ---- Cover ----
+    // Subtle document-cover watermark (UI spec) — pre-faded 10%-alpha asset so
+    // pdfkit (no per-image opacity) still renders it subtly; centre-right.
+    if (ODA_WATERMARK_PATH) {
+      try { doc.image(ODA_WATERMARK_PATH, doc.page.width - 340, 150, { fit: [260, 260] }); } catch { /* skip */ }
+    }
     doc.rect(56, 96, 120, 4).fill(GOLD);
     doc.fillColor(INK70).font('Helvetica-Bold').fontSize(10).text('OFFICE OF DEVELOPMENT AFFAIRS', 56, 116, { characterSpacing: 2 });
     // Comment: pdfkit lacks the brand TTFs (Lora/Montserrat) — Helvetica stands in.

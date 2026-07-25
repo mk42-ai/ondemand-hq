@@ -46,10 +46,31 @@ async function validateUrl(url) {
  *          null on any failure (unsupported format, empty content, plugin error,
  *          no URL in the answer, or the URL failing validation).
  */
-export async function generateHostedDoc({ externalUserId, format, title, subtitle, date, content, brandBrief = '', logoUrl = null, images = [], endpointId = null, reasoningEffort = null }) {
+export async function generateHostedDoc({ externalUserId, format, title, subtitle, date, content, brandBrief = '', logoUrl = null, images = [], endpointId = null, reasoningEffort = null, runContext = null }) {
   if (!PLUGIN_DOC_FORMATS.has(format)) return null;
   const body = String(content || '').slice(0, 12000);
   if (!body.trim()) return null;
+  // ROOT_CAUSES Problem 8 fix (2026-07-25): the plugin prompt now carries the
+  // FULL run context — original request, verified evidence, assumptions and
+  // user clarifications — so the hosted document is grounded in what the user
+  // actually asked and what the pipeline actually established, not just the
+  // last draft blob. Each block is capped; absent fields are omitted.
+  let contextBlock = '';
+  if (runContext && typeof runContext === 'object') {
+    const parts = [];
+    if (runContext.originalRequest) parts.push(`ORIGINAL USER REQUEST (authoritative — the document must answer THIS):\n${String(runContext.originalRequest).slice(0, 1200)}`);
+    if (Array.isArray(runContext.clarifications) && runContext.clarifications.length) {
+      parts.push(`USER CLARIFICATIONS (fold every answer into the document):\n${runContext.clarifications.slice(0, 6).map((c) => `Q: ${c.question}\nA: ${c.answer}`).join('\n')}`);
+    }
+    if (runContext.finalPrompt) parts.push(`OPTIMISED BRIEF (from user clarifications — authoritative):\n${String(runContext.finalPrompt).slice(0, 1500)}`);
+    if (Array.isArray(runContext.evidence) && runContext.evidence.length) {
+      parts.push(`VERIFIED EVIDENCE (cite these; never invent figures):\n${runContext.evidence.slice(0, 15).map((e) => `- [${e.tag || 'fact'}] ${String(e.claim).slice(0, 200)}`).join('\n')}`);
+    }
+    if (Array.isArray(runContext.assumptions) && runContext.assumptions.length) {
+      parts.push(`ASSUMPTIONS ON THE RUN (state them where relevant):\n${runContext.assumptions.slice(0, 8).map((a) => `- ${String(a).slice(0, 200)}`).join('\n')}`);
+    }
+    if (parts.length) contextBlock = `\nRUN CONTEXT — ground the document in ALL of this:\n${parts.join('\n\n')}\n`;
+  }
 
   const label = FORMAT_LABEL[format] || format;
   let instruction;
@@ -63,7 +84,7 @@ Build ONE worksheet per "## " section (sheet name = the heading). Put each markd
 After creating the file, return ONLY the direct download URL of the generated .${format} file. No commentary, no explanation — the URL alone.
 
 TITLE: ${title || 'ODA data'}
-
+${contextBlock}
 CONTENT (markdown tables):
 ${body}`;
   } else {
@@ -82,7 +103,7 @@ Structure: a cover (title, subtitle, date, logo, hero image), then ONE slide/pag
 After creating the file, return ONLY the direct download URL of the generated .${format} file. No commentary, no explanation — the URL alone.
 
 TITLE: ${title || 'ODA deliverable'}${subtitle ? `\nSUBTITLE: ${subtitle}` : ''}${date ? `\nDATE: ${date}` : ''}
-
+${contextBlock}
 CONTENT (markdown):
 ${body}`;
   }

@@ -55,7 +55,8 @@ export default function Composer({
   const autoGrow = (e) => {
     const el = e.target;
     el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+    // Auto-grow to ~6 rows (6 × 20px line-height + vertical padding), then scroll.
+    el.style.height = Math.min(el.scrollHeight, 132) + 'px';
     setText(el.value);
   };
 
@@ -149,6 +150,7 @@ export default function Composer({
             ref={taRef}
             rows={1}
             dir="auto"
+            aria-label="Message composer"
             value={text}
             placeholder={placeholder || 'Describe the deliverable…'}
             onChange={autoGrow}

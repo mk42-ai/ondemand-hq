@@ -29,6 +29,7 @@ const EMPTY = {
   liveDeck: null,
   liveThinking: '',
   downloadUrl: null,
+  clarifications: [],
   events: [],
   error: null,
 };
@@ -149,6 +150,7 @@ function hydrate(run) {
     safeStatus: run.control?.safe_status || null,
     liveDeck: run.liveDeck || null,
     downloadUrl: run.downloadUrl || run.finalArtifact?.downloadUrl || null,
+    clarifications: run.clarifications || [],
     events: run.events || [],
     error: run.error?.message || null,
   };
@@ -204,11 +206,12 @@ export default function useOdaRun() {
     return true;
   }, [listen]);
 
-  /** Start a new run from the composer. */
-  const start = useCallback(async ({ text, attachments = [], brain = null, output = null }) => {
+  /** Start a new run from the composer. Depth travels structurally — the
+   *  backend treats it as authoritative over any prose hint in the text. */
+  const start = useCallback(async ({ text, attachments = [], brain = null, output = null, depth = null }) => {
     const r = await fetch('/api/oda/runs', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, attachments, externalUserId: 'oda-workspace', ...(brain ? { brain } : {}), ...(output ? { output } : {}) }),
+      body: JSON.stringify({ text, attachments, externalUserId: 'oda-workspace', ...(brain ? { brain } : {}), ...(output ? { output } : {}), ...(depth ? { depth } : {}) }),
     });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
     const { runId } = await r.json();
@@ -245,6 +248,30 @@ export default function useOdaRun() {
     }));
   }, [run.runId]);
 
+  /** Conversational continuation: answer the open gate (or leave a note) on
+   *  the ACTIVE run instead of forking a new one (RC-5). The backend routes
+   *  the text to the open gate if one exists; otherwise it records a note. */
+  const sendMessage = useCallback(async (text) => {
+    if (!run.runId) throw new Error('No active run to message.');
+    const r = await fetch(`/api/oda/runs/${run.runId}/message`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
+    const body = await r.json();
+    const noneOpen = Array.isArray(body.openGates) && body.openGates.length === 0;
+    // Optimistically mark the open gate resolved; authoritative state arrives on SSE.
+    setRun((prev) => {
+      const open = prev.gates.find((g) => g.status === 'open');
+      return {
+        ...prev,
+        gates: open ? prev.gates.map((g) => (g.gateId === open.gateId ? { ...g, status: 'approved' } : g)) : prev.gates,
+        status: noneOpen ? 'executing' : prev.status,
+      };
+    });
+    return body;
+  }, [run.runId]);
+
   const lifecycle = useCallback(async (op) => {
     if (!run.runId) return;
     await fetch(`/api/oda/runs/${run.runId}/${op}`, { method: 'POST' });
@@ -271,7 +298,7 @@ export default function useOdaRun() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { run, connected, start, retry, attach, resolveGate, lifecycle, reset, fetchArtifact };
+  return { run, connected, start, retry, attach, resolveGate, sendMessage, lifecycle, reset, fetchArtifact };
 }
 
 export { reduceEvent, hydrate };

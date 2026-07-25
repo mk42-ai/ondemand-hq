@@ -1,3 +1,168 @@
+## 2026-07-25 (22:15-22:30Z) — Verification pass: STT real-audio round-trip, P3/5/6/7 + PRIOR_KNOWLEDGE stamps, live TTFT probe
+
+1. **Speech re-probe with REAL audio (PLUGIN_TESTS.md §22:17Z).** TTS re-confirmed: EN 200/2378ms
+   @22:17:56.718Z, AR 200/3489ms @22:17:59.096Z (hosted mp3, ADOPT). STT probed with the freshly
+   generated TTS mp3s themselves (true round-trip): EN 400/396ms @22:18:02.585Z, AR 400/142ms
+   @22:18:02.982Z — 'Unknown error' on platform-hosted audio proves the failure is service-side.
+   **REJECT re-confirmed; gap explicitly flagged; graceful `SERVICE_*` fallback stays shipped.**
+2. **ROOT_CAUSES.md — Problems 3/5/6/7 stamped in place** (replacing the 'tracked separately'
+   note): P3 PARTIALLY RESOLVED (90s stall watchdog ondemand.js:263-264, REVISE cap
+   verifier.js:361-369, orphan sweep runStore.js:150-165, sequential depth-0; HONEST GAP — no
+   total per-run wall-clock cap, flagged as future work). P5 RESOLVED re-verified
+   (routes.js:157, orchestrator.js:351, OdaWorkspace.jsx:43/56, OdaSidebar.jsx:125).
+   P6 RESOLVED BY DESIGN (14 stage renderers / 15 STAGES stageMap.js:7-23; liveDeck preemption
+   at :82 is the intentional universal live render). P7 RESOLVED (SSE seq replay events.js:112,
+   LEGAL_TRANSITIONS runStore.js:192-204, 7 emit + 12 persist sites, orphan sweep).
+3. **PRIOR_KNOWLEDGE.md — §5 Resolution stamps added**: all 5 EXISTS-BUT-BROKEN + 5 MISSING
+   items CLOSED 2026-07-25 with file:line evidence (handoff.js:42; correlation.js:63-64/323/356
+   w/ Reddit chat-attach caveat; :796 + runStore.js:17; brains.js:57,59; CorrelationEngine.jsx:395;
+   correlation.js:5/239-251; :251; CorrelationGraph.jsx:2,337; :922; env.js:123 +
+   dataFetch.js:82). WORKS(1) streaming re-verified live.
+4. **gpt-5.6-sol-medium streaming policy re-verified**: static enforcement (env.js:62 decomposed
+   endpoint+effort, ondemand.js:174 responseMode stream, Messages.jsx:126 collapsed thinking
+   accordion) + LIVE streamed probe @22:25:44.719Z — **TTFT 4097ms**, 24 fulfillment frames,
+   statusLog×2/heartbeat×2/metricsLog/[DONE], 158-char answer.
+
+## 2026-07-25 (16:40-17:15Z) — Real-time Visual Intelligence (Section 19): dual-session build + 16/16 live validation `[ts: 2026-07-25T17:13:00Z]`
+
+1. **Feature landed (prior attempt had died with 'argument list too long' before writing any
+   code — nothing was in the tree).** NEW `server/visualIntel.js`: per-conversation DUAL REAL
+   OnDemand sessions (A assistant / B silent Visual Director), strict Director JSON schema,
+   Wikimedia image sourcing with HEAD validation (a broken image can never ship), per-session
+   dedup, 12 s director cap racing Session A-independent, Section-13 typographic/AI-labeled
+   fallback cards (label EXACTLY 'AI-generated explanatory visual'), tenancy guard for
+   restricted internal docs, kill-B/pause/resume/pin, 200-entry observability ring, 6 routes.
+   NEW `src/intel/VisualIntel.jsx` + `/visual-intel` deep-link in App.jsx.
+2. **16/16 Section-19 scenarios PASS on the LIVE deploy** (sb-hgyxlw16s5y5.vercel.run,
+   real sessions + real Chromium clicks): S1 Hormuz map+world-focus (TTFV 5763ms) · S2 Fujairah
+   drift 'continue' · S3 Ghana 'switch' · S4 person card w/ validated image · S5 org card ·
+   S6 timeline · S7 typographic fallback · S8 pause · S9 resume (5038ms) · S10 pin · S11
+   ask-about-image · S12 kill-B → A unblocked in 4.45s (`session_b_killed`→`director_skipped_dead`)
+   · S13 20s slow provider → timeout at exactly the 12000ms cap with the EXACT AI label ·
+   S14 dedup (urls_differ) · S15 exact-label strict equality · S16 tenancy_blocked
+   (`restricted-doc` rule logged).
+3. **Two Director defects found by validation and fixed live:** hero-kind downgrades (org/
+   timeline → card) fixed via mandatory mechanical kind-selection rules in DIRECTOR_PROMPT plus
+   a server-side `normaliseHeroKind()` schema guard; S5/S6 re-tested PASS at 17:12:00-06Z.
+4. **Ops note:** in-sandbox restarts via setsid/nohup died with the exec teardown (502);
+   the reliable pattern is a Node `spawn(..., {detached, unref})` daemonizer — recorded here
+   for future hot-redeploys.
+
+## 2026-07-25 (06:20-06:55Z pass) — Checkpoint resume: Problem-1 residuals closed, gpt-5.6-sol-medium policy restored, cover watermark, EN/AR speech re-probe, 8/8 E2E
+
+Master entry for the checkpoint-resume pass (3 parallel subagents + orchestrator merge; all
+items live-proven; evidence in PLUGIN_TESTS.md §2026-07-25-06Z and NOTES.md §2026-07-25-06Z):
+
+1. **ROOT_CAUSES Problem 1 — residual sub-items CLOSED (06:28Z).**
+   - `interpreter.js heuristicInterpret()` no longer collapses FULL runs to a single node:
+     full+design → data-scout→model→design; full+problem-solve → data-scout→problem-solve;
+     full+benchmark → problem-solve→benchmark (all legal edges). FAST and transform skills
+     keep single nodes. Live probe: FULL deck → ["data-scout<-","model<-n1","design<-n2"].
+   - `normaliseControl()` REPAIRS illegal GLM graphs by dropping only the illegal edges
+     (isEdgeAllowed check per dep) and re-validating — the wholesale single-node fallback now
+     fires only when repair also fails.
+   - `orchestrator.js` evidence extraction: the never-matching '**fact**' regex is replaced by
+     `extractEvidenceClaims()` — 4 tolerant patterns (bold-marker, [bracket], (paren), bulleted
+     '(source: X)' lines), tag-normalised, deduped, capped 12/draft (6 hits on the sample draft
+     vs ~0 before). The non-streaming brainCall path now populates slide 2 evidence.
+2. **Model policy RESTORED to gpt-5.6-sol-medium (06:22Z, session directive).** `server/env.js`
+   ENDPOINT_ID → 'predefined-gpt-5.6-sol', REASONING_EFFORT → 'medium' (GATHER_* same policy);
+   decomposed form only; streaming ON everywhere; thinking tokens rendered in the collapsed
+   accordion; NO silent fallback — every upstream non-2xx logs [HARD-FAIL]
+   (server/ondemand.js:146/192/337). /api/health live: "predefined-gpt-5.6-sol+medium".
+   GLM 4.7 remains ONLY on its dedicated non-suite surfaces (quick-query constant).
+3. **PRIOR_KNOWLEDGE 5+5 verification (06:30Z).** EXISTS-BUT-BROKEN all CLOSED: brief-schema
+   pipeline (handoff.js:42+ defects-validated typed handoff); 5-plugin stack
+   (correlation.js:60-66 — perplexity/xsearch/reddit plugin-1748003575/igDownload
+   plugin-1762980461/igUserInfo plugin-1716164040; IG media wired at :426); workflow
+   versioning/diff (correlation.js:796 GET /api/correlation/diff/:iso + runStore supersede
+   versioning :325); model config sonnet/fable (brains.js BRAINS: kimi3/sonnet-5/opus-4.8/fable);
+   run-storage evidence-JSON download (CorrelationEngine.jsx:395 JSON button +
+   GET /api/oda/runs/:id full-run JSON). MISSING all CLOSED (edge extraction, weighting/dedupe/
+   contradictions, Connected Dots ForceGraph2D, GLM Quick Query, fable-5 policy w/
+   CE_MIN_DATA_POINTS=100 + enforceEvenBatch) — file:line table in NOTES.md.
+4. **Branding completed (06:35Z).** Suite sidebar already carries the official logo top-left
+   (Sidebar.jsx:40, oda-logo-bw.png; workspace OdaSidebar.jsx:86). NEW: document-cover
+   watermark added to the ODA builders — brandAsset.js exports ODA_WATERMARK_PATH
+   (public/oda-watermark-faded.png, pre-faded 10% alpha) and pptxBuilder.js + pdfBuilder.js
+   render it centre-right on covers with graceful degrade (suite exports.js already had it).
+   Asset provenance: bundled official ODA logo lineage (skills/design/assets/logo-oda.png);
+   oda.gov.ae / mediaoffice.abudhabi fetches were unreachable at asset-creation time
+   (ARCHITECTURE.md §1 log); public hotlink fallback via ODA_LOGO_URL chain unchanged.
+5. **Speech re-probe EN+AR with verdicts (06:33-06:36Z).** TTS text_to_speech: EN 200/3315ms,
+   AR 200/1686ms → **ADOPT** (ships; AudioPlayer live). STT speech_to_text: EN 400/508ms,
+   AR 400/189ms 'Unknown error' → **REJECT** (graceful 'speech unavailable' fallback retained).
+   Reddit plugin plugin-1748003575 as agent id → HTTP 400 invalidAgentIds → **REJECT** for
+   chat-attachment; it remains a CE evidence source key only. gpt-5.6-sol stream sanity:
+   200, TTFT 1305ms, 15 fulfillment frames → **ADOPT**. Full table in PLUGIN_TESTS.md.
+6. **8-feature E2E — 8/8 PASS on predefined-gpt-5.6-sol+medium (06:40-06:46Z).** Every feature
+   streamed a REAL first answer token over /api/chat SSE with thinking frames captured:
+   design 49.9s TTFA/35 think-frames, summary 32.2s/69, problem-solve 40.1s/37, benchmark
+   44.3s/47 (240s window — research phase), translate 2.8s (first token Arabic 'ت'), media
+   29.9s/2, action-titles 5.4s/0, country-data 38.4s/2. Report: e2e-8features JSON in NOTES.md.
+7. **Quality gates:** node --check on all 6 touched files, plan-mode contract tests 8/8,
+   vite build 7.88s clean, npm install restored (node_modules had been pruned).
+
+## 2026-07-25 — Plan Mode restoration + ROOT_CAUSES 1/2/8 fixes + OnDemand rebrand (feature/oda-workflow-overhaul)
+
+Master entry for the 2026-07-25 build pass (verification window 05:15–05:23 UTC; all items live-proven, evidence in PLUGIN_TESTS.md + tests/e2e-plan-mode.mjs report):
+
+1. **Plan Mode end-to-end restored (AUDIT.md RC-1..RC-6).** `raiseRunGate` is live again:
+   full-depth runs raise GLM-4.7-generated `clarification` gates (2–3 per run, interpreter
+   `clarifying_questions` field), chain one-at-a-time (`raiseNextClarification`), and on
+   completion GLM 4.7 synthesises the final optimised prompt (`synthesizeFinalPrompt` →
+   `run.finalPrompt`, injected into authoring as the OPTIMISED BRIEF block) before the
+   user-selected brain authors the deliverable. New `POST /api/oda/runs/:id/message`
+   (RC-5) answers the open gate or records a mid-run note (`handleRunMessage`).
+   Depth travels structurally (`request.depth`, RC-6); workspace chips submit (RC-2);
+   rail Open-decision rows are buttons (RC-3); suite chips fixed for the stale-closure
+   double-conversation bug (RC-4). `ODA_NEVER_PARK=1` env flag restores old behaviour.
+   **Live e2e proof 2026-07-25T05:20–05:22Z: 10/10 steps PASS** — create-run 201 (depth full),
+   `question.required` ×3 via real GLM, 3 gate POSTs 200, `final_prompt_ready` notice emitted,
+   engine resumed `skill.started`, snapshot showed 3 approved gates + clarifications persisted.
+   Fix found during e2e: `raiseRunGate` no longer self-transitions waiting_for_user→waiting_for_user
+   (was a 500 ODA_ILLEGAL_TRANSITION on the 2nd question of a chain).
+2. **ROOT_CAUSES Problem 1 (evidence/analysis skipped).** `interpreter.js` FAST no longer
+   deletes a planned evidence stage — a planned `data-scout` survives as a 2-node
+   `data-scout → author` pipeline when the edge is legal; `liveDeck.js` slide 4
+   (Recommendations) is no longer pre-filled at planning time and only fills from the
+   TERMINAL node's artifact; the empty Evidence card stamp is honest
+   ("Evidence stage ran — no claims extracted" vs "No external evidence required").
+3. **ROOT_CAUSES Problem 2 (benchmark before problem definition).** `sequencing.js` gains the
+   `problem-solve → benchmark` edge (validatePipeline accepts benchmark dependsOn problem-solve —
+   unit-proven); `orchestrator.js` executePipeline runs depth-0 ROOT nodes SEQUENTIALLY
+   (first root per iteration, `sequential_depth0` notice) so a root benchmark can no longer race
+   ahead; interpreter prompt reordered ("Both wanted → problem-solve FIRST, THEN benchmark
+   dependsOn it"); the restored pre-execution gate (item 1) parks full runs before execution.
+4. **ROOT_CAUSES Problem 8 (final-output grounding).** `autoArtifact.js` merges the newest
+   version of every upstream verified artifact (evidence pack, workbook, model) into the final
+   document input as capped appendix sections AND passes `runContext` {originalRequest,
+   clarifications, finalPrompt, evidence, assumptions} to `pluginDoc.js`, which renders a
+   RUN CONTEXT block into BOTH plugin instruction templates (doc/deck + xlsx).
+5. **Speech Services re-probe (PLUGIN_TESTS.md §2026-07-25).** TTS `text_to_speech` is now
+   SUBSCRIBED AND WORKING: EN 200/2526ms + AR 200/1608ms with hosted mp3 URLs
+   (old "Please subscribe" block gone). STT `speech_to_text` still fails 400
+   ("Unknown error" on every documented audioUrl variant; "Missing required body parameter
+   audioUrl" proves the contract) — graceful `SERVICE_*` fallback stays in place.
+6. **OnDemand rebrand + UI modernisation.** App chrome accents #159a7a/#1dac89 across
+   styles.css + oda.css (buttons, chips, focus rings, options pills, running states);
+   thinking accordion collapsed by default; options buttons busy-guarded; composer
+   bottom-anchored with auto-grow; ODA gold retained ONLY for document/deck content branding.
+   Logo: bundled official asset `public/oda-logo.png` (+ watermarks) referenced by the UI;
+   hosted-doc pipeline resolves a public logo URL via `ODA_LOGO_URL`/`PUBLIC_BASE_URL`/`VERCEL_URL`
+   with the bundled asset as fallback (`server/oda/builders/brandAsset.js:33-45`).
+7. **Model policy (verified this pass, NOT changed):** suite chat = GLM 4.7 Cerebras BYOI
+   `byoi-6e314690-4eaf-4def-a33c-380809acf1f5` + reasoningEffort low, streaming ON, thinking
+   tokens rendered in the collapsed accordion (`/api/health` live: `"model":"byoi-…+low"`).
+   The 2026-07-20 NOTES.md capture proved gpt-5.6-sol+low as a diagnostic config; the shipped
+   default remains the GLM BYOI policy from the same pass. FAST/FULL split, verify-gate
+   contract (`verifyOn = node.mode==='full'`, env `ODA_VERIFY` override) and the
+   never-invent-a-number rule are preserved verbatim.
+8. **Verification pass:** 8/8 suite features routing-probed live over `/api/chat` SSE
+   (design/summary/problem-solve/benchmark/translate/media/action-titles/country-data —
+   all HTTP 200, correct feature + plugin set + model tag, 2–74ms to routing frame,
+   2026-07-25T05:18:22Z); plan-mode unit tests 8/8; vite build clean.
+
 ## 2026-07-22 — ODA bilateral correlation core: cross-cluster UAE↔country mandate (checkpoint/correlation-engine-fixes)
 
 Master entry for the 3-commit ODA intelligence series:

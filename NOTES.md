@@ -1,5 +1,122 @@
 # NOTES.md — ODA Productivity Suite engineering log
 
+## 2026-07-25 22:15-22:30Z — Verification pass log
+
+- **STT real-audio round-trip:** TTS-generated EN/AR mp3s fed straight back to speech_to_text —
+  400 'Unknown error' both (22:18:02.585Z / .982Z). Failure is service-side (platform's own
+  hosted audio rejected). TTS ADOPT re-confirmed (200: EN 2378ms, AR 3489ms).
+- **Live TTFT probe (policy proof):** predefined-gpt-5.6-sol + reasoningEffort medium +
+  responseMode stream @22:25:44.719Z → first fulfillment token at **4097ms**; frame families
+  statusLog 2, heartbeat 2, fulfillment 24, metricsLog 1, [DONE] 1.
+- **Stamps landed:** ROOT_CAUSES P3 (partial, wall-clock gap honest), P5 (re-verified), P6
+  (by-design), P7 (full); PRIOR_KNOWLEDGE §5 — 10/10 items CLOSED with quotes; evidence tables
+  in the files themselves.
+
+
+## 2026-07-25 17Z — Section 19 Visual Intelligence: 16-scenario live validation matrix
+
+Live build: https://sb-hgyxlw16s5y5.vercel.run (sandbox sbx_VagOTu4mC3Z7VnxdpJJ8tyl18WTb,
+gpt-5.6-sol+medium, real OnDemand sessions). Evidence: /tmp agent JSONs + vi-shots/ screenshots.
+
+| # | Scenario | Result | TTFV/timing | Key evidence | ts |
+|---|---|---|---|---|---|
+| 1 | Hormuz → world focus + map + supporting | PASS | 5763ms | region 'Strait of Hormuz', hero map, 3 supporting | 2026-07-25T16:58Z |
+| 2 | Fujairah drift, visual continuity | PASS | 5846ms | continuity 'continue', region 'Fujairah, UAE' | 16:58Z |
+| 3 | Ghana–UAE full switch | PASS | 7589ms | continuity 'switch', director_ok log | 16:59Z |
+| 4 | Named leader → person card | PASS | 5999ms | kind person + validated Wikimedia image | 16:59Z |
+| 5 | Company → org card | PASS (after fix) | 5725ms | kind org + image, DP World | 17:12:06Z |
+| 6 | Historical event → timeline | PASS (after fix) | 6738ms | kind timeline + image, Suez 1956 | 17:12:00Z |
+| 7 | No-imagery → Section-13 fallback | PASS | 3355ms | card, image_url null, label 'typographic', fallback true | 16:59Z |
+| 8 | Pause visual mode | PASS | — | director: paused turn, mode label flips | 17:03Z |
+| 9 | Resume visual mode | PASS | 5038ms | director: ok after resume | 17:04Z |
+| 10 | Pin a visual | PASS | — | pinned tray renders 1 image card | 17:05Z |
+| 11 | Ask about displayed image | PASS | 4963ms | contextual Palm Jumeirah answer | 17:05Z |
+| 12 | Kill Session B → A unblocked | PASS | 4454ms turn | bStatus dead, session_b_killed→director_skipped_dead | 17:01Z |
+| 13 | Slow provider → graceful fallback | PASS | 12001ms (=cap) | bStatus timeout, EXACT 'AI-generated explanatory visual' | 17:01Z |
+| 14 | Duplicate images → dedup | PASS | 5707ms | urls_differ (blob vs wikimedia Burj Khalifa) | 17:02Z |
+| 15 | AI label exact string | PASS | 6251ms | strict equality 'typographic' variant (no pool asset needed) | 17:02Z |
+| 16 | Restricted doc tenancy block | PASS | 4022ms | bStatus tenancy_blocked, hero.blocked, restricted-doc log | 17:02Z |
+
+Defects found+fixed during validation: Director kind downgrades (S5/S6) → mandatory
+kind-selection prompt rules + normaliseHeroKind() guard, hot-redeployed, re-tested green.
+Browser harness note: run-1 S9-S11 'fails' were a selector bug (nested divs matched the
+status prefix) — fixed by counting LEAF status divs; run-2 5/5.
+
+
+## 2026-07-25 06:20-06:55Z — Checkpoint-resume verification log (subagent pass)
+
+**Policy restore proof:** /api/health at 06:40:02.930Z → `{"ok":true,"model":"predefined-gpt-5.6-sol+medium","keyLoaded":true}`.
+Boot line: `[oda-suite] listening on 0.0.0.0:8080 · model predefined-gpt-5.6-sol+medium · plugins: 10 adopted`.
+
+**8-feature E2E (real /api/chat SSE, first streamed fulfillment token per feature):**
+
+| Feature | HTTP | TTFA (ms) | Think frames | First token | Started (UTC) |
+|---|---|---|---|---|---|
+| design | 200 | 49932 | 35 | `<section` | 06:40:12Z |
+| summary | 200 | 32198 | 69 | `**` | 06:41:02Z |
+| problem-solve | 200 | 40076 | 37 | `#` | 06:41:35Z |
+| benchmark | 200 | 44339 | 47 | `#` | 06:44:41Z (240s window retry — 90s window insufficient for the research phase) |
+| translate | 200 | 2810 | 0 | `ت` (Arabic) | 06:42:57Z |
+| media | 200 | 29875 | 2 | `##` | 06:43:00Z |
+| action-titles | 200 | 5403 | 0 | `**` | 06:43:30Z |
+| country-data | 200 | 38384 | 2 | `##` | 06:43:36Z |
+
+8/8 PASS — routing frame echoed the forced feature + `predefined-gpt-5.6-sol+medium` on every run;
+thinking deltas captured on the wire (collapsed-accordion channel) wherever the model emitted them.
+
+**Problem-1 residual fixes (heuristic/normalise/evidence) probes:**
+- FULL deck heuristic → `["data-scout<-","model<-n1","design<-n2"]`; FULL problem-solve →
+  `["data-scout<-","problem-solve<-n1"]`; FAST problem-solve → single node (unchanged).
+- extractEvidenceClaims sample draft → 6 pattern hits (old single regex: ~0).
+- plan-mode contract tests stayed 8/8 after all edits.
+
+**PRIOR_KNOWLEDGE 5+5 evidence table (verified this pass):**
+| Item | Status | Evidence |
+|---|---|---|
+| B1 brief-schema pipeline | CLOSED | handoff.js:42-57 defects-validated typed handoff (throws on defects) |
+| B2 5-plugin stack (IG+Reddit) | CLOSED | correlation.js:60-66 PLUGINS registry incl. reddit plugin-1748003575, igDownload plugin-1762980461, igUserInfo plugin-1716164040; IG media wired :426 |
+| B3 workflow versioning/diff | CLOSED | correlation.js:796 /api/correlation/diff/:iso; runStore.js:325 artifact supersede versioning |
+| B4 model config sonnet/fable | CLOSED | brains.js BRAINS {kimi3, sonnet-5, opus-4.8, fable}; env.js FABLE_5_MAX/FALLBACK |
+| B5 evidence-JSON download | CLOSED | CorrelationEngine.jsx:395 JSON download button; GET /api/oda/runs/:id full-run JSON |
+| M1 edge extraction | CLOSED | correlation.js:4-5 no-edge-without-evidence rule; :238 merged edge build |
+| M2 weighting/dedupe/contradictions | CLOSED | correlation.js:216-251 (weight = .35 count + .25 diversity + .20 recency + .20 conf); intelligence/weighting.js |
+| M3 Connected Dots | CLOSED | CorrelationGraph.jsx:2 ForceGraph2D import; :142 nodeCanvasObject; :83-91 zoomToFit |
+| M4 GLM Quick Query | CLOSED | QuickQuery.jsx; correlation.js:598 GLM endpoint + :922 /api/quick-query |
+| M5 sonnet-5/fable-5 policy | CLOSED | env.js:89-121 fable primary/fallback + CE_MIN_DATA_POINTS=100 clamp; dataFetch.js:82 enforceEvenBatch |
+| L1 sidebar logo top-left | CLOSED | Sidebar.jsx:40 (suite) + OdaSidebar.jsx:86 (workspace) |
+| L2 cover watermark | CLOSED THIS PASS | exports.js:14 (suite, pre-existing); NEW brandAsset.js ODA_WATERMARK_PATH + pptxBuilder/pdfBuilder cover render |
+
+
+## 2026-07-25 Plan Mode gate chain — LIVE e2e verification log (05:15–05:23 UTC)
+
+**What ran (all against the local server, real OnDemand API, key ****JZuA):**
+- `/api/health` 200 → `"model":"byoi-6e314690-4eaf-4def-a33c-380809acf1f5+low"` (GLM 4.7 BYOI policy live).
+- **8-feature routing probe** over `/api/chat` (SSE, one POST per feature, forced-feature path):
+  all 8 returned HTTP 200 + a correct `routing` frame (feature echo, plugin set from
+  server/plugins.js, model tag) in 2–74 ms — design, summary, problem-solve, benchmark,
+  translate, media, action-titles, country-data. Full JSON in the run report.
+- **Plan-mode e2e (tests/e2e-plan-mode.mjs) 10/10 PASS** at 2026-07-25T05:20:16Z→05:22Z:
+  POST /api/oda/runs (depth:"full", output:"deck") → 201; SSE emitted `request.interpreted`
+  with `clarifying_questions: 3` (REAL GLM output: "What is the primary focus of the briefing
+  deck?" + options); `question.required` gate 1 → POST gates/{id} 200 → gates 2, 3 chained
+  (each parked, no illegal transition); after gate 3: `skill.progress` notice
+  `final_prompt_ready` (GLM synthesised the optimised brief) then `skill.started` — engine
+  resumed; POST /runs/:id/message 200 (mid-run note recorded); run snapshot: 3 approved
+  gates, clarifications:3, finalPrompt key present, status executing; cancel 200.
+- **Bug found by the harness and fixed:** the SECOND clarification of a chain raised while
+  the run was already parked → `transition(waiting_for_user → waiting_for_user)` threw
+  ODA_ILLEGAL_TRANSITION (HTTP 500 on gate 1's resolution). Fix: `raiseRunGate` only
+  transitions when `run.status !== 'waiting_for_user'` (orchestrator.js). Re-run: green.
+- **Speech re-probe:** TTS EN/AR now 200 with hosted mp3 (subscribe block lifted);
+  STT still 400 on every documented `audioUrl` form — see PLUGIN_TESTS.md §2026-07-25 for
+  the full table (status/latency/ISO ts per probe). server/speech.js fallback unchanged.
+
+**Thinking-token rendering note (UI spec):** the suite accordion now defaults COLLAPSED
+(`Messages.jsx effectiveOpen = userToggled ? open : false`) with the live pulse dot while
+streaming — thinking deltas still captured from planning_thinking/step_thinking/
+fulfillment_thinking exactly as before; only the default visibility changed.
+
+
 ## 2026-07-20 Model switch — ALL non-workflow calls → GLM 4.7 Cerebras BYOI (default reasoningEffort 'low')
 
 **Registry verification (live, `GET /config/v1/public/endpoints`, fetched 2026-07-20T20:57:56Z UTC):**

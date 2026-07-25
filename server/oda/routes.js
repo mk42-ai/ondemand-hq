@@ -7,7 +7,7 @@
 import express from 'express';
 import * as runStore from './runStore.js';
 import { subscribe, subscriberCount } from './events.js';
-import { startRun, resolveGateAndContinue } from './orchestrator.js';
+import { startRun, resolveGateAndContinue, handleRunMessage } from './orchestrator.js';
 import { listManifests, getManifest, COMPAT_ROUTES } from './manifests.js';
 import { ALLOWED_EDGES } from './sequencing.js';
 import { describeModelConfig, getCallLog, getCallStats } from './models.js';
@@ -79,12 +79,15 @@ router.post('/interpret/heuristic', (req, res) => {
 // ---------------------------------------------------------------------------
 
 router.post('/runs', asyncH(async (req, res) => {
-  const { text, attachments = [], externalUserId = 'oda-user', brain = null, output = 'auto' } = req.body || {};
+  const { text, attachments = [], externalUserId = 'oda-user', brain = null, output = 'auto', depth = null } = req.body || {};
   if (!text || typeof text !== 'string') return res.status(400).json({ error: 'text (string) is required' });
   // Explicit Output selection forces the final format downstream (Document → PDF,
   // Deck → PPTX, Data/Model → XLSX); an unknown value degrades to 'auto'.
   const OUTPUT_CHOICES = new Set(['auto', 'deck', 'document', 'data', 'model']);
   const outputChoice = OUTPUT_CHOICES.has(String(output)) ? String(output) : 'auto';
+  // Explicit Depth selection overrides the interpreter's fast/full judgement;
+  // an unknown value degrades to null (interpreter decides).
+  const depthChoice = depth === 'fast' || depth === 'full' ? depth : null;
   // Brain validation (live-render upgrade): unknown brains are a 400, never a
   // silent fallback; forbidden endpoints throw per the central guard.
   let brainId = null;
@@ -96,7 +99,7 @@ router.post('/runs', asyncH(async (req, res) => {
       return res.status(400).json({ error: err.message, code: err.code || 'ODA_UNKNOWN_BRAIN' });
     }
   }
-  const run = runStore.createRun({ text, attachments, externalUserId, brain: brainId, output: outputChoice });
+  const run = runStore.createRun({ text, attachments, externalUserId, brain: brainId, output: outputChoice, depth: depthChoice });
   // (runStore.createRun already emits run.created — exactly one frame per state change.)
   // Fire the engine asynchronously — the client follows progress on the SSE stream.
   startRun(run).catch((err) => console.error(`[oda-routes] startRun ${run.runId}: ${err.message}`));
@@ -144,6 +147,21 @@ router.post('/runs/:id/gates/:gateId', asyncH(async (req, res) => {
   try {
     await resolveGateAndContinue(run, req.params.gateId, { approved: Boolean(approved), choice, edits });
     res.json({ runId: run.runId, status: run.status, gate: run.gates.find((g) => g.gateId === req.params.gateId) });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+}));
+
+// Mid-run conversational input (AUDIT RC-5): answers the open gate when one
+// exists, otherwise records the text as run context for the next stage.
+router.post('/runs/:id/message', asyncH(async (req, res) => {
+  const run = runStore.getRun(req.params.id);
+  if (!run) return notFound(res, 'run');
+  const { text } = req.body || {};
+  if (!text || typeof text !== 'string' || !text.trim()) return res.status(400).json({ error: 'text (string) is required' });
+  try {
+    await handleRunMessage(run, text.trim());
+    res.json({ runId: run.runId, status: run.status, openGates: openGates(run) });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }

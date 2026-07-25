@@ -192,3 +192,49 @@ Five of the eight problems intersect at two commits:
 - **`88bf693` (2026-07-25 00:20:22 +0530, misleadingly titled "added log level fixes")** — introduced fast-collapse pipelines (P1), fast-model authoring + plugin-built finals with 12k truncation (P8), and the sequential imagery/hosted-doc completion tail (P3).
 
 The repository has no test suite for `server/oda/*` (only `tests/{interaction,regression,voice}.test.mjs` and `test/world.test.mjs` targeting other subsystems; `package.json` defines no `test` script), so none of these regressions were caught mechanically.
+
+
+---
+
+# RESOLUTIONS (2026-07-25)
+
+- **Problem 1 — RESOLVED 2026-07-25T06:28Z.** enforceOutputClass fast-collapse keeps planned
+  evidence stages (05:06Z); liveDeck Recommendations gated to the terminal node + honest Evidence
+  stamp (05:06Z); heuristicInterpret multi-node FULL pipelines, normaliseControl illegal-graph
+  REPAIR (drop only illegal edges), and the 4-pattern extractEvidenceClaims() replacing the
+  never-matching '**fact**' regex (06:28Z). Verified: FULL heuristic probes return multi-node
+  chains; extractor hits 6/6 tag shapes on sample; 8/8 contract tests green.
+- **Problem 2 — RESOLVED 2026-07-25T05:09Z.** problem-solve→benchmark edge added (validatePipeline
+  accepts, unit-proven); depth-0 roots sequential (sequential_depth0 notice); interpreter prompt
+  reordered; pre-execution gate restored (raiseRunGate live, orchestrator.js:226-227).
+- **Problem 4 (gates) — RESOLVED 2026-07-25 (prior pass).** Clarification gate chain + GLM 4.7
+  final-prompt synthesis + POST /runs/:id/message; e2e 10/10 with 3 real gates answered.
+- **Problem 8 — RESOLVED 2026-07-25T05:12Z.** autoArtifact merges newest upstream verified
+  artifacts as appendix sections + passes runContext {originalRequest, clarifications,
+  finalPrompt, evidence, assumptions}; pluginDoc renders the RUN CONTEXT block in both templates.
+- **Problem 3 — PARTIALLY RESOLVED, verified 2026-07-25T22:20Z.** Bounded-execution controls at
+  HEAD e56acfd: 90s upstream-stall watchdog (`server/ondemand.js:263-264 STALL_MS = 90000`),
+  verifier revise cap `REVISE_POLICY {maxReviseLoops: 2}` + `shouldEscalate` (`server/oda/verifier.js:361-369`),
+  never-park verifier escalation (ships instead of looping), boot orphan sweep marking dead
+  in-flight runs failed (`server/oda/runStore.js:150-165`), sequential depth-0 execution
+  (`orchestrator.js` sequential_depth0). HONEST GAP: no TOTAL per-run wall-clock cap exists
+  (grep RUN_MAX/wallClock/runTimeout → none) — a pathologically slow model can still extend a
+  run; every individual stage is bounded but the sum is not. Flagged as future work.
+- **Problem 5 — RESOLVED 2026-07-25 (re-verified at HEAD e56acfd, 22:15Z).** Mid-run message
+  channel live end-to-end: `POST /runs/:id/message` (`server/oda/routes.js:157`),
+  `handleRunMessage` (`server/oda/orchestrator.js:351`), composer answers the ACTIVE run when
+  parked (`src/oda/OdaWorkspace.jsx:43 runIsWaiting`, `:56 sendMessage`; hook
+  `src/oda/useOdaRun.js:254`), answering affordance (`src/oda/OdaSidebar.jsx:125`).
+- **Problem 6 — RESOLVED BY DESIGN, verified 2026-07-25T22:20Z.** Rendering is no longer
+  constrained to four cards: 14 per-skill stage renderers exist (`src/oda/stages/` — 15 STAGES
+  incl. idle/failed in `src/oda/stageMap.js:7-23`), gates route to their owning canvases
+  (`stageMap.js:52-71`). The four-slide LIVE DECK remains as the intentional universal live
+  render while executing (`stageMap.js:82` preemption) — a design decision, not a constraint:
+  gate/completed/failed states always reach the per-skill canvases.
+- **Problem 7 — RESOLVED, verified 2026-07-25T22:20Z.** Visible state mirrors backend state:
+  durable event log with SSE seq replay (`server/oda/events.js:8, :112 subscribe(since)`),
+  single-source status graph `LEGAL_TRANSITIONS` (`runStore.js:192-204`, illegal moves throw),
+  one-frame-per-state-change emits (7 emitRunEvent sites in runStore) + write-through persistence
+  (12 persist(run) sites), boot orphan sweep eliminates stranded 'Executing' ghosts
+  (`runStore.js:150-165`), optimistic UI updates reconciled by authoritative SSE
+  (`useOdaRun.js` resolveGate/sendMessage).

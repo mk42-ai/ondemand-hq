@@ -246,3 +246,152 @@ Model logged per run (`run.model`) and per call in PLUGIN_TESTS.md.
 - `QuickQuery.jsx` — ⚡ floating card: EN/AR context chips, micro prompt, streaming
   answer, latency+TTFT stamps, 'Continue in chat →' handoff.
 - Mounted in `src/intel/CountryPage.jsx` as the `Correlation Engine` tab.
+
+
+---
+
+## 12 · 2026-07-25 addendum — Plan Mode gate chain + grounding fixes (feature/oda-workflow-overhaul)
+
+**Run engine (server/oda/):** full-depth runs now PARK before execution. GLM 4.7 emits
+`clarifying_questions` in the interpreter control JSON; `startRun` builds
+`run.pendingClarifications` and raises them one-at-a-time as `clarification` gates
+(`raiseNextClarification`); `resolveGateAndContinue` records each answer, chains the next
+question, and — once all are answered — calls `synthesizeFinalPrompt` (GLM 4.7) whose output
+(`run.finalPrompt`) rides into worker authoring as the OPTIMISED BRIEF block and into the
+hosted-doc plugin prompt. `POST /api/oda/runs/:id/message` feeds mid-run user text to the open
+gate (or records a note). Depth is a structured run field (`request.depth`) that overrides the
+GLM mode guess. `ODA_NEVER_PARK=1` restores never-park behaviour.
+
+**Sequencing:** `problem-solve → benchmark` is a legal edge; depth-0 roots execute
+sequentially (first root per engine iteration) so evidence/definition lands before sibling
+roots build their briefs.
+
+**Final-document grounding:** `packageRunArtifact` merges the newest upstream verified
+artifacts as appendix sections and passes `runContext` (original request, clarifications,
+finalPrompt, evidence, assumptions) to `generateHostedDoc`, which renders it as a RUN CONTEXT
+block in the plugin instruction.
+
+**Speech:** TTS (`text_to_speech`) is subscribed and live (EN+AR 200, hosted mp3). STT remains
+400 on this key — `server/speech.js` keeps the structured SERVICE_* fallback.
+
+**Chrome:** OnDemand accent tokens `#159a7a`/`#1dac89` drive interactive chrome in both
+surfaces; ODA gold remains the document/deck content brand. Thinking accordion collapsed by
+default; routing trace card, step-wizard panel, plugin-naming skeletons unchanged.
+
+Verification: plan-mode unit tests 8/8; live e2e 10/10 (3-gate chain → final prompt → engine
+resume); 8/8 feature routing probes; vite build clean. Evidence: CHANGELOG.md 2026-07-25 entry,
+PLUGIN_TESTS.md §2026-07-25, NOTES.md §2026-07-25.
+
+
+---
+
+## 13 · 2026-07-25 (06Z) addendum — model policy restore, watermark, Problem-1 residuals
+
+**Model policy (authoritative):** every suite call — router classify, all 8 workers, wizard,
+MSM analyse — runs `predefined-gpt-5.6-sol` + TOP-LEVEL `reasoningEffort:"medium"`, streaming ON,
+thinking tokens rendered in the collapsed accordion. No silent fallback: upstream non-2xx →
+`[HARD-FAIL]` log + UI error with retry (server/ondemand.js:146/192/337). GLM 4.7 BYOI remains
+ONLY on its dedicated CE quick-query surface (env.js GLM_47_QUICK_ENDPOINT_ID). CE data
+population stays fable-5-medium per CORRELATION_TESTS.md (primary fable-5, fallback via
+CE_DATAFETCH_ENDPOINT_ID, floor CE_MIN_DATA_POINTS=100, even-batch enforced).
+
+**Feature→plugin map (re-verified 06:40Z, unchanged ids):** design → GPT Image 2 + Internet +
+Perplexity · summary → File Directory + Web Extractor · problem-solve → Internet + Perplexity +
+GPT Search · benchmark → Perplexity + Internet + Tavily · translate → LLM-direct · media →
+Perplexity + Internet + GPT Image 2 · action-titles → LLM-direct · country-data → direct
+WDI/GHO/SDG + Internet fallback. Speech: TTS ADOPTED (EN+AR 200); STT REJECTED (400) behind the
+graceful fallback. Reddit: CE evidence-source key only — NOT chat-attachable (400 invalidAgentIds).
+
+**Mode logic / verify gate (unchanged contracts):** FAST = compressed single pass; FULL = gates +
+verification (`verifyOn = node.mode==='full'`, env ODA_VERIFY override); never-invent rule intact.
+Plan Mode gate chain (clarification gates → GLM final-prompt synthesis) per §12.
+
+**Pipeline shape guarantees (Problem 1 closed end-to-end):** GLM plans, the depth override, the
+heuristic fallback AND the illegal-graph repair path now ALL yield evidence-bearing multi-node
+pipelines in FULL mode; evidence extraction matches 4 tag shapes; Recommendations fill only from
+the terminal node; the Evidence card stamp is honest.
+
+**Branding:** official-lineage logo top-left in both sidebars (Sidebar.jsx:40, OdaSidebar.jsx:86);
+document-cover watermark on ALL export paths — suite exports.js:14 + ODA builders via
+brandAsset.js ODA_WATERMARK_PATH (pre-faded public/oda-watermark-faded.png), graceful degrade.
+
+
+---
+
+## 14 · 2026-07-25 (17Z) addendum — Real-time Visual Intelligence (Section 19, dual-session) `[ts: 2026-07-25T17:13:00Z]`
+
+**Dual-session flow (per conversation):**
+
+```
+User turn ──> POST /api/visual-intel/turn {viId, text}
+                     │
+        ┌────────────┴─────────────────────────────┐
+        ▼ (always)                                  ▼ (unless paused/dead/blocked)
+  Session A — primary assistant             Session B — Visual Intelligence Director
+  real OnDemand chat session                real OnDemand chat session (SILENT)
+  gpt-5.6-sol + medium, answers user        gpt-5.6-sol + low, emits STRICT JSON only
+        │                                           │  Promise.race vs 12 000 ms cap
+        │                                           ▼
+        │                                   Director JSON → resolveVisual():
+        │                                   normaliseHeroKind (schema guard) →
+        │                                   Wikimedia image pick → HEAD/1-byte GET
+        │                                   validation → per-session dedup (shown set)
+        │                                   → fallback card if anything fails
+        ▼                                           ▼
+  { answer, aOk }  +  { visual, bStatus, ttfvMs }  → one JSON response; A NEVER waits on B's
+                                                     failure (timeout/error/kill = fallback card)
+```
+
+**Visual Director JSON schema (Session B contract):**
+```json
+{"topic":   {"id":"kebab-topic","continuity":"continue|drift|switch"},
+ "world_focus":{"region":"str|null","lat":0.0,"lng":0.0,"zoom":1.0},
+ "hero":    {"kind":"map|photo|person|org|timeline|card","title":"<=70","subtitle":"<=90",
+             "image_query":"str|null","label":"str|null"},
+ "supporting":[{"kind":"photo|card","title":"<=60","image_query":"str|null"}],
+ "confidence":0.0}
+```
+Hero-kind selection is MANDATORY (mechanical first-match rules in the prompt) and additionally
+enforced server-side by `normaliseHeroKind()` — a dated historical event can never ship as a
+plain card. Shipped hero adds `image_url` (validated), `fallback`, `blocked` as applicable;
+fallback labels are EXACTLY `AI-generated explanatory visual` (pool asset) or `typographic`.
+
+**Feature → source map:** hero/supporting imagery → Wikimedia Commons API (keyless, attributable,
+800px thumbs) with URL validation + dedup; map heroes → client world-focus render (no external
+image); AI/fallback cards → pre-generated pool assets (session blob URLs) labeled exactly;
+restricted internal docs (`oda-internal/*`, `chairman-briefing-private`, `restricted:*`) →
+tenancy-blocked card, never fetched. Assistant answers → Session A (suite model policy).
+
+**Changed files (this feature):** `server/visualIntel.js` (NEW — state, dual sessions, director,
+resolver, 6 routes, observability ring) · `server/index.js` (+6 lines: route mount) ·
+`src/intel/VisualIntel.jsx` (NEW — chat column + visual canvas, pause/resume, pin,
+ask-about-this, testids) · `src/App.jsx` (lazy import + /visual-intel deep-link state/popstate/
+render branch).
+
+**Env vars:** `ONDEMAND_API_KEY` (required; `ON_DEMAND_API_KEY` fallback — server-side only,
+never in dist) · `ONDEMAND_BASE_URL`/`ON_DEMAND_BASE_URL` · `VOICE_ENDPOINT_ID` (voice module,
+default GLM 4.7 BYOI slug; `VOICE_FALLBACK_ENDPOINT` empty = no fallback) ·
+`WORLD_INTEL_WORKFLOW_ID` (default `6a5d90228a845853270b9b53`) · suite policy `CHAT_ENDPOINT_ID`/
+`CHAT_REASONING_EFFORT` (default predefined-gpt-5.6-sol + medium).
+
+**Routes:** `POST /api/visual-intel/session|turn|mode|kill-b|pin` · `GET /api/visual-intel/logs/:viId`.
+**Observability:** per-session 200-entry ring (`session_a/b_created`, `director_ok|timeout|error|
+bad_json|skipped_paused|skipped_dead`, `dedup_dropped`, `image_validation_failed`,
+`tenancy_blocked`, `visual_pinned`, `mode_changed`, `session_b_killed`, `turn_complete`).
+
+**Section-19 validation (2026-07-25, LIVE build sb-hgyxlw16s5y5): 16/16 scenarios PASS** —
+API scenarios via real OnDemand sessions (agents 1+2), UI scenarios via real headless-Chromium
+clicks; TTFV 3.4–7.6 s; evidence: NOTES.md §2026-07-25-17Z matrix + vi-shots/ screenshots.
+
+
+---
+
+## 15 · 2026-07-25 (22Z) verification addendum
+
+Speech: TTS EN/AR ADOPT re-confirmed (200 @22:17Z, fresh hosted mp3); STT EN/AR REJECT
+re-confirmed with a REAL round-trip (the platform's own TTS output 400s — service-side gap,
+`server/speech.js` SERVICE_* fallback remains the shipped contract). Model policy: gpt-5.6-sol +
+medium + streaming enforced (env.js:62, ondemand.js:174) with thinking rendered separately in
+the collapsed accordion (Messages.jsx:126); live TTFT 4097ms @22:25:44.719Z. ROOT_CAUSES
+Problems 3/5/6/7 and all 10 PRIOR_KNOWLEDGE items now carry in-file resolution stamps with
+file:line evidence (P3 keeps one honest open gap: no total per-run wall-clock cap).

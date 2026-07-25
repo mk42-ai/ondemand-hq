@@ -114,13 +114,16 @@ export function ToolCallLine({ call, index = 0 }) {
 }
 
 /* ---------- STEP 4: thinking accordion ---------- */
+// eslint-disable-next-line no-unused-vars
 export function ThinkingAccordion({ thinking, live, forceOpenWhileLive }) {
   const [open, setOpen] = useState(false);
   const [userToggled, setUserToggled] = useState(false);
   const bodyRef = useRef(null);
 
-  // Live-streaming while open by default; auto-collapse when the answer starts (live=false)
-  const effectiveOpen = userToggled ? open : (live && forceOpenWhileLive);
+  // 2026-07-25 UX research pass: collapsed by DEFAULT — the pulsing dot +
+  // 'Thinking…' header is the live signal; users expand manually. The
+  // forceOpenWhileLive prop is kept for API compat but intentionally ignored.
+  const effectiveOpen = userToggled ? open : false;
 
   useEffect(() => {
     if (effectiveOpen && bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
@@ -205,7 +208,7 @@ export function PluginSkeleton({ label }) {
 }
 
 /* ---------- assistant message ---------- */
-export function AssistantMessage({ msg, live, onOption, onExport, exportBusy, artifacts, onRetry }) {
+export function AssistantMessage({ msg, live, busy, onOption, onExport, exportBusy, artifacts, onRetry }) {
   const { body, options, trace } = dissect(msg.text || '');
   const showExports = !live && (msg.text || '').length > 120;
   return (
@@ -232,7 +235,8 @@ export function AssistantMessage({ msg, live, onOption, onExport, exportBusy, ar
       {live && <span className="cursor-blink" />}
       {!live && options.length > 0 && (
         <div className="options">
-          {options.map((o, i) => <button key={i} onClick={() => onOption?.(o)}>{o}</button>)}
+          {/* Re-entrancy defect fix: option taps are inert while a stream is in flight */}
+          {options.map((o, i) => <button key={i} disabled={busy} onClick={() => onOption?.(o)}>{o}</button>)}
         </div>
       )}
       {(msg.artifactIds || []).map(id => artifacts[id] && <ArtifactCard key={id} artifact={artifacts[id]} />)}

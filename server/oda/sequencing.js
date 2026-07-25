@@ -40,6 +40,11 @@ const CORE_EDGES = [
   ['storyline', 'design'],
   ['benchmark', 'storyline'],
   ['benchmark', 'problem-solve'],
+  // ROOT_CAUSES Problem 2 fix (2026-07-25): benchmark may now CONSUME a
+  // confirmed problem definition — without this edge any GLM plan where
+  // benchmark dependsOn problem-solve failed validatePipeline and collapsed
+  // to a single node, so benchmark could structurally never run after it.
+  ['problem-solve', 'benchmark'],
   ['data-scout', 'problem-solve'],
   ['problem-solve', 'data-scout'],
   ['data-scout', 'model'],

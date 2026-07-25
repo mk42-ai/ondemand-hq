@@ -12,6 +12,9 @@
   --od-green: #159a7a;
   --od-green-bright: #ffffff;
   --od-green-soft: #E3F4EF;
+  --od-accent: #159a7a;         /* canonical OnDemand accent */
+  --od-accent-2: #1dac89;       /* accent hover / active tone */
+  --od-accent-soft: rgba(21, 154, 122, .10);
   --gold: #159a7a;         /* accent remapped to OnDemand green (legacy var name kept for low-risk restyle) */
   --gold-soft: #E3F4EF;    /* soft green wash */
   --mist: #CBDCE6;
@@ -37,14 +40,14 @@
   --btn-h: 38px;
   --btn-h-sm: 30px;
   --btn-px: 16px;
-  --btn-primary-bg: #1a1a1a;
-  --btn-primary-bg-hover: #333333;
+  --btn-primary-bg: var(--od-accent);
+  --btn-primary-bg-hover: var(--od-accent-2);
   --btn-primary-fg: #ffffff;
   --btn-secondary-bg: #ffffff;
   --btn-secondary-fg: var(--ink);
   --btn-secondary-border: #d9dce0;
   --btn-secondary-bg-hover: #f5f6f7;
-  --btn-focus-ring: 0 0 0 3px rgba(26, 26, 26, 0.12);
+  --btn-focus-ring: 0 0 0 3px rgba(21, 154, 122, 0.18);
   --font-title: 'Lora', 'Noto Naskh Arabic', Georgia, serif;
   --sidebar-w: 280px;
 }
@@ -711,11 +714,12 @@ textarea, input { font-family: inherit; }
 /* Options chips (wizard tappable answers) */
 .options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .options button {
-  padding: 8px 15px; border-radius: 10px; font-size: 13px;
-  border: 1px solid var(--gold); background: #fff; color: var(--ink);
-  transition: background .15s;
+  padding: 8px 16px; border-radius: 999px; font-size: 13px;
+  border: 1px solid var(--od-accent); background: #fff; color: var(--ink);
+  transition: background .15s ease, border-color .15s ease;
 }
-.options button:hover { background: var(--gold-soft); }
+.options button:hover:not(:disabled) { background: var(--od-accent-soft); border-color: var(--od-accent-2); }
+.options button:disabled { opacity: .45; cursor: not-allowed; }
 
 /* ============ STEP 8 — States ============ */
 .skel { display: flex; align-items: center; gap: 10px; padding: 10px 0; color: var(--ink-55); font-size: 13px; }

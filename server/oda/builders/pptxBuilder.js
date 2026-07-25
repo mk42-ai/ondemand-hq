@@ -7,7 +7,7 @@
 import PptxGenJS from 'pptxgenjs';
 import fs from 'node:fs';
 import { COLORS, FONTS, PPTX_LAYOUT, GEOMETRY, sourcesLine, truncateAtWord, isRtl, isBilingual } from './theme.js';
-import { ODA_LOGO_PATH } from './brandAsset.js';
+import { ODA_LOGO_PATH, ODA_WATERMARK_PATH } from './brandAsset.js';
 
 const MAX_TITLE = 110;
 const MAX_BULLETS = 8;
@@ -120,6 +120,13 @@ async function writeDeck(spec, plan, outPath) {
     }
 
     if (s.kind === 'cover') {
+      // Subtle document-cover watermark (UI spec) — pre-faded asset, centre-
+      // right, behind the cover text; degrades silently when absent.
+      if (ODA_WATERMARK_PATH) {
+        try {
+          slide.addImage({ path: ODA_WATERMARK_PATH, x: W * 0.58, y: 1.6, w: 4.2, h: 4.2, sizing: { type: 'contain', w: 4.2, h: 4.2 } });
+        } catch { /* skip on any image error */ }
+      }
       // Four elements only: gold rule + wordmark · title · subtitle · date,
       // plus an optional hero image on the right panel.
       const hero = s.heroImage && s.heroImage.dataUri ? s.heroImage : null;

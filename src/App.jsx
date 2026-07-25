@@ -13,6 +13,8 @@ import IntelDashboard from './intel/IntelDashboard.jsx';
 import MsmDashboard from './msm/MsmDashboard.jsx';
 // ODA Workspace (Phase 3) — lazy-loaded so the suite home bundle stays lean.
 const OdaWorkspace = React.lazy(() => import('./oda/OdaWorkspace.jsx'));
+// Visual Intelligence (Section 19) — lazy: dual-session assistant + visual director.
+const VisualIntel = React.lazy(() => import('./intel/VisualIntel.jsx'));
 import { ArrowDown, X, AlertTriangle } from 'lucide-react';
 import { dissect } from './markdown.jsx';
 
@@ -52,6 +54,10 @@ export default function App() {
   const [msmOpen, setMsmOpen] = useState(() => {
     try { return window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'; } catch { return false; }
   });
+  // Visual Intelligence — /visual-intel route (Section 19), deep-linkable.
+  const [viOpen, setViOpen] = useState(() => {
+    try { return window.location.pathname.replace(/\/+$/, '') === '/visual-intel'; } catch { return false; }
+  });
   // ODA Workspace (Phase 3) — /oda route, deep-linkable; the suite home
   // (executive brief + per-skill quick starts) is preserved untouched at '/'.
   // One universal workspace: /oda (legacy /oda/live deep links land here too —
@@ -64,15 +70,16 @@ export default function App() {
   });
   useEffect(() => {
     if (connectorCallback) return;
-    const want = odaOpen ? '/oda' : (msmOpen ? '/msm-analysis' : '/');
+    const want = odaOpen ? '/oda' : (msmOpen ? '/msm-analysis' : (viOpen ? '/visual-intel' : '/'));
     try { if (window.location.pathname !== want) window.history.pushState({}, '', want); } catch { /* noop */ }
-  }, [msmOpen, odaOpen, connectorCallback]);
+  }, [msmOpen, odaOpen, viOpen, connectorCallback]);
   useEffect(() => {
     const onPop = () => {
       try {
         const p = window.location.pathname.replace(/\/+$/, '');
         setConnectorCallback(p === '/connector/auth/callback');
         setMsmOpen(p === '/msm-analysis');
+        setViOpen(p === '/visual-intel');
         setOdaOpen(/^\/oda(\/live)?$/.test(p));
       } catch { /* noop */ }
     };
@@ -234,9 +241,16 @@ export default function App() {
 
   /* ---------- send ---------- */
   const send = async (text, fileId = null, fileName = null, extra = {}) => {
-    let convId = activeId;
+    if (busy) return; // re-entrancy guard — one in-flight stream at a time
+    // RC-4 fix: callers that just created a conversation (chips, handoffs) pass the id
+    // explicitly so we never read a stale activeId (null) and open a SECOND conversation.
+    let convId = extra.convId || activeId;
     if (!convId) convId = await newChat(pendingTool || 'chat');
     if (!convId) return;
+    // RC-4 fix (wizard): chip-started wizard flows send before the setWizard state
+    // update has flushed — honour an explicit override from the caller.
+    const wizardActive = extra.wizardActive ?? wizard.active;
+    const wizardStep = extra.wizardStep ?? wizard.step;
 
     // Re-affirm connector selection for this conversation after convId is known.
     // This beats a race where the activeId effect loads [] from storage before the
@@ -279,7 +293,7 @@ export default function App() {
       fileId,
       feature: extra.feature || pendingTool || undefined,
       mode: extra.mode || undefined, // explicit FAST/FULL override (e.g. MSM 'Analyse deeper' → one-shot FAST)
-      wizard: wizard.active ? { active: true, step: wizard.step } : undefined,
+      wizard: wizardActive ? { active: true, step: wizardStep } : undefined,
       editTarget: extra.editTarget || undefined,
       msmVideoId: extra.msmVideoId || undefined,
       pluginIds: ids.length ? ids : undefined,
@@ -386,8 +400,9 @@ export default function App() {
         }
       }
       patchLive({ live: false });
-      // advance wizard on success
-      if (wizard.active && wizard.step < 4) setWizard(w => ({ ...w, step: Math.min(w.step + 1, 4) }));
+      // advance wizard on success (wizardActive covers chip-started flows whose
+      // state update had not flushed when this closure was captured)
+      if (wizardActive && wizardStep < 4) setWizard(w => ({ ...w, step: Math.min(w.step + 1, 4) }));
       draftRef.current = null;
       await refreshConvs();
     } catch (e) {
@@ -503,6 +518,10 @@ export default function App() {
         <React.Suspense fallback={<div className="main main--intel" style={{ display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 13 }}>Opening the ODA workspace…</div>}>
           <OdaWorkspace onExit={() => setOdaOpen(false)} />
         </React.Suspense>
+      ) : viOpen ? (
+        <React.Suspense fallback={<div className="main main--intel" style={{ display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 13 }}>Opening Visual Intelligence…</div>}>
+          <VisualIntel onExit={() => setViOpen(false)} />
+        </React.Suspense>
       ) : msmOpen ? (
         <div className="main main--intel">
           <MsmDashboard onExit={() => setMsmOpen(false)} onAnalyseDeeper={analyseDeeper} />
@@ -529,8 +548,19 @@ export default function App() {
                 <div className="chips">
                   {CHIPS.map(c => (
                     <button key={c.label} className="chip" onClick={async () => {
-                      await newChat(c.feature, { wizard: Boolean(c.wizard) });
-                      if (!c.text.endsWith(' ')) send(c.text, null, null, { feature: c.feature });
+                      const id = await newChat(c.feature, { wizard: Boolean(c.wizard) });
+                      if (!id) return;
+                      if (c.text.endsWith(' ')) {
+                        // Trailing-space chips are prompt STARTERS — prefill the composer
+                        // for the user to complete instead of silently doing nothing.
+                        setComposePrefill({ text: c.text, ts: Date.now() });
+                        return;
+                      }
+                      send(c.text, null, null, {
+                        feature: c.feature,
+                        convId: id, // RC-4: bypass the stale activeId closure
+                        ...(c.wizard ? { wizardActive: true, wizardStep: 0 } : {}),
+                      });
                     }}>{c.label}</button>
                   ))}
                 </div>
@@ -541,7 +571,7 @@ export default function App() {
                   <div className="stream__inner">
                     {messages.map(m => m.role === 'user'
                       ? <UserMessage key={m.id} msg={m} />
-                      : <AssistantMessage key={m.id} msg={m} live={m.live} onOption={onOption} onExport={doExport} exportBusy={exportBusy} artifacts={artifacts} onRetry={regenerate} />)}
+                      : <AssistantMessage key={m.id} msg={m} live={m.live} busy={busy} onOption={onOption} onExport={doExport} exportBusy={exportBusy} artifacts={artifacts} onRetry={regenerate} />)}
                   </div>
                 </div>
                 {!atBottom && (
@@ -560,7 +590,7 @@ export default function App() {
                       <span className="stopgen__sq" aria-hidden /> Stop generating
                     </button>
                   )}
-                  <div className="composer-hint">glm-4.7 (Cerebras BYOI) · max reasoning · every figure sourced or flagged · one verified deliverable per run</div>
+                  <div className="composer-hint">gpt-5.6-sol · medium reasoning · streaming on · every figure sourced or flagged</div>
                 </div>
               </>
             )}

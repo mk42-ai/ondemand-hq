@@ -68,6 +68,12 @@ registerEvidenceRoutes(app);
 app.use('/api/oda', odaRouter);
 console.log('[oda] application engine mounted at /api/oda');
 
+// Real-time Visual Intelligence (Section 19) — dual-session (A assistant + B
+// silent Visual Director) routes, mounted ADDITIVELY; nothing existing touched.
+const { registerVisualIntelRoutes } = await import('./visualIntel.js');
+registerVisualIntelRoutes(app);
+console.log('[visual-intel] dual-session routes mounted at /api/visual-intel');
+
 // ---------- health ----------
 app.get('/api/health', (req, res) => res.json({
   ok: true, model: `${ENDPOINT_ID}+${REASONING_EFFORT}`, keyLoaded: Boolean(ONDEMAND_API_KEY), streamDebug: STREAM_DEBUG, time: new Date().toISOString(),

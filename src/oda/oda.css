@@ -4,7 +4,10 @@
 
 .oda-ws {
   --oda-ink: #1D252C;
-  --oda-gold: #AD833B;
+  --oda-gold: #AD833B;          /* ODA document brand — document content only */
+  --od-accent: #159a7a;         /* OnDemand accent — interactive chrome */
+  --od-accent-2: #1dac89;       /* OnDemand accent hover */
+  --od-accent-soft: rgba(21, 154, 122, .10);
   --oda-cream: #F1E7D6;
   --oda-mist: #CBDCE6;
   --oda-mist-soft: #E5EDF2;
@@ -40,7 +43,7 @@
   font: 600 10.5px 'Montserrat', system-ui, sans-serif;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--oda-gold);
+  color: var(--od-accent);
   margin: 0 0 8px;
 }
 
@@ -48,7 +51,7 @@
   font-family: 'Lora', Georgia, serif;
   font-weight: 600;
   font-size: 34px;
-  color: var(--oda-gold);
+  color: var(--od-accent);
   line-height: 1.1;
 }
 
@@ -183,7 +186,7 @@
 
 .oda-ws .oda-side__composer textarea:focus {
   outline: none;
-  border-color: var(--oda-gold);
+  border-color: var(--od-accent);
 }
 
 .oda-ws .oda-side__files {
@@ -231,7 +234,7 @@
   cursor: pointer;
 }
 
-.oda-ws .oda-side__chip-btn:hover { border-color: var(--oda-gold); color: var(--oda-gold); }
+.oda-ws .oda-side__chip-btn:hover { border-color: var(--od-accent); color: var(--od-accent); }
 
 .oda-ws .oda-side__controls {
   display: grid;
@@ -392,7 +395,7 @@
 
 .oda-ws .oda-rail--collapsed .oda-rail__toggle { display: flex; margin: 0 auto; }
 
-.oda-ws .oda-rail__toggle:hover { border-color: var(--oda-gold); color: var(--oda-gold); }
+.oda-ws .oda-rail__toggle:hover { border-color: var(--od-accent); color: var(--od-accent); }
 
 .oda-ws .oda-rail__sec {
   border-bottom: 1px solid var(--oda-mist-soft);
@@ -456,7 +459,7 @@
 .oda-ws .oda-rail__icon--completed { color: var(--oda-green); }
 .oda-ws .oda-rail__icon--queued { color: var(--oda-ink70); }
 .oda-ws .oda-rail__icon--failed { color: var(--oda-red); }
-.oda-ws .oda-rail__icon--running { color: var(--oda-gold); }
+.oda-ws .oda-rail__icon--running { color: var(--od-accent); }
 
 .oda-ws .oda-rail__badge {
   display: inline-flex;
@@ -551,13 +554,13 @@
 }
 
 .oda-ws .oda-table th {
-  color: var(--oda-gold);
+  color: var(--od-accent);
   font-weight: 600;
   font-size: 11.5px;
   text-transform: uppercase;
   letter-spacing: .06em;
   text-align: left;
-  border-bottom: 1.5px solid var(--oda-gold);
+  border-bottom: 1.5px solid var(--od-accent);
   padding: 8px 10px;
 }
 
@@ -619,7 +622,7 @@
   top: 12px;
   width: 6px;
   height: 6px;
-  background: var(--oda-gold);
+  background: var(--od-accent);
 }
 
 .oda-ws .oda-tree__children {
@@ -646,7 +649,7 @@
 }
 
 .oda-ws .oda-flow__node--queued { opacity: .55; }
-.oda-ws .oda-flow__node--running { border-width: 1.5px; border-color: var(--oda-gold); }
+.oda-ws .oda-flow__node--running { border-width: 1.5px; border-color: var(--od-accent); }
 .oda-ws .oda-flow__node--completed { border-color: var(--oda-green); background: rgba(62, 124, 79, .05); }
 .oda-ws .oda-flow__node--failed { border-color: var(--oda-red); }
 
@@ -660,7 +663,7 @@
 
 .oda-ws .oda-src { font-size: 11.5px; color: var(--oda-ink70); }
 .oda-ws .oda-src a { color: var(--oda-ink70); text-decoration: none; }
-.oda-ws .oda-src a:hover { color: var(--oda-gold); text-decoration: underline; }
+.oda-ws .oda-src a:hover { color: var(--od-accent); text-decoration: underline; }
 
 .oda-ws .oda-empty {
   text-align: center;
@@ -695,7 +698,7 @@
 .oda-ws .oda-badge--verified { color: var(--oda-green); background: rgba(62, 124, 79, .12); }
 .oda-ws .oda-badge--draft { color: var(--oda-ink70); background: var(--oda-mist-soft); }
 .oda-ws .oda-badge--failed { color: var(--oda-red); background: rgba(163, 59, 46, .12); }
-.oda-ws .oda-badge--verifying { color: var(--oda-gold); background: var(--oda-cream); }
+.oda-ws .oda-badge--verifying { color: var(--od-accent); background: var(--od-accent-soft); }
 
 .oda-ws .oda-slidegrid {
   display: grid;
@@ -714,7 +717,7 @@
   transition: border-color .15s ease;
 }
 
-.oda-ws .oda-slide:hover { border-width: 1.5px; border-color: var(--oda-gold); }
+.oda-ws .oda-slide:hover { border-width: 1.5px; border-color: var(--od-accent); }
 
 .oda-ws .oda-slide__title {
   font-family: 'Lora', Georgia, serif;
@@ -810,7 +813,7 @@
   font: 600 10.5px 'Montserrat', system-ui, sans-serif;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--oda-gold);
+  color: var(--od-accent);
   margin-bottom: 6px;
 }
 
@@ -849,7 +852,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  background: var(--oda-gold);
+  background: var(--od-accent);
   color: var(--oda-white);
   border: none;
   border-radius: 8px;
@@ -859,7 +862,7 @@
   transition: background-color .15s ease;
 }
 
-.oda-ws .oda-btn:hover:not(:disabled) { background: #96702F; }
+.oda-ws .oda-btn:hover:not(:disabled) { background: var(--od-accent-2); }
 .oda-ws .oda-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 .oda-ws .oda-btn--ghost {
@@ -930,7 +933,7 @@
   border: 1px solid var(--oda-mist-soft); border-radius: 7px;
   padding: 4px 7px; color: var(--oda-ink70); line-height: 0;
 }
-.oda-ws .oda-widgetcard__tools button:hover:not(:disabled) { border-color: var(--oda-gold); color: var(--oda-ink); }
+.oda-ws .oda-widgetcard__tools button:hover:not(:disabled) { border-color: var(--od-accent); color: var(--oda-ink); }
 .oda-ws .oda-widgetcard__tools button:disabled { opacity: .4; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) { .oda-ws .oda-widgetcard__dot { animation: none; } }
 
@@ -941,3 +944,26 @@
   margin-top: 6px;
   padding-left: 2px;
 }
+
+
+/* --- OnDemand rebrand additions (2026-07-25): Plan Mode interaction chrome --- */
+/* Open-decision rows are real buttons now (AUDIT RC-3) — hover affordance. */
+.oda-ws .oda-rail__row--clickable {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  border-radius: 8px;
+  transition: background .15s ease;
+}
+.oda-ws .oda-rail__row--clickable:hover { background: var(--od-accent-soft); }
+
+/* Composer answering an open gate (Plan Mode conversational continuation). */
+.oda-ws .oda-side__composer--answering { border-left: 3px solid var(--od-accent); padding-left: 12px; }
+.oda-ws .oda-side__composer--answering textarea { border-color: var(--od-accent); }
+
+/* Gate card while open — OnDemand accent wash so the required decision reads instantly. */
+.oda-ws .oda-gate:not(.oda-gate--resolved) { border-left: 3px solid var(--od-accent); background: var(--od-accent-soft); }

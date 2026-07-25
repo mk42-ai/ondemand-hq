@@ -43,6 +43,18 @@ export async function packageRunArtifact(run, { format = null } = {}) {
     // Primary: newest verified non-synthesis artifact; fall back to synthesis.
     const primary = [...verified].reverse().find((a) => a.logicalId !== 'run-synthesis')
       || verified[verified.length - 1];
+    // ROOT_CAUSES Problem 8 fix (2026-07-25): upstream verified artifacts
+    // (evidence pack, workbook, model) are MERGED into the final document input
+    // as appendix sections instead of being dropped — newest version per
+    // logicalId, primary and run-synthesis excluded, each capped so the plugin
+    // prompt stays within budget.
+    const newestByLogical = new Map();
+    for (const a of verified) {
+      const prev = newestByLogical.get(a.logicalId);
+      if (!prev || (a.version || 0) > (prev.version || 0)) newestByLogical.set(a.logicalId, a);
+    }
+    const upstream = [...newestByLogical.values()]
+      .filter((a) => a.logicalId !== primary.logicalId && a.logicalId !== 'run-synthesis');
 
     // DELIVERABLE FORMAT POLICY (2026-07-24, product rule): the final download is
     // ONLY ever a DECK → .pptx, a SPREADSHEET → .xlsx, or ANY other document → .pdf.
@@ -73,8 +85,19 @@ export async function packageRunArtifact(run, { format = null } = {}) {
     const { parseContentSpec, buildArtifact } = await import('./builders/index.js');
     const { looksLikeHtml, htmlToMarkdown } = await import('./builders/htmlToMd.js');
     const rawContent = primary.content || primary.preview || '';
-    const contentMd = looksLikeHtml(rawContent) ? htmlToMarkdown(rawContent) : rawContent;
-    const spec = parseContentSpec(rawContent);
+    let contentMd = looksLikeHtml(rawContent) ? htmlToMarkdown(rawContent) : rawContent;
+    // Problem 8: append upstream artifacts as appendix sections (≤2500 chars
+    // each, max 4) so evidence/workbook/model content survives into the final
+    // document instead of influencing it only indirectly during authoring.
+    if (upstream.length) {
+      const appendix = upstream.slice(0, 4).map((a) => {
+        const raw = a.content || a.preview || '';
+        const md = looksLikeHtml(raw) ? htmlToMarkdown(raw) : raw;
+        return `\n\n## Appendix — ${a.title || a.logicalId} (${a.type})\n${String(md).slice(0, 2500)}`;
+      }).join('');
+      if (appendix.trim()) contentMd += appendix;
+    }
+    const spec = parseContentSpec(contentMd);
     if (!spec.title) spec.title = primary.title;
 
     // ---- IMAGERY (Perplexity → GPT Image 2): sourced ONCE, then used by whichever
@@ -128,6 +151,16 @@ export async function packageRunArtifact(run, { format = null } = {}) {
         images,
         endpointId: BRAINS[chosenBrain].endpointId,
         reasoningEffort: BRAINS[chosenBrain].reasoningEffort, // null (e.g. Fable) → omitted downstream
+        // Problem 8: full run context rides into the plugin prompt — the hosted
+        // document is grounded in the original request, clarifications, the GLM
+        // optimised brief, verified evidence and recorded assumptions.
+        runContext: {
+          originalRequest: run.request?.text || null,
+          clarifications: run.clarifications || [],
+          finalPrompt: run.finalPrompt || null,
+          evidence: run.evidence || [],
+          assumptions: run.assumptions || [],
+        },
       });
       if (hosted?.hostedUrl) {
         // downloadUrl stays SAME-ORIGIN (the canonical route proxy-streams the

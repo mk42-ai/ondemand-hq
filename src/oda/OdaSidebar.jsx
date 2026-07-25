@@ -16,7 +16,7 @@ const SUGGESTIONS = [
 const STATUS_DOT = {
   completed: '#3E7C4F',
   failed: '#A33B2E',
-  waiting_for_user: 'var(--oda-gold)',
+  waiting_for_user: 'var(--od-accent)',
 };
 
 const DEFAULT_CONTROLS = { lang: 'en', output: 'auto', depth: 'full' };
@@ -39,6 +39,7 @@ function composeText(text, controls) {
 export default function OdaSidebar({
   run, connected, onSubmit, onLifecycle, onNewTask, onExit,
   history = [], onSelectRun, controls, onControlsChange, busy,
+  answering = false,
 }) {
   const [text, setText] = useState('');
   const [files, setFiles] = useState([]);
@@ -65,7 +66,9 @@ export default function OdaSidebar({
 
   const handleSubmit = () => {
     if (!canStart) return;
-    onSubmit?.({ text: composeText(text.trim(), c), files });
+    // While answering an open gate the raw text IS the answer — control
+    // summary prose belongs only on fresh requests (OdaWorkspace branches).
+    onSubmit?.({ text: answering ? text.trim() : composeText(text.trim(), c), files });
     setText('');
     setFiles([]);
   };
@@ -119,13 +122,15 @@ export default function OdaSidebar({
         )}
       </div>
 
-      <div className="oda-side__composer">
-        <div className="oda-kicker">New request</div>
+      <div className={`oda-side__composer${answering ? ' oda-side__composer--answering' : ''}`}>
+        <div className="oda-kicker">{answering ? 'Answer to continue' : 'New request'}</div>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Describe the deliverable — a deck, a problem to structure, a benchmark, a country pack…"
+          placeholder={answering
+            ? 'Answer the open question to continue the run…'
+            : 'Describe the deliverable — a deck, a problem to structure, a benchmark, a country pack…'}
         />
 
         <div className="oda-side__files">
@@ -154,13 +159,24 @@ export default function OdaSidebar({
           ))}
         </div>
 
-        <div className="oda-side__chips">
-          {SUGGESTIONS.map((s) => (
-            <button type="button" key={s} className="oda-pill oda-side__chip-btn" onClick={() => setText(s)}>
-              {s}
-            </button>
-          ))}
-        </div>
+        {/* RC-2: chips fire a run directly (matching suite-home chip behaviour)
+            rather than merely pre-filling the composer. Hidden while answering
+            an open gate — a chip must never fork a fresh run mid-conversation. */}
+        {!answering && (
+          <div className="oda-side__chips">
+            {SUGGESTIONS.map((s) => (
+              <button
+                type="button"
+                key={s}
+                className="oda-pill oda-side__chip-btn"
+                disabled={busy}
+                onClick={() => { const t = composeText(s, c); onSubmit?.({ text: t, files: [] }); setText(''); }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="oda-side__controls">
           <label>
@@ -202,7 +218,7 @@ export default function OdaSidebar({
 
         <div className="oda-side__submit">
           <button type="button" className="oda-btn oda-side__start" disabled={!canStart} onClick={handleSubmit}>
-            <Send size={14} aria-hidden /> Start run
+            <Send size={14} aria-hidden /> {answering ? 'Answer' : 'Start run'}
           </button>
           <div className="oda-side__lifecycle">
             <button
