@@ -450,3 +450,26 @@ STT stays behind the graceful `SERVICE_*` 'speech unavailable' fallback (server/
 NOT shipped. Reddit is NOT attachable as a chat agent on this key; it remains an optional
 Correlation-Engine evidence-source key (correlation.js:60-66) whose absence degrades gracefully.
 Suite model policy re-verified live on the wire: predefined-gpt-5.6-sol + medium, streaming ON.
+
+---
+
+## 2026-07-25 22:17-22:18Z re-probe — Speech Services STT with REAL audio (EN+AR) + TTS re-confirmation
+
+Method: TTS generated REAL hosted audio files (EN + AR, tts-1/alloy), then those exact mp3 URLs were
+fed to STT `{audioUrl}` — a genuine round-trip probe, not a synthetic payload. Service:
+`POST {base}/services/v1/public/service/execute/{text_to_speech|speech_to_text}`, header `apikey`.
+
+| Probe | Service id | Test query / payload | HTTP | Latency (ms) | Sample output | Timestamp (UTC) | Verdict |
+|---|---|---|---|---|---|---|---|
+| TTS EN | `text_to_speech` (tts-1, alloy) | "The ODA Productivity Suite speech verification pass… twenty-two seventeen UTC." | **200** | 2378 | hosted mp3 `audioUrl` @ airevprod.blob.core.windows.net | 2026-07-25T22:17:56.718Z | **ADOPT** — 200 + playable hosted audio |
+| TTS AR | `text_to_speech` (tts-1, alloy) | "مكتب شؤون التنمية في أبوظبي — إعادة التحقق من الخدمات الصوتية…" | **200** | 3489 | hosted mp3 `audioUrl` (Arabic input accepted) | 2026-07-25T22:17:59.096Z | **ADOPT** — 200 + playable hosted audio |
+| STT EN | `speech_to_text` | `{audioUrl: <REAL TTS-EN mp3 just generated>}` | **400** | 396 | `{"message":"Unknown error","errorCode":"400"}` | 2026-07-25T22:18:02.585Z | **REJECT** — no 200/transcript; not the old 'Please subscribe' body, but every documented audioUrl form (incl. real platform-hosted audio) fails |
+| STT AR | `speech_to_text` | `{audioUrl: <REAL TTS-AR mp3 just generated>}` | **400** | 142 | `{"message":"Unknown error","errorCode":"400"}` | 2026-07-25T22:18:02.982Z | **REJECT** — same failure with Arabic-speech audio |
+
+**Verdicts applied (hard rule: nothing without HTTP 200 + usable output ships):**
+- **TTS EN/AR: ADOPT re-confirmed** with fresh timestamps — AudioPlayer speaker buttons remain live.
+- **STT EN/AR: REJECT re-confirmed** — the GAP STAYS EXPLICITLY FLAGGED. The subscribe-block message is
+  gone but the endpoint 400s ('Unknown error') even on the platform's own freshly-hosted TTS output,
+  so failure is service-side, not payload-side. The graceful `SERVICE_*` fallback in `server/speech.js`
+  + the frontend 'speech unavailable' state remain the shipped behaviour (mic capture still works;
+  transcription is disabled until the service accepts audio).
