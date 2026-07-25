@@ -79,13 +79,39 @@ export function heuristicInterpret(text) {
   else if (/\b(deck|slides?|presentation|one-?pager|briefing|design|lay ?out|mock)\b/.test(t)) skill = 'design';
   const full = /\b(chairman|board|presidential court|leadership|full treatment|verified|campaign|launch)\b/.test(t);
   const mode = full ? 'full' : 'fast';
-  const node = { nodeId: 'n1', skill, mode, dependsOn: [], objective: String(text || '').slice(0, 200) };
-  if (route) node.route = route;
+  const objective = String(text || '').slice(0, 200);
+  // ROOT_CAUSES Problem 1 residual fix (2026-07-25): the heuristic fallback no
+  // longer collapses FULL runs to a single node. Evidence-hungry skills get a
+  // legal multi-node chain (data-scout→problem-solve; problem-solve→benchmark;
+  // data-scout→model→design) so Evidence/Analysis stages exist even when GLM
+  // interpretation fails. FAST and transform skills keep the single node.
+  let pipeline;
+  if (mode === 'full' && skill === 'problem-solve') {
+    pipeline = [
+      { nodeId: 'n1', skill: 'data-scout', mode, dependsOn: [], objective },
+      { nodeId: 'n2', skill: 'problem-solve', mode, dependsOn: ['n1'], objective },
+    ];
+  } else if (mode === 'full' && skill === 'benchmark') {
+    pipeline = [
+      { nodeId: 'n1', skill: 'problem-solve', mode, dependsOn: [], objective },
+      { nodeId: 'n2', skill: 'benchmark', mode, dependsOn: ['n1'], objective },
+    ];
+  } else if (mode === 'full' && skill === 'design') {
+    pipeline = [
+      { nodeId: 'n1', skill: 'data-scout', mode, dependsOn: [], objective },
+      { nodeId: 'n2', skill: 'model', mode, dependsOn: ['n1'], objective },
+      { nodeId: 'n3', skill: 'design', mode, dependsOn: ['n2'], objective },
+    ];
+  } else {
+    const node = { nodeId: 'n1', skill, mode, dependsOn: [], objective };
+    if (route) node.route = route;
+    pipeline = [node];
+  }
   return {
     intent: String(text || '').slice(0, 240),
     mode,
-    primary_skill: skill,
-    pipeline: [node],
+    primary_skill: pipeline[0].skill,
+    pipeline,
     deliverables: [defaultDeliverable(skill, route)],
     workspace_renderer: defaultRenderer(skill),
     requires_user_gate: mode === 'full',
@@ -161,9 +187,29 @@ export function normaliseControl(raw, requestText) {
   try {
     validatePipeline(pipeline);
   } catch (err) {
-    // Illegal graph from the interpreter → single-node fallback on the primary skill.
-    console.warn(`[oda-interpreter] pipeline rejected by sequencing rules — falling back to single node: ${err.message}`);
-    pipeline = [{ nodeId: 'n1', skill: c.primary_skill, mode: c.mode, dependsOn: [], objective: c.intent }];
+    // ROOT_CAUSES Problem 1 residual fix (2026-07-25): REPAIR before discarding.
+    // An illegal graph previously threw the WHOLE multi-node plan away (single-
+    // node fallback), deleting evidence/analysis stages. Now we first drop only
+    // the ILLEGAL edges (keeping every node) and re-validate; the wholesale
+    // single-node fallback fires only when the repaired graph still fails.
+    try {
+      const skillOf = new Map(pipeline.map((n) => [n.nodeId, n.skill]));
+      let dropped = 0;
+      const repaired = pipeline.map((n) => {
+        const deps = (n.dependsOn || []).filter((d) => {
+          const ok = skillOf.has(d) && isEdgeAllowed(skillOf.get(d), n.skill, { route: n.route });
+          if (!ok) dropped += 1;
+          return ok;
+        });
+        return { ...n, dependsOn: deps };
+      });
+      validatePipeline(repaired);
+      console.warn(`[oda-interpreter] repaired illegal graph by dropping ${dropped} illegal edge(s) — all ${repaired.length} node(s) kept`);
+      pipeline = repaired;
+    } catch (repairErr) {
+      console.warn(`[oda-interpreter] pipeline rejected by sequencing rules (repair also failed: ${repairErr.message}) — falling back to single node: ${err.message}`);
+      pipeline = [{ nodeId: 'n1', skill: c.primary_skill, mode: c.mode, dependsOn: [], objective: c.intent }];
+    }
   }
   c.pipeline = pipeline;
   c.deliverables = (Array.isArray(c.deliverables) ? c.deliverables : []).filter((d) => ARTIFACT_TYPES.includes(d));

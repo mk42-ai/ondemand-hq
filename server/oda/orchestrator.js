@@ -255,6 +255,38 @@ export async function startRun(run) {
   }
 }
 
+/**
+ * Tolerant evidence-claim extractor (ROOT_CAUSES Problem 1 residual, 2026-07-25).
+ * Accepts the four tag shapes workers actually emit — '**fact**:', '[fact]',
+ * '(fact)', and bulleted '… (source: X)' lines — normalises tags, dedupes by
+ * claim prefix, caps at 12 per draft. Pure; never throws on malformed input.
+ * @param {string} draftText
+ * @returns {Array<{tag: string, claim: string}>}
+ */
+function extractEvidenceClaims(draftText) {
+  const text = String(draftText || '');
+  const out = [];
+  const seen = new Set();
+  const push = (tag, claim) => {
+    const c = String(claim || '').trim().replace(/\s+/g, ' ');
+    if (c.length < 10) return;
+    const key = c.toLowerCase().slice(0, 120);
+    if (seen.has(key) || out.length >= 12) return;
+    seen.add(key);
+    const t = /^assm/i.test(tag) ? 'assumption' : String(tag || 'fact').toLowerCase();
+    out.push({ tag: ['fact', 'assumption', 'web', 'derived', 'bote'].includes(t) ? t : 'fact', claim: c.slice(0, 300) });
+  };
+  // A. Bold-marker form: **fact**: … / **tagged fact** — …
+  for (const m of text.matchAll(/\*\*(?:tagged )?fact\*\*[:\s—-]*(.{10,300}?)(?:\n|$)/gi)) push('fact', m[1]);
+  // B. Bracket tags: [fact] … / [assm] … / [web] … / [derived] … / [BOTE] …
+  for (const m of text.matchAll(/\[(fact|assumption|assm|web|derived|BOTE)\]\s*[:—-]?\s*(.{10,300}?)(?:\n|$)/gi)) push(m[1], m[2]);
+  // C. Parenthetical tags: (fact) … / (web) …
+  for (const m of text.matchAll(/\((fact|assumption|web|derived)\)\s*[:—-]?\s*(.{10,300}?)(?:\n|$)/gi)) push(m[1], m[2]);
+  // D. Bulleted source lines: - claim … (source: World Bank)
+  for (const m of text.matchAll(/^[-*•]\s+(.{15,300}?)\s+\((?:source|src)[:\s]+[^)]{4,120}\)/gim)) push('fact', m[1]);
+  return out;
+}
+
 /** Raise a gate: park the run and emit question.required (M4). */
 async function raiseRunGate(run, { gateType, nodeId = null, payload = null, promptOverride = null, options = null }) {
   const gate = createGate({ gateType, nodeId, payload, promptOverride, options });
@@ -550,11 +582,14 @@ async function executeNode(run, node) {
   emitRunEvent(run, 'artifact.preview.updated', { artifactId: artifact.artifactId, preview: artifact.preview });
 
   // Evidence extraction (structured state, not prose): record tagged facts the
-  // worker declared, if any, as evidence items (best-effort, non-fatal).
-  for (const m of String(draftText).matchAll(/\*\*(?:tagged )?fact\*\*[:\s—-]*(.{10,180}?)(?:\n|$)/gi)) {
-    const claim = m[1].trim();
-    if (!isSubstantiveEvidence(claim)) continue; // meta/status lines never pollute run.evidence
-    const evItem = addEvidence(run, { claim, tag: 'fact', addedBy: node.skill, nodeId: node.nodeId }); // emits evidence.added
+  // worker declared as evidence items (best-effort, non-fatal).
+  // ROOT_CAUSES Problem 1 residual fix (2026-07-25): the old single '**fact**'
+  // regex "virtually never matched" (liveStream.js admission), so the non-
+  // streaming path produced zero evidence. extractEvidenceClaims() now accepts
+  // the four tag shapes workers actually emit; deduped, capped at 12 per draft.
+  for (const ev of extractEvidenceClaims(draftText)) {
+    if (!isSubstantiveEvidence(ev.claim)) continue; // meta/status lines never pollute run.evidence
+    const evItem = addEvidence(run, { claim: ev.claim, tag: ev.tag, addedBy: node.skill, nodeId: node.nodeId }); // emits evidence.added
     liveOf(run).onEvidence(evItem); // slide 2 fills from REAL evidence state
   }
 
