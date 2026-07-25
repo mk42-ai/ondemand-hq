@@ -1,0 +1,1892 @@
+{
+ "date": "2026-07-18",
+ "createdAt": "2026-07-18T08:39:02.200Z",
+ "lastRunAt": "2026-07-18T09:00:20.267Z",
+ "videos": [
+  {
+   "videoId": "pEAnENxNiZs",
+   "outlet": "cnn",
+   "subLabel": null,
+   "title": "'The Odyssey' is the latest culture war Rorschach test | Engagement Party",
+   "author": "CNN",
+   "durationSec": 864,
+   "publishedAt": "2026-07-17T03:00:22-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 13849,
+    "mediaId": "6a5b3ba7db404d38defdb763",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "CNN\u2019s Engagement Party discusses Christopher Nolan\u2019s adaptation of The Odyssey, focusing on its celebrity cast, anticipated box-office performance, and culture-war disputes over representation. The hosts examine criticism directed at Lupita Nyong\u2019o and Elliot Page while arguing that Nolan\u2019s stature may turn controversy into publicity. The discussion briefly references Cyprus, Turkey\u2019s denial of the Armenian genocide, and the potential impact of coordinated negative reviews on smaller films, but it does not substantively address UAE, Gulf, aid, development, humanitarian affairs, or regional stability.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.18
+    },
+    "odaImpact": {
+     "flag": "None",
+     "reasoning": "The segment is primarily entertainment commentary and contains no substantive coverage of ODA themes."
+    },
+    "entities": [
+     "CNN",
+     "Christopher Nolan",
+     "Lupita Nyong\u2019o",
+     "Elliot Page",
+     "Matt Damon",
+     "Cyprus",
+     "Turkey",
+     "Pink Martini"
+    ],
+    "topics": [
+     "film industry",
+     "culture wars",
+     "casting controversy",
+     "representation",
+     "box office",
+     "review bombing"
+    ],
+    "odaRelevant": false,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:40:00.086Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:39:03.164Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 160,
+     "note": "6a5b3ba74b9768e553e9c573"
+    },
+    {
+     "ts": "2026-07-18T08:39:48.969Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 45804,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:39:49.003Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 34,
+     "note": "13849 chars"
+    },
+    {
+     "ts": "2026-07-18T08:39:49.089Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 86,
+     "note": "6a5b3bd522dc498ce761ad23"
+    },
+    {
+     "ts": "2026-07-18T08:40:00.086Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 10997,
+     "note": "answer=1193ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "K9C2upCeESs",
+   "outlet": "cnn",
+   "subLabel": null,
+   "title": "Doctor reacts to Hegseth's plan to test troops' testosterone",
+   "author": "CNN",
+   "durationSec": 749,
+   "publishedAt": "2026-07-16T05:21:37-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 12277,
+    "mediaId": "6a5b3ba7db404d38defdb764",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "CNN examined Defense Secretary Pete Hegseth's plan for mandatory annual testosterone screening of service members over 30 and optional screening for younger personnel. Dr. Jonathan Riner questioned the medical rationale and warned about treatment risks, logistical problems, and potential effects on deployment or promotion decisions. Panelists also debated whether the initiative reflects military recruitment goals and broader cultural views about masculinity, while the segment made no reference to the UAE, Gulf affairs, international development, aid, or humanitarian issues.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.1
+    },
+    "odaImpact": {
+     "flag": "None",
+     "reasoning": "The coverage concerns a United States military health policy and has no stated connection to ODA themes."
+    },
+    "entities": [
+     "CNN",
+     "Pete Hegseth",
+     "Pentagon",
+     "Dr. Jonathan Riner",
+     "George Washington University",
+     "Trump administration",
+     "FDA",
+     "Tammy Duckworth"
+    ],
+    "topics": [
+     "testosterone screening",
+     "US military health",
+     "military readiness",
+     "treatment risks",
+     "troop recruitment",
+     "culture-war debate"
+    ],
+    "odaRelevant": false,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:39:24.609Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:39:03.284Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 231,
+     "note": "6a5b3ba74b9768e553e9c574"
+    },
+    {
+     "ts": "2026-07-18T08:39:13.539Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 10254,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:39:13.577Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 38,
+     "note": "12277 chars"
+    },
+    {
+     "ts": "2026-07-18T08:39:13.659Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 80,
+     "note": "6a5b3bb14b9768e553e9c575"
+    },
+    {
+     "ts": "2026-07-18T08:39:24.608Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 10948,
+     "note": "answer=1222ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "KmO_nii-9QM",
+   "outlet": "cnn",
+   "subLabel": "CNN-News18",
+   "title": "Iran Will Let UN Nuke Inspectors Back In, Could Buy US Crops With Billions In Unfrozen Assets: Vance",
+   "author": "CNN-News18",
+   "durationSec": 28553,
+   "publishedAt": "2026-06-23T08:56:25-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 481290,
+    "mediaId": "6a5b3dbd7675cd3b310d34a2",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "CNN-News18 reports that the United States waived sanctions on Iranian oil sales for 60 days, potentially increasing Iran\u2019s revenue while negotiations over its nuclear program and regional security continue. President Donald Trump and Vice President JD Vance said Iran had agreed to renewed international nuclear inspections, but Iranian officials disputed that characterization, and analysts emphasized that no verified nuclear concessions had yet occurred. Commercial traffic through the Strait of Hormuz increased and oil prices fell, while a hotline was proposed to prevent shipping misunderstandings. The talks also address the fragile Israel-Hezbollah ceasefire in Lebanon, with the US military reportedly helping monitor compliance amid concerns about further regional confrontation.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.86
+    },
+    "odaImpact": {
+     "flag": "Notable",
+     "reasoning": "Sanctions relief, renewed Hormuz shipping, oil-price movement, and the Lebanon ceasefire directly affect Gulf economic conditions and regional stability."
+    },
+    "entities": [
+     "Iran",
+     "United States",
+     "Donald Trump",
+     "JD Vance",
+     "Israel",
+     "Hezbollah",
+     "Lebanon",
+     "Strait of Hormuz"
+    ],
+    "topics": [
+     "Iran sanctions relief",
+     "nuclear inspections",
+     "Strait of Hormuz",
+     "oil markets",
+     "Lebanon ceasefire",
+     "regional stability"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:48:14.857Z",
+    "transcriptTruncatedForAnalysis": true
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:43:03.323Z",
+     "step": "transcribe.post",
+     "http": 0,
+     "ms": 240002,
+     "note": "network: This operation was aborted"
+    },
+    {
+     "ts": "2026-07-18T08:47:57.281Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 144,
+     "note": "6a5b3dbd4b9768e553e9c590"
+    },
+    {
+     "ts": "2026-07-18T08:48:04.734Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 7452,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:48:04.762Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 28,
+     "note": "481290 chars"
+    },
+    {
+     "ts": "2026-07-18T08:48:04.864Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 100,
+     "note": "6a5b3dc4367603cd722b453e"
+    },
+    {
+     "ts": "2026-07-18T08:48:14.856Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 9992,
+     "note": "answer=1314ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "eaBUNBDOgkU",
+   "outlet": "bbc",
+   "subLabel": null,
+   "title": "2026 April 12 BBC 2-minute World News Audio",
+   "author": "News Zentrale",
+   "durationSec": 122,
+   "publishedAt": "2026-04-12T04:31:53-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 1720,
+    "mediaId": "6a5b3dbd7675cd3b310d34a3",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Iran-US peace talks in Pakistan ended without agreement, with Iran citing a failure of trust and the US saying Tehran rejected Washington's terms; Pakistan urged both sides to observe the two-week ceasefire. Regional tensions persisted as Israel carried out air strikes in southern Lebanon that Lebanese state media said killed at least 11 people, while Hezbollah fired rockets into northern Israel. The bulletin also covered elections in Hungary, alleged ceasefire violations by Ukraine and Russia, a deadly stampede in Haiti, the death of Indian singer Asha Bhosle, and Marie-Louise Eta's appointment as Union Berlin head coach.",
+    "sentiment": {
+     "label": "negative",
+     "confidence": 0.94
+    },
+    "odaImpact": {
+     "flag": "High",
+     "reasoning": "Failed Iran-US talks and continuing Israel-Hezbollah hostilities bear directly on Gulf and regional stability."
+    },
+    "entities": [
+     "Iran",
+     "United States",
+     "Pakistan",
+     "JD Vance",
+     "Israel",
+     "Lebanon",
+     "Hezbollah",
+     "Hungary"
+    ],
+    "topics": [
+     "Iran-US peace talks",
+     "regional ceasefire",
+     "Israel-Lebanon strikes",
+     "Hezbollah rockets",
+     "Hungary elections",
+     "Ukraine-Russia ceasefire"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:48:09.741Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:43:25.242Z",
+     "step": "transcribe.post",
+     "http": 0,
+     "ms": 240002,
+     "note": "network: This operation was aborted"
+    },
+    {
+     "ts": "2026-07-18T08:47:57.377Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 219,
+     "note": "6a5b3dbd4b9768e553e9c591"
+    },
+    {
+     "ts": "2026-07-18T08:48:01.587Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 4209,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:48:01.623Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 36,
+     "note": "1720 chars"
+    },
+    {
+     "ts": "2026-07-18T08:48:01.757Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 133,
+     "note": "6a5b3dc133960cd24772b397"
+    },
+    {
+     "ts": "2026-07-18T08:48:09.740Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 7982,
+     "note": "answer=1243ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "b1bOVBHtSho",
+   "outlet": "bbc",
+   "subLabel": null,
+   "title": "What could Andy Burnham's plan be in Downing Street? | BBC Newscast",
+   "author": "BBC News",
+   "durationSec": 1540,
+   "publishedAt": "2026-07-16T13:00:11-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 28128,
+    "mediaId": "6a5b3dbdb88ae2788ce79dbf",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "BBC Newscast discusses Andy Burnham\u2019s expected premiership, arguing that he has a coherent domestic agenda centered on devolution, investment, reindustrialization and greater public control of utilities. The conversation considers possible tax and business-rate changes, social housing, welfare reform, fiscal policy and prospective Cabinet appointments. It also briefly addresses Keir Starmer\u2019s support for Ukraine and the importance of foreign policy, but provides no substantive coverage of the UAE, Gulf, aid or humanitarian affairs.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.25
+    },
+    "odaImpact": {
+     "flag": "None",
+     "reasoning": "The discussion is overwhelmingly focused on UK domestic politics and has no direct implications for ODA priorities."
+    },
+    "entities": [
+     "Andy Burnham",
+     "Keir Starmer",
+     "Andrew Marr",
+     "Kemi Badenoch",
+     "Volodymyr Zelensky",
+     "Ed Miliband",
+     "Shabana Mahmood",
+     "Bank of England"
+    ],
+    "topics": [
+     "UK political leadership",
+     "economic policy",
+     "devolution",
+     "reindustrialization",
+     "tax reform",
+     "Ukraine"
+    ],
+    "odaRelevant": false,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:49:08.772Z",
+    "transcriptTruncatedForAnalysis": true
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:44:01.047Z",
+     "step": "transcribe.post",
+     "http": 0,
+     "ms": 240001,
+     "note": "network: This operation was aborted"
+    },
+    {
+     "ts": "2026-07-18T08:47:57.456Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 297,
+     "note": "6a5b3dbd367603cd722b453d"
+    },
+    {
+     "ts": "2026-07-18T08:48:56.945Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 59488,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:48:56.974Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 28,
+     "note": "28128 chars"
+    },
+    {
+     "ts": "2026-07-18T08:48:57.061Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 85,
+     "note": "6a5b3df922dc498ce761ad32"
+    },
+    {
+     "ts": "2026-07-18T08:49:08.772Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 11711,
+     "note": "answer=1167ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "gCNeDWCI0vo",
+   "outlet": "aje",
+   "subLabel": null,
+   "title": "\ud83d\udd34 Al Jazeera English | Live",
+   "author": "Al Jazeera English",
+   "durationSec": 0,
+   "publishedAt": "2023-03-09T16:24:38-08:00",
+   "status": "transcription-failed",
+   "transcript": null,
+   "analysis": null,
+   "failReason": "This ID is the Al Jazeera English 24/7 LIVE STREAM (oEmbed title verified), not a fixed-length video \u2014 the Media API cannot transcribe an endless live broadcast (HTTP 500 errors.transcription.not.found; record stays \"processing\" indefinitely). Honest failure; substitute a normal AJE video ID to monitor this outlet.",
+   "log": [
+    {
+     "ts": "2026-07-18T08:44:43.151Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 98577,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-07-18T08:49:35.375Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 85633,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-07-18T08:51:07.999Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 152,
+     "note": "6a5b3e7b367603cd722b4544"
+    },
+    {
+     "ts": "2026-07-18T08:54:08.002Z",
+     "step": "transcribe.post",
+     "http": 0,
+     "ms": 180002,
+     "note": "client timeout/abort (This operation was aborted) \u2014 recovering via GET listing poll"
+    },
+    {
+     "ts": "2026-07-18T08:54:18.360Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 357,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:54:28.739Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 378,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:54:39.246Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 507,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:54:49.622Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 374,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:55:00.101Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 476,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:55:10.520Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 416,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:55:20.918Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 397,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:55:31.344Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 423,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:55:41.803Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 454,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:55:52.213Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 410,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:56:02.558Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 341,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:56:12.918Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 355,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:56:23.321Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 398,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:56:33.652Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 330,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:56:43.988Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 330,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:56:54.306Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 311,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:57:04.726Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 412,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:57:15.159Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 431,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:57:25.576Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 411,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:57:35.817Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 239,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:57:46.093Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 275,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:57:56.377Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 280,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:58:06.598Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 214,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:58:16.924Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 323,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:58:27.305Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 379,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:58:37.579Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 274,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:58:47.889Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 303,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:58:58.282Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 387,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:59:08.528Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 245,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:59:18.780Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 250,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:59:29.024Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 243,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:59:39.276Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 250,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:59:49.571Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 293,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T08:59:59.877Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 304,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T09:00:10.194Z",
+     "step": "transcribe.recover",
+     "http": 200,
+     "ms": 314,
+     "note": "actionStatus=processing"
+    },
+    {
+     "ts": "2026-07-18T09:00:10.195Z",
+     "step": "transcribe.recover",
+     "http": 0,
+     "ms": 362192,
+     "note": "recovery poll budget exhausted (360s)"
+    }
+   ]
+  },
+  {
+   "videoId": "e93MaEwrsfc",
+   "outlet": "aje",
+   "subLabel": null,
+   "title": "Al Jazeera English Live Stream",
+   "author": "Al Jazeera English",
+   "durationSec": 0,
+   "publishedAt": "2012-09-04T23:31:26-07:00",
+   "status": "transcription-failed",
+   "transcript": null,
+   "analysis": null,
+   "failReason": "This ID is the Al Jazeera English 24/7 LIVE STREAM (oEmbed title verified), not a fixed-length video \u2014 the Media API cannot transcribe an endless live broadcast (HTTP 500 errors.transcription.not.found; record stays \"processing\" indefinitely). Honest failure; substitute a normal AJE video ID to monitor this outlet.",
+   "log": [
+    {
+     "ts": "2026-07-18T08:44:43.153Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 77126,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-07-18T08:49:35.376Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 80518,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-07-18T08:51:08.080Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 232,
+     "note": "6a5b3e7c4b9768e553e9c59a"
+    },
+    {
+     "ts": "2026-07-18T08:52:30.620Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 82540,
+     "note": "actionStatus=-"
+    }
+   ]
+  },
+  {
+   "videoId": "qLuiF3DNkJY",
+   "outlet": "bloomberg",
+   "subLabel": null,
+   "title": "Live from DoubleLine Capital | The Close 5/7/2026",
+   "author": "Bloomberg Television",
+   "durationSec": 5688,
+   "publishedAt": "2026-05-07T15:20:20-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 103651,
+    "mediaId": "6a5b3cd1db404d38defdb77e",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Bloomberg Television\u2019s discussion with DoubleLine Capital highlighted a war involving Iran as a source of higher energy prices, inflation pressure, market volatility, and uncertainty over global growth. Bill Campbell said the shock was affecting central-bank reserve management and contributing to caution toward long-dated US Treasuries, while concerns over US fiscal and Federal Reserve credibility could further raise interest rates. The program also reported that the United States was awaiting an Iranian response to a proposal to reopen the Strait of Hormuz. Although the UAE was not directly discussed, the coverage bears on Gulf regional stability and the economic effects of disrupted energy flows.",
+    "sentiment": {
+     "label": "negative",
+     "confidence": 0.94
+    },
+    "odaImpact": {
+     "flag": "Notable",
+     "reasoning": "Conflict involving Iran and uncertainty over reopening the Strait of Hormuz present material risks to Gulf stability, energy markets, inflation, and economic development."
+    },
+    "entities": [
+     "Bloomberg Television",
+     "DoubleLine Capital",
+     "Bill Campbell",
+     "United States",
+     "Iran",
+     "Strait of Hormuz",
+     "Federal Reserve",
+     "Los Angeles"
+    ],
+    "topics": [
+     "Iran conflict",
+     "Strait of Hormuz",
+     "Gulf stability",
+     "energy prices",
+     "inflation shock",
+     "sovereign debt"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:44:30.041Z",
+    "transcriptTruncatedForAnalysis": true
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:44:20.045Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 18260,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:44:20.155Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 109,
+     "note": "103651 chars"
+    },
+    {
+     "ts": "2026-07-18T08:44:20.261Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 105,
+     "note": "6a5b3ce44b9768e553e9c577"
+    },
+    {
+     "ts": "2026-07-18T08:44:30.040Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 9778,
+     "note": "answer=1399ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "2IYDWDja3E0",
+   "outlet": "bloomberg",
+   "subLabel": null,
+   "title": "Bloomberg Surveillance TV: July 2nd, 2026 | Bloomberg Surveillance",
+   "author": "Bloomberg Podcasts",
+   "durationSec": 1148,
+   "publishedAt": "2026-07-02T10:22:45-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 23101,
+    "mediaId": "6a5b3cee7675cd3b310d348c",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Bloomberg Television examines a technology-led market decline, questioning whether artificial-intelligence capacity and investment have outpaced demonstrated commercial benefits. Guests also assess US employment data, describing the labor market as broadly balanced despite weaker payroll growth, and discuss the implications for Federal Reserve interest-rate policy. The broadcast focuses on US markets, AI spending, inflation, and monetary policy, with no substantive coverage of the UAE, Gulf affairs, international development, aid, or humanitarian issues.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.18
+    },
+    "odaImpact": {
+     "flag": "None",
+     "reasoning": "The transcript contains no direct discussion of the UAE, Gulf, development assistance, humanitarian affairs, Abu Dhabi, or regional stability."
+    },
+    "entities": [
+     "Bloomberg Television",
+     "Meta",
+     "SpaceX",
+     "Microsoft",
+     "OpenAI",
+     "JPMorgan",
+     "Federal Reserve",
+     "Mary Daly"
+    ],
+    "topics": [
+     "Artificial intelligence",
+     "Technology stocks",
+     "US labor market",
+     "Federal Reserve policy",
+     "Inflation",
+     "Corporate credit"
+    ],
+    "odaRelevant": false,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:44:45.087Z",
+    "transcriptTruncatedForAnalysis": true
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:44:35.426Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 4555,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:44:35.458Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 32,
+     "note": "23101 chars"
+    },
+    {
+     "ts": "2026-07-18T08:44:35.568Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 109,
+     "note": "6a5b3cf322dc498ce761ad24"
+    },
+    {
+     "ts": "2026-07-18T08:44:45.086Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 9518,
+     "note": "answer=1205ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "JQSB2Fdv398",
+   "outlet": "bloomberg",
+   "subLabel": null,
+   "title": "Iran, Israel Pledge to End Attacks; OpenAI Files For IPO | Horizons Middle East & Africa 6/9/2026",
+   "author": "Bloomberg Television",
+   "durationSec": 2765,
+   "publishedAt": "2026-06-09T00:35:20-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 41023,
+    "mediaId": "6a5b3cfcb88ae2788ce79dae",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Iran and Israel agreed to halt strikes following President Trump\u2019s appeal for de-escalation, easing immediate regional tensions, although both sides threatened to respond if attacked and Lebanon remains a key dispute. Oil edged lower, with Brent reported at $93 a barrel, while the blockade in the Strait of Hormuz continued and an incident involving a US Army Apache helicopter near the strait remained under investigation. Asian equities rebounded as Middle East tensions eased, but persistent risks involving Iran, Israel, Hezbollah, Lebanon, and Hormuz remain significant for Gulf stability and energy markets.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.9
+    },
+    "odaImpact": {
+     "flag": "Notable",
+     "reasoning": "The temporary de-escalation supports Gulf stability, but unresolved Lebanon tensions and the continuing Strait of Hormuz blockade preserve substantial regional and economic risk."
+    },
+    "entities": [
+     "Iran",
+     "Israel",
+     "Donald Trump",
+     "Lebanon",
+     "Hezbollah",
+     "Strait of Hormuz",
+     "United States",
+     "Dubai"
+    ],
+    "topics": [
+     "Iran-Israel de-escalation",
+     "regional stability",
+     "Strait of Hormuz",
+     "oil markets",
+     "Lebanon conflict",
+     "Asian markets"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:45:00.696Z",
+    "transcriptTruncatedForAnalysis": true
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:44:49.363Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 5443,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:44:49.370Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 7,
+     "note": "41023 chars"
+    },
+    {
+     "ts": "2026-07-18T08:44:49.486Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 115,
+     "note": "6a5b3d01d38ebead026138b5"
+    },
+    {
+     "ts": "2026-07-18T08:45:00.696Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 11210,
+     "note": "answer=1288ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "ohAstmb29lE",
+   "outlet": "ft",
+   "subLabel": null,
+   "title": "FT Live: Your Edge in a Changing World",
+   "author": "FT Live",
+   "durationSec": 107,
+   "publishedAt": "2024-12-11T02:32:07-08:00",
+   "status": "done",
+   "transcript": {
+    "chars": 878,
+    "mediaId": "6a5b3cfcb88ae2788ce79dad",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "The Financial Times promotes FT Live as a platform for global events addressing business-critical issues. The coverage highlights artificial intelligence, economic shocks, geopolitical risk, innovation, leadership, and decision-making during crises. It emphasizes engagement with leaders and access to insights but provides no substantive discussion of the UAE, Gulf affairs, international development, aid, humanitarian issues, Abu Dhabi, or regional stability.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.2
+    },
+    "odaImpact": {
+     "flag": "None",
+     "reasoning": "The promotional segment contains no direct coverage of ODA themes or implications for the UAE and Gulf."
+    },
+    "entities": [
+     "Financial Times",
+     "FT Live"
+    ],
+    "topics": [
+     "artificial intelligence",
+     "economic shocks",
+     "geopolitical risk",
+     "innovation",
+     "crisis leadership",
+     "global business events"
+    ],
+    "odaRelevant": false,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:44:55.702Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:44:48.814Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 4925,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:44:48.832Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 18,
+     "note": "878 chars"
+    },
+    {
+     "ts": "2026-07-18T08:44:48.963Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 130,
+     "note": "6a5b3d00367603cd722b4532"
+    },
+    {
+     "ts": "2026-07-18T08:44:55.702Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 6738,
+     "note": "answer=966ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "E76BzrJPDWY",
+   "outlet": "ft",
+   "subLabel": null,
+   "title": "Financial Times News Briefing \uff5c 1 February 2026, Sunday",
+   "author": "Quality Press News",
+   "durationSec": 884,
+   "publishedAt": "2026-02-01T03:12:51-08:00",
+   "status": "done",
+   "transcript": {
+    "chars": 15426,
+    "mediaId": "6a5b3cfddb404d38defdb787",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "The broadcast reports that Vladimir Putin agreed to facilitate talks in Abu Dhabi after the US President requested a one-week ceasefire on Kyiv amid freezing weather. It describes this development as shifting the diplomatic center of gravity toward the Gulf while heat, electricity, and humanitarian survival become central bargaining issues in the Ukraine conflict. The briefing also highlights emerging-market investment flows, global monetary-policy uncertainty, technology-sector spending, and concentrated supply-chain risks. For ODA leadership, Abu Dhabi\u2019s reported diplomatic role is the clearest relevance, linking the UAE capital to regional stability, mediation, and humanitarian concerns.",
+    "sentiment": {
+     "label": "positive",
+     "confidence": 0.88
+    },
+    "odaImpact": {
+     "flag": "Notable",
+     "reasoning": "The reported facilitation of Ukraine talks in Abu Dhabi positively positions the UAE capital as a venue for diplomacy tied to humanitarian survival and international stability."
+    },
+    "entities": [
+     "Abu Dhabi",
+     "Vladimir Putin",
+     "Volodymyr Zelensky",
+     "Ukraine",
+     "Microsoft",
+     "OpenAI",
+     "Federal Reserve",
+     "Financial Times"
+    ],
+    "topics": [
+     "Abu Dhabi diplomacy",
+     "Ukraine ceasefire",
+     "humanitarian affairs",
+     "regional stability",
+     "emerging markets",
+     "AI investment"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:45:42.628Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:45:32.948Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 47111,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:45:32.976Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 27,
+     "note": "15426 chars"
+    },
+    {
+     "ts": "2026-07-18T08:45:33.163Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 186,
+     "note": "6a5b3d2dd38ebead026138b8"
+    },
+    {
+     "ts": "2026-07-18T08:45:42.627Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 9464,
+     "note": "answer=1398ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "sHKSIVg7rqU",
+   "outlet": "reuters",
+   "subLabel": null,
+   "title": "Reuters NEXT: Reuters journalists speak to global policymakers, business leaders and changemakers",
+   "author": "Islam Channel",
+   "durationSec": 28695,
+   "publishedAt": "2025-12-03T15:05:47-08:00",
+   "status": "done",
+   "transcript": {
+    "chars": 319855,
+    "mediaId": "6a5b36acb88ae2788ce79da6",
+    "cached": true
+   },
+   "analysis": {
+    "summary": "Reuters journalists assess how higher US tariffs, immigration restrictions and inflation are reshaping the US economy and global trade relationships. They describe resilient consumption and AI-linked business investment alongside manufacturing job losses, affordability pressures and uncertainty over future growth. The discussion also highlights concerns about political pressure on the Federal Reserve, intervention in corporate decision-making and the longer-term effects of reduced support for research and immigration. US-China tensions are examined as an unresolved contest with potentially significant consequences for innovation and the global economy, but the transcript contains no direct discussion of the UAE, Gulf or humanitarian aid.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.68
+    },
+    "odaImpact": {
+     "flag": "Watch",
+     "reasoning": "Global trade restructuring, inflation and US-China tensions may affect economic-development conditions, although no direct UAE or Gulf impact is identified."
+    },
+    "entities": [
+     "Donald Trump",
+     "Federal Reserve",
+     "Joe Biden",
+     "China",
+     "Russia",
+     "Ukraine",
+     "Kevin Hassett",
+     "Jay Powell"
+    ],
+    "topics": [
+     "US tariffs",
+     "global trade",
+     "inflation",
+     "labor migration",
+     "Federal Reserve independence",
+     "US-China tensions"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:45:11.115Z",
+    "transcriptTruncatedForAnalysis": true
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:44:56.396Z",
+     "step": "transcribe.cache",
+     "http": 200,
+     "ms": 0,
+     "note": "reused stored transcript (319855 chars) \u2014 dedupe: no re-transcription"
+    },
+    {
+     "ts": "2026-07-18T08:44:56.509Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 112,
+     "note": "6a5b3d084b9768e553e9c57c"
+    },
+    {
+     "ts": "2026-07-18T08:45:11.114Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 14605,
+     "note": "answer=1395ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "wzcoHTVAobY",
+   "outlet": "reuters",
+   "subLabel": null,
+   "title": "LIVE: Reuters Institute Unveils Digital News Report 2026 at Global Launch Event | AC1B",
+   "author": "DRM News",
+   "durationSec": 4585,
+   "publishedAt": "2026-06-16T15:40:45-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 72230,
+    "mediaId": "6a5b3d0ddb404d38defdb790",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "The Reuters Institute\u2019s 2026 Digital News Report finds that social-media and video networks have overtaken television and news websites or apps as the most widely used news source globally. AI-chatbot use for news rose from 7% to 10%, while trust in news fell significantly in 29 of 48 surveyed markets and concern about distinguishing fake from real information reached 62%. Video consumption and news creators are growing, although creators remain largely complementary to established outlets rather than substitutes for them. The segment contains no specific findings about the UAE, Gulf development, aid, or humanitarian affairs, with regional conflict referenced only as an example of generational news-consumption patterns in the United States.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.35
+    },
+    "odaImpact": {
+     "flag": "Watch",
+     "reasoning": "Shifts toward third-party video platforms, creators, and lower-trust channels could affect how development and regional-stability information reaches global audiences, but no UAE-specific evidence is presented."
+    },
+    "entities": [
+     "Reuters Institute",
+     "YouGov",
+     "Google News Initiative",
+     "BBC",
+     "Ofcom",
+     "NHK",
+     "United Kingdom",
+     "United States"
+    ],
+    "topics": [
+     "digital news consumption",
+     "social media platforms",
+     "news trust",
+     "AI chatbots",
+     "online video",
+     "news creators"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:45:20.791Z",
+    "transcriptTruncatedForAnalysis": true
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:45:07.453Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 6003,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:45:07.482Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 28,
+     "note": "72230 chars"
+    },
+    {
+     "ts": "2026-07-18T08:45:07.566Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 83,
+     "note": "6a5b3d134b9768e553e9c580"
+    },
+    {
+     "ts": "2026-07-18T08:45:20.790Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 13223,
+     "note": "answer=1328ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "Y0gi4Pd9wkQ",
+   "outlet": "reuters",
+   "subLabel": null,
+   "title": "LIVE NOW: Reuters NEXT New York 2025 \u2013 Global Leaders, Jimmy Wales & Ben Shapiro Speak! | AC15",
+   "author": "DWS News",
+   "durationSec": 31390,
+   "publishedAt": "2025-12-03T14:57:42-08:00",
+   "status": "done",
+   "transcript": {
+    "chars": 354132,
+    "mediaId": "6a5b3e047675cd3b310d34ac",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Reuters opened its New York event with UN Secretary-General Antonio Guterres discussing wars in Gaza and Ukraine, climate risks, weakening international law, and pressure on the multilateral system. Guterres said Gaza\u2019s ceasefire must hold, humanitarian distribution must improve, and links among Gaza, the West Bank, and the Palestinian Authority should support a two-state solution. He warned that cuts following the end of USAID, alongside reduced humanitarian support from other developed countries, are harming health, food security, sanitation, vaccination, and civilian protection. He also said UN peacekeeping missions are reducing deployed troops and police by 25%, creating further risks for civilians and regional stability.",
+    "sentiment": {
+     "label": "negative",
+     "confidence": 0.94
+    },
+    "odaImpact": {
+     "flag": "High",
+     "reasoning": "The discussion directly highlights worsening humanitarian financing, reduced peacekeeping capacity, Gaza aid needs, climate-driven insecurity, and threats to regional stability."
+    },
+    "entities": [
+     "Reuters",
+     "United Nations",
+     "Antonio Guterres",
+     "Gaza",
+     "Palestinian Authority",
+     "United States",
+     "Ukraine",
+     "Abu Dhabi"
+    ],
+    "topics": [
+     "humanitarian aid cuts",
+     "Gaza ceasefire",
+     "regional stability",
+     "UN peacekeeping",
+     "climate change",
+     "international law"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:49:23.105Z",
+    "transcriptTruncatedForAnalysis": true
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:46:33.820Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 81979,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-07-18T08:49:13.639Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 4865,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:49:13.693Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 53,
+     "note": "354132 chars"
+    },
+    {
+     "ts": "2026-07-18T08:49:13.777Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 82,
+     "note": "6a5b3e0922dc498ce761ad33"
+    },
+    {
+     "ts": "2026-07-18T08:49:23.104Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 9327,
+     "note": "answer=1426ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "C0a3Q2NtAD0",
+   "outlet": "alarabiya",
+   "subLabel": null,
+   "title": "Al Arabiya English \u2013 Where the World Talks",
+   "author": "Al Arabiya English",
+   "durationSec": 70,
+   "publishedAt": "2025-04-04T07:11:07-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 838,
+    "mediaId": "6a5b3d21b88ae2788ce79daf",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Al Arabiya English promotes its coverage of rapid shifts in the world order, including political upheaval, economic tensions, social movements, war, and nuclear competition. The transcript highlights criticism of tariffs and calls for America to adopt a friendlier, more inclusive international policy. It also notes that meetings with Hamas offered some hope, while warning that wars can erupt unexpectedly and that another nuclear arms race is underway. The segment contains no direct discussion of the UAE, Abu Dhabi, aid, or humanitarian and development initiatives.",
+    "sentiment": {
+     "label": "negative",
+     "confidence": 0.72
+    },
+    "odaImpact": {
+     "flag": "Watch",
+     "reasoning": "References to Hamas, unexpected war, tariffs, and a nuclear arms race bear on regional stability and the wider international environment, but no direct UAE or development impact is identified."
+    },
+    "entities": [
+     "Al Arabiya English",
+     "America",
+     "Canada",
+     "Hamas"
+    ],
+    "topics": [
+     "world order",
+     "tariffs",
+     "international policy",
+     "Hamas talks",
+     "war",
+     "nuclear arms race"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:45:36.091Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:45:25.803Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 4338,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:45:25.927Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 123,
+     "note": "838 chars"
+    },
+    {
+     "ts": "2026-07-18T08:45:26.065Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 137,
+     "note": "6a5b3d2622dc498ce761ad27"
+    },
+    {
+     "ts": "2026-07-18T08:45:36.090Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 10025,
+     "note": "answer=1160ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "NaDT5rVDm60",
+   "outlet": "alarabiya",
+   "subLabel": null,
+   "title": "EXCLUSIVE: Israeli President 'Not Surprised' Iran-US Deal Fraying, Believes in 'Diplomatic Solution'",
+   "author": "Al Arabiya English",
+   "durationSec": 1645,
+   "publishedAt": "2026-07-16T10:43:37-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 22979,
+    "mediaId": "6a5b3d31db404d38defdb79d",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Israeli President Isaac Herzog said he supports a diplomatic solution with Iran but argued that firm action is needed to prevent Iranian nuclear capability and keep the Strait of Hormuz open to international trade. He advocated deeper Israeli dialogue with Arab states, praised relations with the United Arab Emirates, Bahrain, and Morocco under the Abraham Accords, and expressed support for eventual normalization with Saudi Arabia. Herzog also highlighted potential transportation, communications, and energy connectivity linking Israel, the Gulf, Saudi Arabia, and India. On Gaza and Lebanon, he defended Israel's conduct, blamed Hamas and Hezbollah for obstructing peace, and presented their disarmament and the removal of Iranian influence as prerequisites for regional stability.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.84
+    },
+    "odaImpact": {
+     "flag": "Notable",
+     "reasoning": "The interview directly addresses UAE-Israel relations, Gulf economic connectivity, Strait of Hormuz security, Saudi normalization, and wider regional stability."
+    },
+    "entities": [
+     "Isaac Herzog",
+     "Israel",
+     "Iran",
+     "United Arab Emirates",
+     "Saudi Arabia",
+     "United States",
+     "Hamas",
+     "Hezbollah"
+    ],
+    "topics": [
+     "UAE-Israel relations",
+     "Strait of Hormuz",
+     "Iran nuclear diplomacy",
+     "Saudi normalization",
+     "Gulf connectivity",
+     "regional stability"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:45:52.395Z",
+    "transcriptTruncatedForAnalysis": true
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:45:42.061Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 5111,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:45:42.116Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 54,
+     "note": "22979 chars"
+    },
+    {
+     "ts": "2026-07-18T08:45:42.208Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 91,
+     "note": "6a5b3d364b9768e553e9c584"
+    },
+    {
+     "ts": "2026-07-18T08:45:52.395Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 10187,
+     "note": "answer=1465ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "njPpXh8pjpc",
+   "outlet": "fox",
+   "subLabel": null,
+   "title": "HEARTBREAKING: Child needs more surgery YEARS after illegal trucker allegedly hit her",
+   "author": "Fox News",
+   "durationSec": 322,
+   "publishedAt": "2026-07-18T00:45:34-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 4566,
+    "mediaId": "6a5b3d377675cd3b310d3496",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "The segment focuses on Delilah Coleman, a child who sustained severe injuries in a California truck crash and now requires another surgery to replace deteriorating skull bone with a synthetic piece. Her father, Marcus Coleman, said she has undergone close to six surgeries and called for stricter driver qualifications and greater transparency in the trucking industry. The program also reported that the Trump administration is launching a fraud investigation into 75 truck-driving schools that allegedly helped non-citizens obtain commercial driver\u2019s licenses. The coverage concerns domestic U.S. immigration, road safety, and commercial-driver regulation and has no stated connection to UAE, Gulf, development, aid, or humanitarian policy themes.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.18
+    },
+    "odaImpact": {
+     "flag": "None",
+     "reasoning": "The segment contains no direct reference to the UAE, Gulf, international development, aid, Abu Dhabi, or regional stability."
+    },
+    "entities": [
+     "Delilah Coleman",
+     "Marcus Coleman",
+     "President Trump",
+     "Har the Singh",
+     "Toby Forsythe",
+     "California",
+     "Ohio",
+     "Pennsylvania"
+    ],
+    "topics": [
+     "U.S. trucking safety",
+     "commercial driver licensing",
+     "immigration enforcement",
+     "fraud investigation",
+     "traffic fatalities",
+     "child injury"
+    ],
+    "odaRelevant": false,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:46:01.778Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:45:52.126Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 8614,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:45:52.164Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 38,
+     "note": "4566 chars"
+    },
+    {
+     "ts": "2026-07-18T08:45:52.262Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 97,
+     "note": "6a5b3d4022dc498ce761ad2a"
+    },
+    {
+     "ts": "2026-07-18T08:46:01.777Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 9515,
+     "note": "answer=1412ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "cBWOtw-ofbw",
+   "outlet": "fox",
+   "subLabel": null,
+   "title": "'This ALLOWS ICE to continue vehicle stops': Ex-Acting DHS secretary",
+   "author": "Fox News",
+   "durationSec": 308,
+   "publishedAt": "2026-07-18T00:00:25-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 4967,
+    "mediaId": "6a5b3d41b88ae2788ce79dbc",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Fox News reported that ICE vehicle stops may resume when at least one participating agent has a body-worn camera. Former Acting DHS Secretary Chad Wolf said the guidance allows ICE to continue vehicle stops while cameras are deployed more broadly. The segment stated that over half of ICE field offices have body cameras and that the remaining offices are expected to receive them within 60 days. The discussion focused on U.S. immigration enforcement, political criticism of ICE, and the operational requirements for deploying body cameras.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.1
+    },
+    "odaImpact": {
+     "flag": "None",
+     "reasoning": "The segment concerns U.S. immigration enforcement and contains no substantive coverage of the UAE, Gulf, development, aid, humanitarian affairs, Abu Dhabi, or regional stability."
+    },
+    "entities": [
+     "Fox News",
+     "ICE",
+     "Department of Homeland Security",
+     "Chad Wolf",
+     "America First Policy Institute",
+     "Markwayne Mullin",
+     "Karoline Leavitt",
+     "United States Congress"
+    ],
+    "topics": [
+     "U.S. immigration enforcement",
+     "ICE vehicle stops",
+     "body cameras",
+     "border security",
+     "deportation policy",
+     "anti-ICE protests"
+    ],
+    "odaRelevant": false,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:46:06.696Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:45:58.269Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 4905,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:45:58.323Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 54,
+     "note": "4967 chars"
+    },
+    {
+     "ts": "2026-07-18T08:45:58.458Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 134,
+     "note": "6a5b3d4622dc498ce761ad2c"
+    },
+    {
+     "ts": "2026-07-18T08:46:06.695Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 8237,
+     "note": "answer=1284ch thinking=0ch"
+    }
+   ]
+  },
+  {
+   "videoId": "2gUKBwDTxzA",
+   "outlet": "fox",
+   "subLabel": null,
+   "title": "A power shift appears to be 'BREWING' within Iran: Former deputy national security advisor",
+   "author": "Fox News",
+   "durationSec": 401,
+   "publishedAt": "2026-07-17T22:30:12-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 5622,
+    "mediaId": "6a5b3d4adb404d38defdb7a4",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Fox News guests described mounting public anger and economic strain in Iran, citing a leaked internal report that allegedly found only 9% of Tehran respondents favoring the status quo, while acknowledging uncertainty about its accuracy. The discussion said military attacks were intensifying alongside possible negotiations, with the campaign increasingly aimed at isolating the IRGC and weakening its ability to maintain control. Speakers warned of threats to shipping, tanker explosions and disruption around the Strait of Hormuz, presenting the conflict as damaging to the energy-dependent economies of Iran\u2019s Gulf neighbors, including Qatar and Oman. The segment also highlighted reported Chevron and Exxon agreements in Iraq and plans to move oil through Iraq and Syria without relying on the strait.",
+    "sentiment": {
+     "label": "negative",
+     "confidence": 0.96
+    },
+    "odaImpact": {
+     "flag": "High",
+     "reasoning": "Escalating conflict, threats to Gulf shipping and energy flows, and pressure on neighboring states directly affect regional stability and economic development."
+    },
+    "entities": [
+     "Iran",
+     "United States",
+     "President Trump",
+     "Heritage Foundation",
+     "IRGC",
+     "Qatar",
+     "Oman",
+     "Iraq"
+    ],
+    "topics": [
+     "Iran conflict",
+     "Gulf regional stability",
+     "Strait of Hormuz",
+     "energy security",
+     "Iranian political unrest",
+     "oil trade routes"
+    ],
+    "odaRelevant": true,
+    "thinking": "",
+    "model": "gpt-5.6-sol-medium",
+    "streamed": true,
+    "analysedAt": "2026-07-18T08:46:19.744Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-07-18T08:46:07.048Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 4453,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-07-18T08:46:07.077Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 29,
+     "note": "5622 chars"
+    },
+    {
+     "ts": "2026-07-18T08:46:07.159Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 81,
+     "note": "6a5b3d4fd38ebead026138be"
+    },
+    {
+     "ts": "2026-07-18T08:46:19.744Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 12584,
+     "note": "answer=1463ch thinking=0ch"
+    }
+   ]
+  }
+ ],
+ "digest": {
+  "top3": [
+   {
+    "videoId": "eaBUNBDOgkU",
+    "headline": "Iran-US peace talks end without agreement in Pakistan",
+    "why": "Failed talks and a fragile ceasefire raise immediate security and economic risks across the Gulf."
+   },
+   {
+    "videoId": "2gUKBwDTxzA",
+    "headline": "Economic strain may be driving a power shift inside Iran",
+    "why": "Reported public anger and elite pressure could affect Iranian stability and regional policy."
+   },
+   {
+    "videoId": "Y0gi4Pd9wkQ",
+    "headline": "Guterres warns wars are weakening international law and multilateralism",
+    "why": "UN concerns over Gaza, Ukraine and global governance carry major diplomatic implications for Gulf states."
+   }
+  ],
+  "narrative": "Mainstream coverage is dominated by Iran: failed US talks, ceasefire uncertainty and signs of internal political strain point to sustained Gulf security risk. Wider reporting also highlights pressure on international law and multilateral diplomacy, reinforcing a picture of regional volatility within a weakening global order.",
+  "sentimentBalance": {
+   "positive": 1,
+   "neutral": 12,
+   "negative": 5
+  },
+  "flagCounts": {
+   "None": 7,
+   "Watch": 3,
+   "Notable": 5,
+   "High": 3
+  },
+  "analysedCount": 18,
+  "model": "gpt-5.6-sol-medium",
+  "streamed": true,
+  "thinking": "",
+  "builtAt": "2026-07-18T09:00:20.266Z",
+  "latencyMs": 10070
+ },
+ "schedule": {
+  "cron": "0 6 * * *",
+  "timezone": "Asia/Dubai",
+  "utcEquivalent": "0 2 * * *",
+  "description": "Daily MSM Analysis run at 06:00 Gulf Standard Time (Asia/Dubai, UTC+4 = 02:00 UTC). Fire POST /api/msm/run {\"date\":\"<gulf-date>\"} \u2014 the run is idempotent: already-transcribed videos are served from the store, so repeated fires only fill gaps."
+ }
+}

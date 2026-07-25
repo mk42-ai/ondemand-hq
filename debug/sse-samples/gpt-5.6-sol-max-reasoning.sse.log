@@ -1,0 +1,729 @@
+# RAW SSE capture — OnDemand POST /chat/v1/sessions/6a5a5bb8fe085fa6b0b185fa/query
+# endpointId=predefined-gpt-5.6-sol reasoningEffort=max responseMode=stream fulfillmentOnly=true
+# capture started (UTC): 2026-07-17T16:46:20.438890+00:00
+# HTTP 200 Content-Type: text/event-stream; charset=utf-8
+event:message
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5c5c33960cd24772b03d","eventIndex":1,"eventType":"statusLog","status":"processing","currentStatusLog":{"statusType":"fulfilling","statusMessage":"Fulfilling the prompt...","time":"2026-07-17T16:46:20Z"}}
+
+event:heartbeat
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5c5c33960cd24772b03d","time":"2026-07-17T16:46:23Z"}
+
+event:heartbeat
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5c5c33960cd24772b03d","time":"2026-07-17T16:46:26Z"}
+
+event:heartbeat
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5c5c33960cd24772b03d","time":"2026-07-17T16:46:29Z"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "There", "status": "processing", "eventIndex":2, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " are", "status": "processing", "eventIndex":3, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " **", "status": "processing", "eventIndex":4, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "16", "status": "processing", "eventIndex":5, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " prime", "status": "processing", "eventIndex":6, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " numbers", "status": "processing", "eventIndex":7, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "**", "status": "processing", "eventIndex":8, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " between", "status": "processing", "eventIndex":9, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":10, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "100", "status": "processing", "eventIndex":11, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "0", "status": "processing", "eventIndex":12, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " and", "status": "processing", "eventIndex":13, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":14, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "110", "status": "processing", "eventIndex":15, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "0", "status": "processing", "eventIndex":16, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ".\n\n", "status": "processing", "eventIndex":17, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "They", "status": "processing", "eventIndex":18, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " are", "status": "processing", "eventIndex":19, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ":\n\n", "status": "processing", "eventIndex":20, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":21, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "[\n", "status": "processing", "eventIndex":22, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":23, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "begin", "status": "processing", "eventIndex":24, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "{", "status": "processing", "eventIndex":25, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "aligned", "status": "processing", "eventIndex":26, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "}\n", "status": "processing", "eventIndex":27, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "&", "status": "processing", "eventIndex":28, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "100", "status": "processing", "eventIndex":29, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "9", "status": "processing", "eventIndex":30, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":31, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":32, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "101", "status": "processing", "eventIndex":33, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "3", "status": "processing", "eventIndex":34, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":35, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":36, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "101", "status": "processing", "eventIndex":37, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "9", "status": "processing", "eventIndex":38, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":39, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":40, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "102", "status": "processing", "eventIndex":41, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "1", "status": "processing", "eventIndex":42, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",", "status": "processing", "eventIndex":43, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\\\", "status": "processing", "eventIndex":44, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\n", "status": "processing", "eventIndex":45, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "&", "status": "processing", "eventIndex":46, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "103", "status": "processing", "eventIndex":47, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "1", "status": "processing", "eventIndex":48, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":49, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":50, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "103", "status": "processing", "eventIndex":51, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "3", "status": "processing", "eventIndex":52, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":53, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":54, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "103", "status": "processing", "eventIndex":55, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "9", "status": "processing", "eventIndex":56, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":57, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":58, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "104", "status": "processing", "eventIndex":59, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "9", "status": "processing", "eventIndex":60, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",", "status": "processing", "eventIndex":61, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\\\", "status": "processing", "eventIndex":62, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\n", "status": "processing", "eventIndex":63, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "&", "status": "processing", "eventIndex":64, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "105", "status": "processing", "eventIndex":65, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "1", "status": "processing", "eventIndex":66, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":67, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":68, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "106", "status": "processing", "eventIndex":69, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "1", "status": "processing", "eventIndex":70, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":71, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":72, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "106", "status": "processing", "eventIndex":73, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "3", "status": "processing", "eventIndex":74, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":75, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":76, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "106", "status": "processing", "eventIndex":77, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "9", "status": "processing", "eventIndex":78, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",", "status": "processing", "eventIndex":79, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\\\", "status": "processing", "eventIndex":80, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\n", "status": "processing", "eventIndex":81, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "&", "status": "processing", "eventIndex":82, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "108", "status": "processing", "eventIndex":83, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "7", "status": "processing", "eventIndex":84, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":85, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":86, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "109", "status": "processing", "eventIndex":87, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "1", "status": "processing", "eventIndex":88, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":89, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":90, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "109", "status": "processing", "eventIndex":91, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "3", "status": "processing", "eventIndex":92, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":93, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":94, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "109", "status": "processing", "eventIndex":95, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "7", "status": "processing", "eventIndex":96, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ".\n", "status": "processing", "eventIndex":97, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":98, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "end", "status": "processing", "eventIndex":99, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "{", "status": "processing", "eventIndex":100, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "aligned", "status": "processing", "eventIndex":101, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "}\n", "status": "processing", "eventIndex":102, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":103, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "]\n\n", "status": "processing", "eventIndex":104, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "To", "status": "processing", "eventIndex":105, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " verify", "status": "processing", "eventIndex":106, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " primal", "status": "processing", "eventIndex":107, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "ity", "status": "processing", "eventIndex":108, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",", "status": "processing", "eventIndex":109, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " it", "status": "processing", "eventIndex":110, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " is", "status": "processing", "eventIndex":111, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " enough", "status": "processing", "eventIndex":112, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " to", "status": "processing", "eventIndex":113, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " test", "status": "processing", "eventIndex":114, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " divis", "status": "processing", "eventIndex":115, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "ibility", "status": "processing", "eventIndex":116, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " by", "status": "processing", "eventIndex":117, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " primes", "status": "processing", "eventIndex":118, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " no", "status": "processing", "eventIndex":119, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " greater", "status": "processing", "eventIndex":120, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " than", "status": "processing", "eventIndex":121, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\n\n", "status": "processing", "eventIndex":122, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":123, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "[\n", "status": "processing", "eventIndex":124, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":125, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "sqrt", "status": "processing", "eventIndex":126, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "{", "status": "processing", "eventIndex":127, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "110", "status": "processing", "eventIndex":128, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "0", "status": "processing", "eventIndex":129, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "}\\", "status": "processing", "eventIndex":130, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "approx", "status": "processing", "eventIndex":131, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":132, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "33", "status": "processing", "eventIndex":133, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ".", "status": "processing", "eventIndex":134, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "17", "status": "processing", "eventIndex":135, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ".\n", "status": "processing", "eventIndex":136, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":137, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "]\n\n", "status": "processing", "eventIndex":138, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "Thus", "status": "processing", "eventIndex":139, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",", "status": "processing", "eventIndex":140, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " after", "status": "processing", "eventIndex":141, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " eliminating", "status": "processing", "eventIndex":142, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " multiples", "status": "processing", "eventIndex":143, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " of", "status": "processing", "eventIndex":144, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " \\(", "status": "processing", "eventIndex":145, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "2", "status": "processing", "eventIndex":146, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":147, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "),", "status": "processing", "eventIndex":148, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " \\(", "status": "processing", "eventIndex":149, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "3", "status": "processing", "eventIndex":150, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":151, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "),", "status": "processing", "eventIndex":152, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " and", "status": "processing", "eventIndex":153, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " \\(", "status": "processing", "eventIndex":154, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "5", "status": "processing", "eventIndex":155, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":156, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "),", "status": "processing", "eventIndex":157, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " each", "status": "processing", "eventIndex":158, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " remaining", "status": "processing", "eventIndex":159, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " candidate", "status": "processing", "eventIndex":160, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " only", "status": "processing", "eventIndex":161, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " needs", "status": "processing", "eventIndex":162, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " to", "status": "processing", "eventIndex":163, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " be", "status": "processing", "eventIndex":164, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " checked", "status": "processing", "eventIndex":165, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " against", "status": "processing", "eventIndex":166, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\n\n", "status": "processing", "eventIndex":167, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":168, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "[\n", "status": "processing", "eventIndex":169, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "7", "status": "processing", "eventIndex":170, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":171, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":172, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "11", "status": "processing", "eventIndex":173, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":174, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":175, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "13", "status": "processing", "eventIndex":176, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":177, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":178, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "17", "status": "processing", "eventIndex":179, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":180, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":181, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "19", "status": "processing", "eventIndex":182, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":183, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":184, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "23", "status": "processing", "eventIndex":185, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":186, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":187, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "29", "status": "processing", "eventIndex":188, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ",\\", "status": "processing", "eventIndex":189, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":190, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "31", "status": "processing", "eventIndex":191, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ".\n", "status": "processing", "eventIndex":192, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":193, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "]\n\n", "status": "processing", "eventIndex":194, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "None", "status": "processing", "eventIndex":195, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " of", "status": "processing", "eventIndex":196, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " the", "status": "processing", "eventIndex":197, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " ", "status": "processing", "eventIndex":198, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "16", "status": "processing", "eventIndex":199, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " listed", "status": "processing", "eventIndex":200, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " numbers", "status": "processing", "eventIndex":201, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " is", "status": "processing", "eventIndex":202, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " divisible", "status": "processing", "eventIndex":203, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " by", "status": "processing", "eventIndex":204, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " any", "status": "processing", "eventIndex":205, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " of", "status": "processing", "eventIndex":206, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " these", "status": "processing", "eventIndex":207, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " primes", "status": "processing", "eventIndex":208, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ".", "status": "processing", "eventIndex":209, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " Every", "status": "processing", "eventIndex":210, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " other", "status": "processing", "eventIndex":211, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " integer", "status": "processing", "eventIndex":212, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " in", "status": "processing", "eventIndex":213, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " the", "status": "processing", "eventIndex":214, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " interval", "status": "processing", "eventIndex":215, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " has", "status": "processing", "eventIndex":216, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " a", "status": "processing", "eventIndex":217, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " prime", "status": "processing", "eventIndex":218, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " divisor", "status": "processing", "eventIndex":219, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " at", "status": "processing", "eventIndex":220, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " most", "status": "processing", "eventIndex":221, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": " \\(", "status": "processing", "eventIndex":222, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "31", "status": "processing", "eventIndex":223, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":224, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": ").\n\n", "status": "processing", "eventIndex":225, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":226, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "[\n", "status": "processing", "eventIndex":227, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":228, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "boxed", "status": "processing", "eventIndex":229, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "{", "status": "processing", "eventIndex":230, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "16", "status": "processing", "eventIndex":231, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "}\n", "status": "processing", "eventIndex":232, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "\\", "status": "processing", "eventIndex":233, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId": "6a5a5bb8fe085fa6b0b185fa", "messageId": "6a5a5c5c33960cd24772b03d", "answer": "]", "status": "processing", "eventIndex":234, "eventType": "fulfillment"}
+
+event:message
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5c5c33960cd24772b03d","eventIndex":235,"eventType":"statusLog","status":"processing","currentStatusLog":{"statusType":"fulfillment_completed","statusMessage":"Fulfillment completed","answer":"There are **16 prime numbers** between 1000 and 1100.\n\nThey are:\n\n\\[\n\\begin{aligned}\n\u00261009,\\ 1013,\\ 1019,\\ 1021,\\\\\n\u00261031,\\ 1033,\\ 1039,\\ 1049,\\\\\n\u00261051,\\ 1061,\\ 1063,\\ 1069,\\\\\n\u00261087,\\ 1091,\\ 1093,\\ 1097.\n\\end{aligned}\n\\]\n\nTo verify primality, it is enough to test divisibility by primes no greater than\n\n\\[\n\\sqrt{1100}\\approx 33.17.\n\\]\n\nThus, after eliminating multiples of \\(2\\), \\(3\\), and \\(5\\), each remaining candidate only needs to be checked against\n\n\\[\n7,\\ 11,\\ 13,\\ 17,\\ 19,\\ 23,\\ 29,\\ 31.\n\\]\n\nNone of the 16 listed numbers is divisible by any of these primes. Every other integer in the interval has a prime divisor at most \\(31\\).\n\n\\[\n\\boxed{16}\n\\]","time":"2026-07-17T16:46:32Z"}}
+
+event:message
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5c5c33960cd24772b03d","eventIndex":236,"eventType":"metricsLog","status":"processing","publicMetrics":{"inputTokens":1562,"outputTokens":684,"totalTokens":2246,"ragTimeSec":0,"fulfillmentTimeSec":11.33,"totalTimeSec":11.33}}
+
+event:heartbeat
+data:{"sessionId":"6a5a5bb8fe085fa6b0b185fa","messageId":"6a5a5c5c33960cd24772b03d","time":"2026-07-17T16:46:32Z"}
+
+event:message
+data:[DONE]
+
+
+# capture ended (UTC): 2026-07-17T16:46:34.284000+00:00

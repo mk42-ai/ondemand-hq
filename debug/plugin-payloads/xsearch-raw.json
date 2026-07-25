@@ -1,0 +1,76 @@
+{
+ "capturedAt": "2026-07-17T18:33:04Z",
+ "pluginId": "plugin-1751872652",
+ "query": "Latest posts on X about UAE investment and development cooperation with Egypt, prioritizing verified government, journalist and think-tank accounts",
+ "httpStatus": 200,
+ "latencyMs": 53367,
+ "queryResponse": {
+  "message": "Chat query submitted successfully",
+  "data": {
+   "sessionId": "6a5a752b4b9768e553e9c294",
+   "messageId": "6a5a752bd38ebead026136ba",
+   "answer": "Here are the latest relevant X posts surfaced, ordered newest first and prioritizing government-affiliated and established news accounts. Exact verification badges, timestamps, and engagement figures were not available.\n\n1. **Dr. Bu Abdullah — UAE government-affiliated account**  \n   Emphasizes the UAE–Egypt strategic partnership, economic cooperation, regional stability, and shared prosperity. Posted approximately **July 12, 2026**.  \n   https://x.com/Dr_BuAbdullah/status/2076548955010138115\n\n2. **Arab Times — news account citing WAM**  \n   Reports efforts involving **Dana Gas** to increase Egyptian oil and gas production, attract investment, and deepen UAE–Egypt energy cooperation. Posted **July 1, 2026**.  \n   https://x.com/arabtimesnews/status/2072219708821234165\n\n3. **Addis Standard — news account**  \n   Reports that Egyptian and Emirati companies signed a strategic partnership exceeding **$3.1 billion** for a New Cairo development. Posted **June 22, 2026**.  \n   https://x.com/addisstandard/status/2068949919553978422\n\n4. **The National — established UAE news outlet**  \n   Covers Majid Al Futtaim’s **$3.1 billion** mixed-use urban-development partnership with Midar in New Cairo’s Mada City. The agreement was witnessed by Egypt’s prime minister and ministers. Posted around **June 21, 2026**.  \n   https://x.com/TheNationalNews/status/2068720068536537308\n\n5. **CGTN Africa — established news account**  \n   Reports the Egypt–UAE partnership to develop a New Cairo urban project with investment exceeding **$3 billion**. Posted around **June 21, 2026**.  \n   https://x.com/cgtnafrica/status/2068675791819362722\n\n**Most recent clearly official economic-policy post surfaced:**\n\n- **Thani Al Zeyoudi — UAE Minister of State for Foreign Trade**  \n  Describes Egypt as a vital UAE partner in non-oil trade and a high-impact investment destination. Posted **December 29, 2025**.  \n  https://x.com/ThaniAlZeyoudi/status/2005692644157194299\n\nThe dominant recent themes are the **$3.1 billion New Cairo project**, expanded **energy-sector investment**, and broader strategic economic cooperation. No recent posts from identified think-tank accounts or additional Egyptian ministry, embassy, sovereign-fund, or head-of-state accounts were surfaced.",
+   "statusLogs": [
+    {
+     "statusType": "fulfilling",
+     "statusMessage": "Fulfilling the prompt...",
+     "time": "2026-07-17T18:32:56Z"
+    },
+    {
+     "statusType": "fulfillment_completed",
+     "statusMessage": "Fulfillment completed",
+     "answer": "Here are the latest relevant X posts surfaced, ordered newest first and prioritizing government-affiliated and established news accounts. Exact verification badges, timestamps, and engagement figures were not available.\n\n1. **Dr. Bu Abdullah — UAE government-affiliated account**  \n   Emphasizes the UAE–Egypt strategic partnership, economic cooperation, regional stability, and shared prosperity. Posted approximately **July 12, 2026**.  \n   https://x.com/Dr_BuAbdullah/status/2076548955010138115\n\n2. **Arab Times — news account citing WAM**  \n   Reports efforts involving **Dana Gas** to increase Egyptian oil and gas production, attract investment, and deepen UAE–Egypt energy cooperation. Posted **July 1, 2026**.  \n   https://x.com/arabtimesnews/status/2072219708821234165\n\n3. **Addis Standard — news account**  \n   Reports that Egyptian and Emirati companies signed a strategic partnership exceeding **$3.1 billion** for a New Cairo development. Posted **June 22, 2026**.  \n   https://x.com/addisstandard/status/2068949919553978422\n\n4. **The National — established UAE news outlet**  \n   Covers Majid Al Futtaim’s **$3.1 billion** mixed-use urban-development partnership with Midar in New Cairo’s Mada City. The agreement was witnessed by Egypt’s prime minister and ministers. Posted around **June 21, 2026**.  \n   https://x.com/TheNationalNews/status/2068720068536537308\n\n5. **CGTN Africa — established news account**  \n   Reports the Egypt–UAE partnership to develop a New Cairo urban project with investment exceeding **$3 billion**. Posted around **June 21, 2026**.  \n   https://x.com/cgtnafrica/status/2068675791819362722\n\n**Most recent clearly official economic-policy post surfaced:**\n\n- **Thani Al Zeyoudi — UAE Minister of State for Foreign Trade**  \n  Describes Egypt as a vital UAE partner in non-oil trade and a high-impact investment destination. Posted **December 29, 2025**.  \n  https://x.com/ThaniAlZeyoudi/status/2005692644157194299\n\nThe dominant recent themes are the **$3.1 billion New Cairo project**, expanded **energy-sector investment**, and broader strategic economic cooperation. No recent posts from identified think-tank accounts or additional Egyptian ministry, embassy, sovereign-fund, or head-of-state accounts were surfaced.",
+     "time": "2026-07-17T18:33:04Z"
+    }
+   ],
+   "metrics": {
+    "inputTokens": 2899,
+    "outputTokens": 628,
+    "totalTokens": 3527,
+    "ragTimeSec": 44.54,
+    "fulfillmentTimeSec": 8.39,
+    "totalTimeSec": 52.93
+   },
+   "status": "completed"
+  }
+ },
+ "fullMessage": {
+  "message": "Chat message fetched successfully",
+  "data": {
+   "id": "6a5a752bd38ebead026136ba",
+   "sessionId": "6a5a752b4b9768e553e9c294",
+   "companyId": "6692b763e851d28a036ab30e",
+   "externalUserId": "oda-intel-probe",
+   "agentIds": [
+    "agent-1751872652"
+   ],
+   "pluginIds": [
+    "agent-1751872652"
+   ],
+   "responseMode": "sync",
+   "reasoningMode": "",
+   "reasoningEffort": "medium",
+   "endpointId": "predefined-gpt-5.6-sol",
+   "modelConfigs": null,
+   "chatMode": "standard",
+   "useMemory": false,
+   "status": "completed",
+   "type": "text",
+   "media": null,
+   "query": "Latest posts on X about UAE investment and development cooperation with Egypt, prioritizing verified government, journalist and think-tank accounts",
+   "answer": "Here are the latest relevant X posts surfaced, ordered newest first and prioritizing government-affiliated and established news accounts. Exact verification badges, timestamps, and engagement figures were not available.\n\n1. **Dr. Bu Abdullah — UAE government-affiliated account**  \n   Emphasizes the UAE–Egypt strategic partnership, economic cooperation, regional stability, and shared prosperity. Posted approximately **July 12, 2026**.  \n   https://x.com/Dr_BuAbdullah/status/2076548955010138115\n\n2. **Arab Times — news account citing WAM**  \n   Reports efforts involving **Dana Gas** to increase Egyptian oil and gas production, attract investment, and deepen UAE–Egypt energy cooperation. Posted **July 1, 2026**.  \n   https://x.com/arabtimesnews/status/2072219708821234165\n\n3. **Addis Standard — news account**  \n   Reports that Egyptian and Emirati companies signed a strategic partnership exceeding **$3.1 billion** for a New Cairo development. Posted **June 22, 2026**.  \n   https://x.com/addisstandard/status/2068949919553978422\n\n4. **The National — established UAE news outlet**  \n   Covers Majid Al Futtaim’s **$3.1 billion** mixed-use urban-development partnership with Midar in New Cairo’s Mada City. The agreement was witnessed by Egypt’s prime minister and ministers. Posted around **June 21, 2026**.  \n   https://x.com/TheNationalNews/status/2068720068536537308\n\n5. **CGTN Africa — established news account**  \n   Reports the Egypt–UAE partnership to develop a New Cairo urban project with investment exceeding **$3 billion**. Posted around **June 21, 2026**.  \n   https://x.com/cgtnafrica/status/2068675791819362722\n\n**Most recent clearly official economic-policy post surfaced:**\n\n- **Thani Al Zeyoudi — UAE Minister of State for Foreign Trade**  \n  Describes Egypt as a vital UAE partner in non-oil trade and a high-impact investment destination. Posted **December 29, 2025**.  \n  https://x.com/ThaniAlZeyoudi/status/2005692644157194299\n\nThe dominant recent themes are the **$3.1 billion New Cairo project**, expanded **energy-sector investment**, and broader strategic economic cooperation. No recent posts from identified think-tank accounts or additional Egyptian ministry, embassy, sovereign-fund, or head-of-state accounts were surfaced.",
+   "publicMetrics": {
+    "inputTokens": 2899,
+    "outputTokens": 628,
+    "totalTokens": 3527,
+    "ragTimeSec": 44.54,
+    "fulfillmentTimeSec": 8.39,
+    "totalTimeSec": 52.93
+   },
+   "ragVersion": "v1",
+   "createdBy": "6692b763e851d28a036ab30f",
+   "createdAt": "2026-07-17T18:32:11.639Z",
+   "updatedAt": "2026-07-17T18:33:04.729Z"
+  }
+ }
+}
