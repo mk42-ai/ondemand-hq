@@ -314,3 +314,71 @@ the terminal node; the Evidence card stamp is honest.
 **Branding:** official-lineage logo top-left in both sidebars (Sidebar.jsx:40, OdaSidebar.jsx:86);
 document-cover watermark on ALL export paths — suite exports.js:14 + ODA builders via
 brandAsset.js ODA_WATERMARK_PATH (pre-faded public/oda-watermark-faded.png), graceful degrade.
+
+
+---
+
+## 14 · 2026-07-25 (17Z) addendum — Real-time Visual Intelligence (Section 19, dual-session) `[ts: 2026-07-25T17:13:00Z]`
+
+**Dual-session flow (per conversation):**
+
+```
+User turn ──> POST /api/visual-intel/turn {viId, text}
+                     │
+        ┌────────────┴─────────────────────────────┐
+        ▼ (always)                                  ▼ (unless paused/dead/blocked)
+  Session A — primary assistant             Session B — Visual Intelligence Director
+  real OnDemand chat session                real OnDemand chat session (SILENT)
+  gpt-5.6-sol + medium, answers user        gpt-5.6-sol + low, emits STRICT JSON only
+        │                                           │  Promise.race vs 12 000 ms cap
+        │                                           ▼
+        │                                   Director JSON → resolveVisual():
+        │                                   normaliseHeroKind (schema guard) →
+        │                                   Wikimedia image pick → HEAD/1-byte GET
+        │                                   validation → per-session dedup (shown set)
+        │                                   → fallback card if anything fails
+        ▼                                           ▼
+  { answer, aOk }  +  { visual, bStatus, ttfvMs }  → one JSON response; A NEVER waits on B's
+                                                     failure (timeout/error/kill = fallback card)
+```
+
+**Visual Director JSON schema (Session B contract):**
+```json
+{"topic":   {"id":"kebab-topic","continuity":"continue|drift|switch"},
+ "world_focus":{"region":"str|null","lat":0.0,"lng":0.0,"zoom":1.0},
+ "hero":    {"kind":"map|photo|person|org|timeline|card","title":"<=70","subtitle":"<=90",
+             "image_query":"str|null","label":"str|null"},
+ "supporting":[{"kind":"photo|card","title":"<=60","image_query":"str|null"}],
+ "confidence":0.0}
+```
+Hero-kind selection is MANDATORY (mechanical first-match rules in the prompt) and additionally
+enforced server-side by `normaliseHeroKind()` — a dated historical event can never ship as a
+plain card. Shipped hero adds `image_url` (validated), `fallback`, `blocked` as applicable;
+fallback labels are EXACTLY `AI-generated explanatory visual` (pool asset) or `typographic`.
+
+**Feature → source map:** hero/supporting imagery → Wikimedia Commons API (keyless, attributable,
+800px thumbs) with URL validation + dedup; map heroes → client world-focus render (no external
+image); AI/fallback cards → pre-generated pool assets (session blob URLs) labeled exactly;
+restricted internal docs (`oda-internal/*`, `chairman-briefing-private`, `restricted:*`) →
+tenancy-blocked card, never fetched. Assistant answers → Session A (suite model policy).
+
+**Changed files (this feature):** `server/visualIntel.js` (NEW — state, dual sessions, director,
+resolver, 6 routes, observability ring) · `server/index.js` (+6 lines: route mount) ·
+`src/intel/VisualIntel.jsx` (NEW — chat column + visual canvas, pause/resume, pin,
+ask-about-this, testids) · `src/App.jsx` (lazy import + /visual-intel deep-link state/popstate/
+render branch).
+
+**Env vars:** `ONDEMAND_API_KEY` (required; `ON_DEMAND_API_KEY` fallback — server-side only,
+never in dist) · `ONDEMAND_BASE_URL`/`ON_DEMAND_BASE_URL` · `VOICE_ENDPOINT_ID` (voice module,
+default GLM 4.7 BYOI slug; `VOICE_FALLBACK_ENDPOINT` empty = no fallback) ·
+`WORLD_INTEL_WORKFLOW_ID` (default `6a5d90228a845853270b9b53`) · suite policy `CHAT_ENDPOINT_ID`/
+`CHAT_REASONING_EFFORT` (default predefined-gpt-5.6-sol + medium).
+
+**Routes:** `POST /api/visual-intel/session|turn|mode|kill-b|pin` · `GET /api/visual-intel/logs/:viId`.
+**Observability:** per-session 200-entry ring (`session_a/b_created`, `director_ok|timeout|error|
+bad_json|skipped_paused|skipped_dead`, `dedup_dropped`, `image_validation_failed`,
+`tenancy_blocked`, `visual_pinned`, `mode_changed`, `session_b_killed`, `turn_complete`).
+
+**Section-19 validation (2026-07-25, LIVE build sb-hgyxlw16s5y5): 16/16 scenarios PASS** —
+API scenarios via real OnDemand sessions (agents 1+2), UI scenarios via real headless-Chromium
+clicks; TTFV 3.4–7.6 s; evidence: NOTES.md §2026-07-25-17Z matrix + vi-shots/ screenshots.

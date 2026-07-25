@@ -1,3 +1,28 @@
+## 2026-07-25 (16:40-17:15Z) — Real-time Visual Intelligence (Section 19): dual-session build + 16/16 live validation `[ts: 2026-07-25T17:13:00Z]`
+
+1. **Feature landed (prior attempt had died with 'argument list too long' before writing any
+   code — nothing was in the tree).** NEW `server/visualIntel.js`: per-conversation DUAL REAL
+   OnDemand sessions (A assistant / B silent Visual Director), strict Director JSON schema,
+   Wikimedia image sourcing with HEAD validation (a broken image can never ship), per-session
+   dedup, 12 s director cap racing Session A-independent, Section-13 typographic/AI-labeled
+   fallback cards (label EXACTLY 'AI-generated explanatory visual'), tenancy guard for
+   restricted internal docs, kill-B/pause/resume/pin, 200-entry observability ring, 6 routes.
+   NEW `src/intel/VisualIntel.jsx` + `/visual-intel` deep-link in App.jsx.
+2. **16/16 Section-19 scenarios PASS on the LIVE deploy** (sb-hgyxlw16s5y5.vercel.run,
+   real sessions + real Chromium clicks): S1 Hormuz map+world-focus (TTFV 5763ms) · S2 Fujairah
+   drift 'continue' · S3 Ghana 'switch' · S4 person card w/ validated image · S5 org card ·
+   S6 timeline · S7 typographic fallback · S8 pause · S9 resume (5038ms) · S10 pin · S11
+   ask-about-image · S12 kill-B → A unblocked in 4.45s (`session_b_killed`→`director_skipped_dead`)
+   · S13 20s slow provider → timeout at exactly the 12000ms cap with the EXACT AI label ·
+   S14 dedup (urls_differ) · S15 exact-label strict equality · S16 tenancy_blocked
+   (`restricted-doc` rule logged).
+3. **Two Director defects found by validation and fixed live:** hero-kind downgrades (org/
+   timeline → card) fixed via mandatory mechanical kind-selection rules in DIRECTOR_PROMPT plus
+   a server-side `normaliseHeroKind()` schema guard; S5/S6 re-tested PASS at 17:12:00-06Z.
+4. **Ops note:** in-sandbox restarts via setsid/nohup died with the exec teardown (502);
+   the reliable pattern is a Node `spawn(..., {detached, unref})` daemonizer — recorded here
+   for future hot-redeploys.
+
 ## 2026-07-25 (06:20-06:55Z pass) — Checkpoint resume: Problem-1 residuals closed, gpt-5.6-sol-medium policy restored, cover watermark, EN/AR speech re-probe, 8/8 E2E
 
 Master entry for the checkpoint-resume pass (3 parallel subagents + orchestrator merge; all

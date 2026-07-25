@@ -1,5 +1,35 @@
 # NOTES.md — ODA Productivity Suite engineering log
 
+## 2026-07-25 17Z — Section 19 Visual Intelligence: 16-scenario live validation matrix
+
+Live build: https://sb-hgyxlw16s5y5.vercel.run (sandbox sbx_VagOTu4mC3Z7VnxdpJJ8tyl18WTb,
+gpt-5.6-sol+medium, real OnDemand sessions). Evidence: /tmp agent JSONs + vi-shots/ screenshots.
+
+| # | Scenario | Result | TTFV/timing | Key evidence | ts |
+|---|---|---|---|---|---|
+| 1 | Hormuz → world focus + map + supporting | PASS | 5763ms | region 'Strait of Hormuz', hero map, 3 supporting | 2026-07-25T16:58Z |
+| 2 | Fujairah drift, visual continuity | PASS | 5846ms | continuity 'continue', region 'Fujairah, UAE' | 16:58Z |
+| 3 | Ghana–UAE full switch | PASS | 7589ms | continuity 'switch', director_ok log | 16:59Z |
+| 4 | Named leader → person card | PASS | 5999ms | kind person + validated Wikimedia image | 16:59Z |
+| 5 | Company → org card | PASS (after fix) | 5725ms | kind org + image, DP World | 17:12:06Z |
+| 6 | Historical event → timeline | PASS (after fix) | 6738ms | kind timeline + image, Suez 1956 | 17:12:00Z |
+| 7 | No-imagery → Section-13 fallback | PASS | 3355ms | card, image_url null, label 'typographic', fallback true | 16:59Z |
+| 8 | Pause visual mode | PASS | — | director: paused turn, mode label flips | 17:03Z |
+| 9 | Resume visual mode | PASS | 5038ms | director: ok after resume | 17:04Z |
+| 10 | Pin a visual | PASS | — | pinned tray renders 1 image card | 17:05Z |
+| 11 | Ask about displayed image | PASS | 4963ms | contextual Palm Jumeirah answer | 17:05Z |
+| 12 | Kill Session B → A unblocked | PASS | 4454ms turn | bStatus dead, session_b_killed→director_skipped_dead | 17:01Z |
+| 13 | Slow provider → graceful fallback | PASS | 12001ms (=cap) | bStatus timeout, EXACT 'AI-generated explanatory visual' | 17:01Z |
+| 14 | Duplicate images → dedup | PASS | 5707ms | urls_differ (blob vs wikimedia Burj Khalifa) | 17:02Z |
+| 15 | AI label exact string | PASS | 6251ms | strict equality 'typographic' variant (no pool asset needed) | 17:02Z |
+| 16 | Restricted doc tenancy block | PASS | 4022ms | bStatus tenancy_blocked, hero.blocked, restricted-doc log | 17:02Z |
+
+Defects found+fixed during validation: Director kind downgrades (S5/S6) → mandatory
+kind-selection prompt rules + normaliseHeroKind() guard, hot-redeployed, re-tested green.
+Browser harness note: run-1 S9-S11 'fails' were a selector bug (nested divs matched the
+status prefix) — fixed by counting LEAF status divs; run-2 5/5.
+
+
 ## 2026-07-25 06:20-06:55Z — Checkpoint-resume verification log (subagent pass)
 
 **Policy restore proof:** /api/health at 06:40:02.930Z → `{"ok":true,"model":"predefined-gpt-5.6-sol+medium","keyLoaded":true}`.
