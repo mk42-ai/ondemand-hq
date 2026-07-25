@@ -45,18 +45,20 @@ Shape:
  "workspace_renderer": one of ${JSON.stringify(RENDERERS)},
  "requires_user_gate": true|false,
  "safe_status": one of ${JSON.stringify(SAFE_STATUSES)},
- "confidence": 0.0-1.0}
+ "confidence": 0.0-1.0,
+ "clarifying_questions": [{"question":"<one focused question that materially changes the deliverable>","options":["<short answer option>","<short answer option>"],"why":"<one line why it matters>"}] (0-3 entries)}
 
 Skill routing rules (from the bundle disambiguation matrix):
 - Build/design a NEW branded deck, one-pager or asset → design. Condense an EXISTING deck/doc into the five-zone executive one-pager → storyline with route "SUMMARY". Title/re-title slides → storyline with route "TITLES".
-- Work ONE problem to a recommendation (solve X, is X feasible, issue tree) → problem-solve. Scan comparable programmes worldwide / precedents / case studies → benchmark. Both wanted → benchmark then problem-solve.
+- Work ONE problem to a recommendation (solve X, is X feasible, issue tree) → problem-solve. Scan comparable programmes worldwide / precedents / case studies → benchmark. Both wanted → problem-solve FIRST (confirm the problem definition), THEN benchmark scoped by it (benchmark dependsOn the problem-solve node).
 - Country profiles / development data / statistics / "pull the numbers" → data-scout. Quantitative model / scoring matrix / scenarios → model.
 - English→Arabic or Arabic QA → translate (the only Arabic skill; English is approved before Arabic starts).
 - Press releases, media strategy, calendars, PR/crisis plans, launch kits → media (already bilingual EN-then-AR; never chain its Arabic to translate).
-Pipeline sequencing (only these downstream edges are legal): problem-solve→storyline→design; benchmark→storyline→design; benchmark→problem-solve; data-scout→problem-solve; problem-solve→data-scout→model→problem-solve; data-scout→model→design; storyline(SUMMARY)→translate; media→design; design→storyline(TITLES); translate last for final document layouts.
+Pipeline sequencing (only these downstream edges are legal): problem-solve→storyline→design; benchmark→storyline→design; benchmark→problem-solve; problem-solve→benchmark; data-scout→problem-solve; problem-solve→data-scout→model→problem-solve; data-scout→model→design; storyline(SUMMARY)→translate; media→design; design→storyline(TITLES); translate last for final document layouts.
 mode "full" when: Chairman/board/Presidential-Court-bound, multi-skill pipeline, campaign/launch package, the user asks for full/verified treatment, or a deck of 3+ slides. Otherwise "fast".
 requires_user_gate true when mode is "full" (approval gates apply) or the request is ambiguous enough to need a confirmation.
-Every quantitative deliverable implies a data-scout stage before the consuming skill (no-invent rule).`;
+Every quantitative deliverable implies a data-scout stage before the consuming skill (no-invent rule).
+Clarifying questions: when mode is "full", ALWAYS emit 2-3 clarifying_questions — the questions whose answers most change the deliverable (audience, scope, length, emphasis, comparator set). Each question carries 2-4 SHORT tappable options covering the likely answers. When mode is "fast", emit at most 1 question and only if the request is genuinely ambiguous; otherwise emit [].`;
 
 /**
  * Deterministic fallback interpretation — used when the GLM call fails or emits
@@ -89,6 +91,8 @@ export function heuristicInterpret(text) {
     requires_user_gate: mode === 'full',
     safe_status: 'Understanding the request',
     confidence: 0.3,
+    // The heuristic never invents questions — only GLM has the judgement to ask.
+    clarifying_questions: [],
   };
 }
 
@@ -172,6 +176,10 @@ export function normaliseControl(raw, requestText) {
   c.safe_status = SAFE_STATUSES.includes(c.safe_status) ? c.safe_status : 'Understanding the request';
   const conf = Number(c.confidence);
   c.confidence = Number.isFinite(conf) ? Math.min(1, Math.max(0, conf)) : 0.5;
+  // Clarifying questions (AUDIT RC-5): sanitise to at most 3 questions, each
+  // with at most 4 short tappable options — malformed entries are dropped, not
+  // repaired, so downstream consumers can trust the shape.
+  c.clarifying_questions = Array.isArray(c.clarifying_questions) ? c.clarifying_questions.filter(q => q && typeof q.question === 'string' && q.question.trim()).slice(0, 3).map(q => ({ question: q.question.trim().slice(0, 300), options: Array.isArray(q.options) ? q.options.filter(o => typeof o === 'string' && o.trim()).slice(0, 4).map(o => o.trim().slice(0, 120)) : [], why: typeof q.why === 'string' ? q.why.trim().slice(0, 200) : null })) : [];
   return c;
 }
 
@@ -261,6 +269,8 @@ function outputConstraintPrompt(cls) {
  */
 export function enforceOutputClass(control, outputClass) {
   if (!control || outputClass === 'auto') return control;
+  // Mutates the control in place (no field-by-field rebuild), so fields it does
+  // not touch — notably clarifying_questions — survive every class branch.
   const c = control;
   const mode = c.mode === 'full' ? 'full' : 'fast';
   const intent = c.intent || '';
@@ -285,11 +295,25 @@ export function enforceOutputClass(control, outputClass) {
     }
     const docPrimary = c.primary_skill === 'design' ? 'problem-solve' : c.primary_skill;
     c.pipeline = safeValidate(p, [{ nodeId: 'n1', skill: docPrimary, mode, dependsOn: [], objective: intent }]);
-    // DEPTH controls thoroughness: FAST → a single authoring pass; FULL → the
-    // deep multi-step chain above.
+    // DEPTH controls thoroughness: FAST → a compressed pass; FULL → the deep
+    // multi-step chain above. ROOT_CAUSES Problem 1 fix (2026-07-25): FAST no
+    // longer deletes a planned Evidence stage — when the interpreter's own plan
+    // included data-scout AND the terminal legally consumes it, FAST keeps a
+    // two-node evidence → author pipeline (compressed EXTRACT, no invented
+    // figures). Only evidence-free plans collapse to a single authoring node.
     if (mode === 'fast') {
       const t = terminalOf(c.pipeline);
-      c.pipeline = [{ nodeId: 'n1', skill: t?.skill || docPrimary || 'problem-solve', mode, dependsOn: [], objective: intent }];
+      const terminalSkill = t?.skill || docPrimary || 'problem-solve';
+      const hadEvidenceNode = c.pipeline.some((n) => n.skill === 'data-scout' || n.skill === 'benchmark');
+      const evidenceEdgeLegal = terminalSkill === 'problem-solve' || terminalSkill === 'model'; // data-scout→problem-solve / data-scout→model
+      if (hadEvidenceNode && evidenceEdgeLegal) {
+        c.pipeline = [
+          { nodeId: 'n1', skill: 'data-scout', mode, dependsOn: [], objective: intent },
+          { nodeId: 'n2', skill: terminalSkill, mode, dependsOn: ['n1'], objective: intent },
+        ];
+      } else {
+        c.pipeline = [{ nodeId: 'n1', skill: terminalSkill, mode, dependsOn: [], objective: intent }];
+      }
     }
     c.primary_skill = c.pipeline[0].skill;
     c.deliverables = coerceDeliverables(c.deliverables, 'document', c.pipeline);
@@ -333,7 +357,7 @@ export function enforceOutputClass(control, outputClass) {
  * selection steers the GLM prompt AND is hard-enforced on the result.
  * @returns {{ control: object, source: 'glm-4.7'|'heuristic', rawLength: number }}
  */
-export async function interpretRequest({ sessionId, text, attachmentsSummary = '', output = 'auto' }) {
+export async function interpretRequest({ sessionId, text, attachmentsSummary = '', output = 'auto', depth = null }) {
   const requested = resolveOutputClass(output, text); // 'deck' | 'document' | 'auto'
   const constraint = outputConstraintPrompt(requested); // '' for auto — let GLM decide
   const body = attachmentsSummary
@@ -342,7 +366,16 @@ export async function interpretRequest({ sessionId, text, attachmentsSummary = '
   const query = `${constraint}${body}`;
   // Auto → resolve deck-vs-document from the interpreter's own routing, then
   // shape the pipeline for that class; explicit deck/document is honoured as-is.
+  // The explicit Depth selection is a user command, not a hint: it overrides the
+  // interpreter's mode BEFORE enforceOutputClass (which reads mode to decide
+  // between single-pass and multi-node pipelines), so both the GLM and the
+  // heuristic paths honour it identically.
   const finalize = (control, source, rawLength) => {
+    if (depth === 'full' || depth === 'fast') {
+      control.mode = depth;
+      control.requires_user_gate = depth === 'full';
+      if (Array.isArray(control.pipeline)) control.pipeline.forEach((n) => { n.mode = depth; });
+    }
     const cls = requested === 'auto' ? deriveClassFromControl(control) : requested;
     return { control: enforceOutputClass(control, cls), source, rawLength, outputClass: cls };
   };

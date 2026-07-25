@@ -198,20 +198,49 @@ export async function startRun(run) {
     live.onPipelineSelected(run.pipeline); // slides 1→final + 4 plan preview
     _flushSync(run);
 
-    // ---- 3. PRE-EXECUTION SCOPE CONFIRMATION (2026-07-23: NEVER PARKS) ----
-    // The pipeline engages IMMEDIATELY on Start run — with or without
-    // attachments. Scope confirmation is a recorded decision + non-blocking
-    // notice, never a 'Waiting for you' stop. The app NEVER asks for
-    // documents; attachments stay optional via the Attach button only.
+    // ---- 3. PRE-EXECUTION PLAN-MODE GATES (RC-1 fix, 2026-07-25) ----
+    // FULL-depth runs park on real backend gates again: GLM clarifying
+    // questions raise a resumable 'clarification' gate chain, and a
+    // requires_user_gate interpretation with no questions raises the classic
+    // pre-execution scope gate. Set ODA_NEVER_PARK=1 (or fast depth) to keep
+    // the 2026-07-23 auto-approve behaviour — a recorded decision plus a
+    // non-blocking notice, never a 'Waiting for you' stop.
+    const NEVER_PARK = process.env.ODA_NEVER_PARK === '1';
+    const effectiveDepth = run.request.depth === 'full' ? 'full' : run.request.depth === 'fast' ? 'fast' : control.mode;
+    const questions = Array.isArray(control.clarifying_questions) ? control.clarifying_questions.filter((q) => q && q.question) : [];
+    if (!NEVER_PARK && effectiveDepth === 'full' && questions.length > 0) {
+      run.pendingClarifications = questions.map((q, i) => ({
+        index: i,
+        question: q.question,
+        options: Array.isArray(q.options) && q.options.length ? q.options.slice(0, 4) : null,
+        why: q.why || null,
+        answer: null,
+      }));
+      run.clarifications = [];
+      await raiseNextClarification(run); // parks the run in waiting_for_user
+      _flushSync(run);
+      return run; // engine resumes via resolveGateAndContinue
+    }
+    if (!NEVER_PARK && effectiveDepth === 'full' && control.requires_user_gate && questions.length === 0) {
+      // No GLM questions but full mode wants a confirmation — raise the classic pre-execution scope gate.
+      await raiseRunGate(run, {
+        gateType: PRE_EXECUTION_GATE[control.primary_skill] || 'scope_edit',
+        nodeId: run.pipeline[0]?.nodeId || null,
+        payload: { intent: control.intent, pipeline: run.pipeline.map((n) => n.skill) },
+      });
+      _flushSync(run);
+      return run;
+    }
+    // ODA_NEVER_PARK=1 or fast depth: keep the auto-approve decision + notice.
     if (control.requires_user_gate && control.mode === 'full') {
       const hasAttachments = (run.request.attachments || []).length > 0;
       addDecision(run, {
-        summary: `Scope auto-approved (${hasAttachments ? 'attachments supplied as optional input' : 'no attachments — web-sourced evidence'}) — runs never park on scope confirmation`,
+        summary: `Scope auto-approved (${hasAttachments ? 'attachments supplied as optional input' : 'no attachments — web-sourced evidence'}) — ODA_NEVER_PARK/fast-depth runs never park on scope confirmation`,
         decidedBy: 'system',
       });
       emitRunEvent(run, 'skill.progress', {
         nodeId: run.pipeline[0]?.nodeId || null,
-        note: `notice: scope confirmation auto-approved — pipeline engaging immediately${hasAttachments ? ' (attachments in context)' : ' on web-sourced evidence'}`,
+        note: `notice: scope confirmation auto-approved (ODA_NEVER_PARK or fast depth) — pipeline engaging immediately${hasAttachments ? ' (attachments in context)' : ' on web-sourced evidence'}`,
         notice: 'auto_approved_scope_gate',
       });
     }
@@ -230,9 +259,70 @@ export async function startRun(run) {
 async function raiseRunGate(run, { gateType, nodeId = null, payload = null, promptOverride = null, options = null }) {
   const gate = createGate({ gateType, nodeId, payload, promptOverride, options });
   addGate(run, gate); // emits the enriched question.required frame
-  transition(run, 'waiting_for_user', { reason: `gate:${gateType}` });
+  // Clarification CHAINS raise the next question while the run is ALREADY
+  // parked — a waiting_for_user → waiting_for_user self-move is illegal in the
+  // runStore graph, so only transition when the run is not yet parked
+  // (e2e-proven 2026-07-25: resolve-gate-1 500 ODA_ILLEGAL_TRANSITION).
+  if (run.status !== 'waiting_for_user') {
+    transition(run, 'waiting_for_user', { reason: `gate:${gateType}` });
+  }
   _flushSync(run);
   return gate;
+}
+
+/**
+ * Raise the NEXT unanswered clarifying question as a 'clarification' gate.
+ * raiseRunGate parks the run and emits question.required; the chain advances
+ * one question at a time via resolveGateAndContinue. Returns the raised gate,
+ * or null when every pending clarification has been answered.
+ */
+async function raiseNextClarification(run) {
+  const entry = (run.pendingClarifications || []).find((e) => e.answer === null);
+  if (!entry) return null;
+  return raiseRunGate(run, {
+    gateType: 'clarification',
+    nodeId: null,
+    payload: { index: entry.index, why: entry.why, total: run.pendingClarifications.length },
+    promptOverride: entry.question,
+    options: entry.options ? [...entry.options, 'Skip this question'] : ['Answer in your own words', 'Skip this question'],
+  });
+}
+
+/**
+ * GLM 4.7 final-prompt synthesis: folds the user's clarification answers into
+ * ONE optimised authoring brief. Best-effort — a synthesis failure never fails
+ * the run; the pipeline simply continues with the original request.
+ */
+async function synthesizeFinalPrompt(run) {
+  try {
+    const sessionId = await ensureSession(run);
+    const qa = (run.clarifications || []).filter((c) => c.answer && c.answer !== '(skipped)');
+    const raw = await interpreterCall({
+      sessionId,
+      systemPrompt: 'You are the ODA prompt synthesiser. Given the original request, the routed pipeline and the user\'s clarification answers, emit ONE final optimised authoring prompt (plain text, ≤300 words, British English, answer-first, no preamble, no JSON). It must fold every clarification answer into concrete instructions for the authoring model.',
+      query: `ORIGINAL REQUEST:\n${run.request.text}\n\nPIPELINE: ${run.pipeline.map((n) => n.skill).join(' → ')}\nMODE: ${run.mode}\n\nCLARIFICATIONS:\n${qa.map((c) => `Q: ${c.question}\nA: ${c.answer}`).join('\n')}`,
+    });
+    run.finalPrompt = String(raw || '').trim().slice(0, 4000) || null;
+  } catch (err) {
+    console.warn(`[oda-orchestrator] final-prompt synthesis failed (${err.message}) — continuing with the original request`);
+    run.finalPrompt = null;
+  }
+  if (run.finalPrompt) emitRunEvent(run, 'skill.progress', { nodeId: null, note: 'final prompt synthesised from clarifications (GLM 4.7)', notice: 'final_prompt_ready', safeStatus: 'Optimising the brief from your answers' });
+}
+
+/**
+ * Handle a free-text user message posted to a run (POST /runs/:id/message).
+ * If a gate is open, the text resolves it as an edited answer (this is how a
+ * typed clarification answer arrives); otherwise the note is recorded as an
+ * assumption for the next stage.
+ */
+export async function handleRunMessage(run, text) {
+  const open = (run.gates || []).find((g) => g.status === 'open');
+  if (open) return resolveGateAndContinue(run, open.gateId, { approved: true, choice: null, edits: { text } });
+  run.assumptions.push(`User note (mid-run): ${String(text).slice(0, 400)}`);
+  emitRunEvent(run, 'skill.progress', { nodeId: run.currentNodeId || null, note: 'user note recorded for the next stage', notice: 'user_note' });
+  _flushSync(run);
+  return run;
 }
 
 /**
@@ -250,7 +340,7 @@ export async function resolveGateAndContinue(run, gateId, { approved, choice = n
   gate.status = status;
   addDecision(run, { summary: `Gate ${gate.gateType} ${status}${choice ? ` (${choice})` : ''}`, decidedBy: 'user' });
 
-  if (status === 'rejected') {
+  if (status === 'rejected' && gate.gateType !== 'clarification') {
     transition(run, 'planning', { reason: 'gate rejected' });
     _flushSync(run);
     return run;
@@ -259,6 +349,18 @@ export async function resolveGateAndContinue(run, gateId, { approved, choice = n
   // into the next handoff as user-approved facts).
   if (edits && typeof edits === 'object') {
     run.assumptions.push(`User edit at ${gate.gateType}: ${JSON.stringify(edits).slice(0, 400)}`);
+  }
+  // Clarification chain: record the answer (a rejected clarification counts as
+  // skipped), raise the next unanswered question, and — once all are answered —
+  // synthesise the final optimised prompt (GLM 4.7) before execution resumes.
+  if (gate.gateType === 'clarification') {
+    const entry = (run.pendingClarifications || []).find((e) => e.index === (gate.payload?.index ?? -1));
+    const answerText = (edits && edits.text) ? edits.text : (choice && !/^skip/i.test(choice) ? choice : null);
+    if (entry) entry.answer = answerText || '(skipped)';
+    run.clarifications = (run.pendingClarifications || []).filter((e) => e.answer !== null).map((e) => ({ question: e.question, answer: e.answer }));
+    const next = await raiseNextClarification(run);
+    if (next) { _flushSync(run); return run; } // stay parked on the next question
+    await synthesizeFinalPrompt(run); // all answered → GLM final prompt
   }
   transition(run, 'executing', { reason: `gate ${gate.gateType} ${status}` });
   // Continue the engine ASYNCHRONOUSLY — the gate endpoint answers immediately
@@ -310,8 +412,24 @@ async function executePipeline(run, { reviseNodeId = null, overrideNodeId = null
     if (run.status === 'waiting_for_user') return; // a mid-run gate parked us
     const runnable = nextRunnableNodes(run.pipeline, run.nodeStates, run.artifacts);
     if (!runnable.length) break;
-    // Genuinely independent runnable nodes execute concurrently.
-    const results = await Promise.allSettled(runnable.map((node) => executeNode(run, node)));
+    // ROOT_CAUSES Problem 2 fix (2026-07-25): DEPTH-0 IS SEQUENTIAL. When more
+    // than one ROOT node (no dependencies) is runnable, only the FIRST in
+    // pipeline order executes this iteration — its evidence/analysis lands on
+    // the run BEFORE the next root's brief is built, so a root benchmark can
+    // no longer race ahead of problem definition. Dependent parallel branches
+    // (shared dependsOn deeper in the graph) still execute concurrently.
+    const roots = runnable.filter((n) => !(n.dependsOn || []).length);
+    let batch = runnable;
+    if (roots.length > 1) {
+      const firstRoot = run.pipeline.find((n) => roots.some((r) => r.nodeId === n.nodeId));
+      batch = firstRoot ? [firstRoot] : [roots[0]];
+      emitRunEvent(run, 'skill.progress', {
+        nodeId: batch[0].nodeId,
+        note: `sequential depth-0: ${batch[0].skill} runs first; ${roots.length - 1} sibling root(s) queued behind it`,
+        notice: 'sequential_depth0',
+      });
+    }
+    const results = await Promise.allSettled(batch.map((node) => executeNode(run, node)));
     const firstFailure = results.find((r) => r.status === 'rejected');
     if (firstFailure) { failRun(run, firstFailure.reason); return; }
     if (['waiting_for_user', 'cancelled', 'failed'].includes(run.status)) return;
@@ -364,7 +482,7 @@ async function executeNode(run, node) {
     inputs: depArtifacts.map((a) => ({ artifactId: a.artifactId })),
     verifiedFacts: run.evidence.filter((e) => e.tag === 'fact').map((e) => e.claim).slice(0, 20),
     assumptions: run.assumptions.slice(0, 20),
-    unresolvedQuestions: [],
+    unresolvedQuestions: (run.pendingClarifications || []).filter((e) => e.answer === null).map((e) => e.question),
     expectedOutputType: spec.type,
     mode: node.mode,
     userApproved: (run.gates || []).some((g) => g.status !== 'open' && g.status !== 'rejected'),
@@ -383,7 +501,10 @@ async function executeNode(run, node) {
 
   // ---- WORKER (Sonnet 5 — the only author of deliverable content) ----
   const sizing = deliverableSizing(spec);
-  const query = `${contextBlock}\n\n--- PRODUCE ---\nA ${labelFor(spec.type)} in mode ${node.mode.toUpperCase()}. Objective: ${handoff.objective}\n${sizing}Author the deliverable as MARKDOWN ONLY — a single "# " title then "## " section headings (each "## " renders as one slide/page), with "- " bullets and GitHub-style pipe tables where they add clarity. Do NOT output HTML, <tags>, <!DOCTYPE>, CSS or code fences — markdown only. Return ONLY the deliverable content — no preamble, no self-commentary; append a final "Self-report" section (what you did, assumed, could not resolve).`;
+  // The GLM-synthesised brief (from the user's clarification answers) leads the
+  // worker query when present — it is the authoritative statement of intent.
+  const briefBlock = run.finalPrompt ? `--- OPTIMISED BRIEF (GLM 4.7, from user clarifications — authoritative) ---\n${run.finalPrompt}\n\n` : '';
+  const query = `${briefBlock}${contextBlock}\n\n--- PRODUCE ---\nA ${labelFor(spec.type)} in mode ${node.mode.toUpperCase()}. Objective: ${handoff.objective}\n${sizing}Author the deliverable as MARKDOWN ONLY — a single "# " title then "## " section headings (each "## " renders as one slide/page), with "- " bullets and GitHub-style pipe tables where they add clarity. Do NOT output HTML, <tags>, <!DOCTYPE>, CSS or code fences — markdown only. Return ONLY the deliverable content — no preamble, no self-commentary; append a final "Self-report" section (what you did, assumed, could not resolve).`;
   // MODEL ROUTING (2026-07-24): the CHOSEN brain (UI selection, default opus-4.8)
   // authors ONLY the terminal deliverable node; every earlier node authors on a
   // fast model. GLM interprets; the terminal plugin call packages on a fast

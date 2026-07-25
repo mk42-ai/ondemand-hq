@@ -243,10 +243,10 @@ export function transition(run, nextStatus, meta = {}) {
 // ---------------------------------------------------------------------------
 
 /**
- * @param {{ text: string, attachments?: import('./contracts.d.ts').ArtifactReference[], externalUserId: string, output?: 'auto'|'deck'|'document'|'data'|'model' }} params
+ * @param {{ text: string, attachments?: import('./contracts.d.ts').ArtifactReference[], externalUserId: string, output?: 'auto'|'deck'|'document'|'data'|'model', depth?: 'fast'|'full'|null }} params
  * @returns {ODARun}
  */
-export function createRun({ text, attachments = [], externalUserId, brain = null, output = 'auto' }) {
+export function createRun({ text, attachments = [], externalUserId, brain = null, output = 'auto', depth = null }) {
   const runId = crypto.randomUUID();
   const now = new Date().toISOString();
   /** @type {ODARun} */
@@ -254,7 +254,7 @@ export function createRun({ text, attachments = [], externalUserId, brain = null
     brain: brain || null,
     runId,
     status: 'idle',
-    request: { text, attachments, externalUserId, output },
+    request: { text, attachments, externalUserId, output, depth },
     intent: null,
     mode: null,
     control: null,
@@ -264,6 +264,11 @@ export function createRun({ text, attachments = [], externalUserId, brain = null
     contextBundle: null,
     evidence: [],
     assumptions: [],
+    // Clarifying-question flow (AUDIT RC-5): answered Q&A pairs, questions
+    // still awaiting the user, and the enriched prompt built from the answers.
+    clarifications: [],
+    pendingClarifications: [],
+    finalPrompt: null,
     decisions: [],
     artifacts: [],
     gates: [],
