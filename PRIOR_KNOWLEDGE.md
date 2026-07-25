@@ -38,3 +38,22 @@ UAE entity news gathered live: AD Ports @ MIITE 2026; ADNOC $9.5B local manufact
 Mubadala/ADNOC/ADQ Hydrogen Alliance MoU; G42 US AI expansion; UAE–India defense framework; Mubadala US LNG
 backing. → Used ONLY to design/verify the evidence schema + edge taxonomy. Runtime data always comes from the
 live 5-plugin calls; nothing from this sample is hardcoded into a run.
+
+
+## 5. Resolution stamps — 2026-07-25 (verified at HEAD e56acfd, file:line evidence)
+
+All EXISTS-BUT-BROKEN(5) and MISSING(5) items from the 2026-07-19 status line are CLOSED:
+
+- **B1 brief-schema pipeline — CLOSED 2026-07-25** — `server/oda/handoff.js:42` (`const defects = []` typed-handoff validation; throws on defects).
+- **B2 5-plugin stack (IG + Reddit) — CLOSED 2026-07-25** — `server/correlation.js:63-64` (reddit `plugin-1748003575`, igDownload `plugin-1762980461`), wired into the live gather at `:323,:356`. Caveat: Reddit is code-integrated; as a chat-attachable agent the platform returns 400 invalidAgentIds (PLUGIN_TESTS.md 2026-07-25 06:36Z) — it remains a CE evidence-source key with graceful absence.
+- **B3 workflow versioning/diff — CLOSED 2026-07-25** — `server/correlation.js:796` (`GET /api/correlation/diff/:iso`), `server/oda/runStore.js:17` (artifact supersede versioning).
+- **B4 model config sonnet/fable — CLOSED 2026-07-25** — `server/oda/brains.js:57,59` (`'sonnet-5'`, `'fable'` BRAINS entries).
+- **B5 run-storage evidence-JSON download — CLOSED 2026-07-25** — `src/correlation/CorrelationEngine.jsx:395` (JSON download button via `runDownloadUrl`).
+- **M1 edge extraction — CLOSED 2026-07-25** — `server/correlation.js:5` (no-edge-without-evidence rule; impl `:239-251`).
+- **M2 weighting/dedupe/contradictions — CLOSED 2026-07-25** — `server/correlation.js:251` (weight = .35·count + .25·diversity + .20·recency + .20·conf; dedupe merge Map; contradiction via altStance).
+- **M3 Connected Dots — CLOSED 2026-07-25** — `src/correlation/CorrelationGraph.jsx:2,337` (ForceGraph2D canvas; mounted CorrelationEngine.jsx:498,558).
+- **M4 GLM Quick Query — CLOSED 2026-07-25** — `server/correlation.js:922` (`POST /api/quick-query`, GLM 4.7 Cerebras).
+- **M5 sonnet-5/fable-5 policy — CLOSED 2026-07-25** — `server/env.js:123` (`CE_MIN_DATA_POINTS` ≥100 clamp), `server/intelligence/dataFetch.js:82` (`enforceEvenBatch`).
+
+WORKS(1) thinking/tool-call streaming: re-verified live 2026-07-25T22:25:44.719Z — gpt-5.6-sol+medium
+streamed probe, TTFT 4097ms, 24 fulfillment frames + statusLog/heartbeat/metricsLog/[DONE].

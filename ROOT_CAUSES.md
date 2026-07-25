@@ -212,6 +212,29 @@ The repository has no test suite for `server/oda/*` (only `tests/{interaction,re
 - **Problem 8 — RESOLVED 2026-07-25T05:12Z.** autoArtifact merges newest upstream verified
   artifacts as appendix sections + passes runContext {originalRequest, clarifications,
   finalPrompt, evidence, assumptions}; pluginDoc renders the RUN CONTEXT block in both templates.
-- Problems 3/5/6/7 tracked separately: 5 (mid-run message channel) shipped with the Plan Mode
-  pass; 3/6/7 mitigations (orphan sweep, never-park removal, terminal-node card gating) shipped
-  across the 2026-07-23→25 passes — see CHANGELOG entries.
+- **Problem 3 — PARTIALLY RESOLVED, verified 2026-07-25T22:20Z.** Bounded-execution controls at
+  HEAD e56acfd: 90s upstream-stall watchdog (`server/ondemand.js:263-264 STALL_MS = 90000`),
+  verifier revise cap `REVISE_POLICY {maxReviseLoops: 2}` + `shouldEscalate` (`server/oda/verifier.js:361-369`),
+  never-park verifier escalation (ships instead of looping), boot orphan sweep marking dead
+  in-flight runs failed (`server/oda/runStore.js:150-165`), sequential depth-0 execution
+  (`orchestrator.js` sequential_depth0). HONEST GAP: no TOTAL per-run wall-clock cap exists
+  (grep RUN_MAX/wallClock/runTimeout → none) — a pathologically slow model can still extend a
+  run; every individual stage is bounded but the sum is not. Flagged as future work.
+- **Problem 5 — RESOLVED 2026-07-25 (re-verified at HEAD e56acfd, 22:15Z).** Mid-run message
+  channel live end-to-end: `POST /runs/:id/message` (`server/oda/routes.js:157`),
+  `handleRunMessage` (`server/oda/orchestrator.js:351`), composer answers the ACTIVE run when
+  parked (`src/oda/OdaWorkspace.jsx:43 runIsWaiting`, `:56 sendMessage`; hook
+  `src/oda/useOdaRun.js:254`), answering affordance (`src/oda/OdaSidebar.jsx:125`).
+- **Problem 6 — RESOLVED BY DESIGN, verified 2026-07-25T22:20Z.** Rendering is no longer
+  constrained to four cards: 14 per-skill stage renderers exist (`src/oda/stages/` — 15 STAGES
+  incl. idle/failed in `src/oda/stageMap.js:7-23`), gates route to their owning canvases
+  (`stageMap.js:52-71`). The four-slide LIVE DECK remains as the intentional universal live
+  render while executing (`stageMap.js:82` preemption) — a design decision, not a constraint:
+  gate/completed/failed states always reach the per-skill canvases.
+- **Problem 7 — RESOLVED, verified 2026-07-25T22:20Z.** Visible state mirrors backend state:
+  durable event log with SSE seq replay (`server/oda/events.js:8, :112 subscribe(since)`),
+  single-source status graph `LEGAL_TRANSITIONS` (`runStore.js:192-204`, illegal moves throw),
+  one-frame-per-state-change emits (7 emitRunEvent sites in runStore) + write-through persistence
+  (12 persist(run) sites), boot orphan sweep eliminates stranded 'Executing' ghosts
+  (`runStore.js:150-165`), optimistic UI updates reconciled by authoritative SSE
+  (`useOdaRun.js` resolveGate/sendMessage).
