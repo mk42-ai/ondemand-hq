@@ -427,3 +427,26 @@ Live re-probe against `${ONDEMAND_BASE_URL}/services/v1/public/service/execute/*
 **Verdict 2026-07-25T05:17Z:**
 - **TTS: SUBSCRIBED + WORKING** (both EN and AR, 200 with hosted mp3). The old "Please subscribe" block is gone for `text_to_speech`. `server/speech.js` `ttsGenerate` (documented `{model, input, voice}` body) is the correct live contract — `AudioPlayer` speaker buttons now function on this key.
 - **STT: STILL UNUSABLE** — the subscribe message is gone but every documented `audioUrl` form returns 400 `Unknown error` (SAS-signed mp3, plain public wav alike). The graceful `SERVICE_*` fallback in `server/speech.js` (`classifyServiceError`) and the frontend "speech unavailable" state **stay in place** for STT; no code change required.
+
+
+---
+
+## 2026-07-25 06:33-06:36Z re-probe — Speech EN/AR + Reddit + gpt-5.6-sol stream (ADOPT/REJECT verdicts)
+
+Hard rule applied: nothing ships without HTTP 200 + usable output.
+
+| Probe | Plugin / service id | Test query | HTTP | Latency (ms) | Sample output | Timestamp (UTC) | Verdict |
+|---|---|---|---|---|---|---|---|
+| TTS EN | `text_to_speech` (tts-1, voice alloy) | "The ODA Productivity Suite end-to-end verification pass…" | **200** | 3315 | hosted mp3 @ airevprod.blob.core.windows.net | 2026-07-25T06:33Z | **ADOPT** |
+| TTS AR | `text_to_speech` (tts-1, voice alloy) | "مكتب شؤون التنمية في أبوظبي — تحقق نهائي…" | **200** | 1686 | hosted mp3 (Arabic accepted) | 2026-07-25T06:33Z | **ADOPT** |
+| STT EN | `speech_to_text` | audioUrl = TTS-EN hosted mp3 | 400 | 508 | `{"message":"Unknown error","errorCode":"400"}` | 2026-07-25T06:34Z | REJECT |
+| STT AR | `speech_to_text` | audioUrl = TTS-AR hosted mp3 | 400 | 189 | `{"message":"Unknown error","errorCode":"400"}` | 2026-07-25T06:34Z | REJECT |
+| Reddit (generic agent id) | agent-1712327325 | top r/worldnews UAE discussion | 200 | 3951 | model disclaimed live Reddit access → unusable | 2026-07-25T06:35Z | REJECT |
+| Reddit (repo id) | plugin-1748003575 → agent-1748003575 | reddit tool fetch top post | 400 | 177 | `invalidAgentIds:["agent-1748003575"]` | 2026-07-25T06:36:01.494Z | REJECT (chat attachment); stays a CE evidence-source key only |
+| gpt-5.6-sol stream | predefined-gpt-5.6-sol + medium | capital of UAE (stream) | **200** | TTFT 1305 | 15 fulfillment frames, "The capital of the United Arab Emirates…", [DONE] | 2026-07-25T06:35Z | **ADOPT** |
+
+**Verdicts applied to the build:** TTS ships (AudioPlayer speaker buttons live, EN+AR).
+STT stays behind the graceful `SERVICE_*` 'speech unavailable' fallback (server/speech.js) —
+NOT shipped. Reddit is NOT attachable as a chat agent on this key; it remains an optional
+Correlation-Engine evidence-source key (correlation.js:60-66) whose absence degrades gracefully.
+Suite model policy re-verified live on the wire: predefined-gpt-5.6-sol + medium, streaming ON.

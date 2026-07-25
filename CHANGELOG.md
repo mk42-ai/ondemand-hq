@@ -1,3 +1,58 @@
+## 2026-07-25 (06:20-06:55Z pass) — Checkpoint resume: Problem-1 residuals closed, gpt-5.6-sol-medium policy restored, cover watermark, EN/AR speech re-probe, 8/8 E2E
+
+Master entry for the checkpoint-resume pass (3 parallel subagents + orchestrator merge; all
+items live-proven; evidence in PLUGIN_TESTS.md §2026-07-25-06Z and NOTES.md §2026-07-25-06Z):
+
+1. **ROOT_CAUSES Problem 1 — residual sub-items CLOSED (06:28Z).**
+   - `interpreter.js heuristicInterpret()` no longer collapses FULL runs to a single node:
+     full+design → data-scout→model→design; full+problem-solve → data-scout→problem-solve;
+     full+benchmark → problem-solve→benchmark (all legal edges). FAST and transform skills
+     keep single nodes. Live probe: FULL deck → ["data-scout<-","model<-n1","design<-n2"].
+   - `normaliseControl()` REPAIRS illegal GLM graphs by dropping only the illegal edges
+     (isEdgeAllowed check per dep) and re-validating — the wholesale single-node fallback now
+     fires only when repair also fails.
+   - `orchestrator.js` evidence extraction: the never-matching '**fact**' regex is replaced by
+     `extractEvidenceClaims()` — 4 tolerant patterns (bold-marker, [bracket], (paren), bulleted
+     '(source: X)' lines), tag-normalised, deduped, capped 12/draft (6 hits on the sample draft
+     vs ~0 before). The non-streaming brainCall path now populates slide 2 evidence.
+2. **Model policy RESTORED to gpt-5.6-sol-medium (06:22Z, session directive).** `server/env.js`
+   ENDPOINT_ID → 'predefined-gpt-5.6-sol', REASONING_EFFORT → 'medium' (GATHER_* same policy);
+   decomposed form only; streaming ON everywhere; thinking tokens rendered in the collapsed
+   accordion; NO silent fallback — every upstream non-2xx logs [HARD-FAIL]
+   (server/ondemand.js:146/192/337). /api/health live: "predefined-gpt-5.6-sol+medium".
+   GLM 4.7 remains ONLY on its dedicated non-suite surfaces (quick-query constant).
+3. **PRIOR_KNOWLEDGE 5+5 verification (06:30Z).** EXISTS-BUT-BROKEN all CLOSED: brief-schema
+   pipeline (handoff.js:42+ defects-validated typed handoff); 5-plugin stack
+   (correlation.js:60-66 — perplexity/xsearch/reddit plugin-1748003575/igDownload
+   plugin-1762980461/igUserInfo plugin-1716164040; IG media wired at :426); workflow
+   versioning/diff (correlation.js:796 GET /api/correlation/diff/:iso + runStore supersede
+   versioning :325); model config sonnet/fable (brains.js BRAINS: kimi3/sonnet-5/opus-4.8/fable);
+   run-storage evidence-JSON download (CorrelationEngine.jsx:395 JSON button +
+   GET /api/oda/runs/:id full-run JSON). MISSING all CLOSED (edge extraction, weighting/dedupe/
+   contradictions, Connected Dots ForceGraph2D, GLM Quick Query, fable-5 policy w/
+   CE_MIN_DATA_POINTS=100 + enforceEvenBatch) — file:line table in NOTES.md.
+4. **Branding completed (06:35Z).** Suite sidebar already carries the official logo top-left
+   (Sidebar.jsx:40, oda-logo-bw.png; workspace OdaSidebar.jsx:86). NEW: document-cover
+   watermark added to the ODA builders — brandAsset.js exports ODA_WATERMARK_PATH
+   (public/oda-watermark-faded.png, pre-faded 10% alpha) and pptxBuilder.js + pdfBuilder.js
+   render it centre-right on covers with graceful degrade (suite exports.js already had it).
+   Asset provenance: bundled official ODA logo lineage (skills/design/assets/logo-oda.png);
+   oda.gov.ae / mediaoffice.abudhabi fetches were unreachable at asset-creation time
+   (ARCHITECTURE.md §1 log); public hotlink fallback via ODA_LOGO_URL chain unchanged.
+5. **Speech re-probe EN+AR with verdicts (06:33-06:36Z).** TTS text_to_speech: EN 200/3315ms,
+   AR 200/1686ms → **ADOPT** (ships; AudioPlayer live). STT speech_to_text: EN 400/508ms,
+   AR 400/189ms 'Unknown error' → **REJECT** (graceful 'speech unavailable' fallback retained).
+   Reddit plugin plugin-1748003575 as agent id → HTTP 400 invalidAgentIds → **REJECT** for
+   chat-attachment; it remains a CE evidence source key only. gpt-5.6-sol stream sanity:
+   200, TTFT 1305ms, 15 fulfillment frames → **ADOPT**. Full table in PLUGIN_TESTS.md.
+6. **8-feature E2E — 8/8 PASS on predefined-gpt-5.6-sol+medium (06:40-06:46Z).** Every feature
+   streamed a REAL first answer token over /api/chat SSE with thinking frames captured:
+   design 49.9s TTFA/35 think-frames, summary 32.2s/69, problem-solve 40.1s/37, benchmark
+   44.3s/47 (240s window — research phase), translate 2.8s (first token Arabic 'ت'), media
+   29.9s/2, action-titles 5.4s/0, country-data 38.4s/2. Report: e2e-8features JSON in NOTES.md.
+7. **Quality gates:** node --check on all 6 touched files, plan-mode contract tests 8/8,
+   vite build 7.88s clean, npm install restored (node_modules had been pruned).
+
 ## 2026-07-25 — Plan Mode restoration + ROOT_CAUSES 1/2/8 fixes + OnDemand rebrand (feature/oda-workflow-overhaul)
 
 Master entry for the 2026-07-25 build pass (verification window 05:15–05:23 UTC; all items live-proven, evidence in PLUGIN_TESTS.md + tests/e2e-plan-mode.mjs report):

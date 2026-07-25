@@ -281,3 +281,36 @@ default; routing trace card, step-wizard panel, plugin-naming skeletons unchange
 Verification: plan-mode unit tests 8/8; live e2e 10/10 (3-gate chain → final prompt → engine
 resume); 8/8 feature routing probes; vite build clean. Evidence: CHANGELOG.md 2026-07-25 entry,
 PLUGIN_TESTS.md §2026-07-25, NOTES.md §2026-07-25.
+
+
+---
+
+## 13 · 2026-07-25 (06Z) addendum — model policy restore, watermark, Problem-1 residuals
+
+**Model policy (authoritative):** every suite call — router classify, all 8 workers, wizard,
+MSM analyse — runs `predefined-gpt-5.6-sol` + TOP-LEVEL `reasoningEffort:"medium"`, streaming ON,
+thinking tokens rendered in the collapsed accordion. No silent fallback: upstream non-2xx →
+`[HARD-FAIL]` log + UI error with retry (server/ondemand.js:146/192/337). GLM 4.7 BYOI remains
+ONLY on its dedicated CE quick-query surface (env.js GLM_47_QUICK_ENDPOINT_ID). CE data
+population stays fable-5-medium per CORRELATION_TESTS.md (primary fable-5, fallback via
+CE_DATAFETCH_ENDPOINT_ID, floor CE_MIN_DATA_POINTS=100, even-batch enforced).
+
+**Feature→plugin map (re-verified 06:40Z, unchanged ids):** design → GPT Image 2 + Internet +
+Perplexity · summary → File Directory + Web Extractor · problem-solve → Internet + Perplexity +
+GPT Search · benchmark → Perplexity + Internet + Tavily · translate → LLM-direct · media →
+Perplexity + Internet + GPT Image 2 · action-titles → LLM-direct · country-data → direct
+WDI/GHO/SDG + Internet fallback. Speech: TTS ADOPTED (EN+AR 200); STT REJECTED (400) behind the
+graceful fallback. Reddit: CE evidence-source key only — NOT chat-attachable (400 invalidAgentIds).
+
+**Mode logic / verify gate (unchanged contracts):** FAST = compressed single pass; FULL = gates +
+verification (`verifyOn = node.mode==='full'`, env ODA_VERIFY override); never-invent rule intact.
+Plan Mode gate chain (clarification gates → GLM final-prompt synthesis) per §12.
+
+**Pipeline shape guarantees (Problem 1 closed end-to-end):** GLM plans, the depth override, the
+heuristic fallback AND the illegal-graph repair path now ALL yield evidence-bearing multi-node
+pipelines in FULL mode; evidence extraction matches 4 tag shapes; Recommendations fill only from
+the terminal node; the Evidence card stamp is honest.
+
+**Branding:** official-lineage logo top-left in both sidebars (Sidebar.jsx:40, OdaSidebar.jsx:86);
+document-cover watermark on ALL export paths — suite exports.js:14 + ODA builders via
+brandAsset.js ODA_WATERMARK_PATH (pre-faded public/oda-watermark-faded.png), graceful degrade.

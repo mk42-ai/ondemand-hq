@@ -1,5 +1,49 @@
 # NOTES.md — ODA Productivity Suite engineering log
 
+## 2026-07-25 06:20-06:55Z — Checkpoint-resume verification log (subagent pass)
+
+**Policy restore proof:** /api/health at 06:40:02.930Z → `{"ok":true,"model":"predefined-gpt-5.6-sol+medium","keyLoaded":true}`.
+Boot line: `[oda-suite] listening on 0.0.0.0:8080 · model predefined-gpt-5.6-sol+medium · plugins: 10 adopted`.
+
+**8-feature E2E (real /api/chat SSE, first streamed fulfillment token per feature):**
+
+| Feature | HTTP | TTFA (ms) | Think frames | First token | Started (UTC) |
+|---|---|---|---|---|---|
+| design | 200 | 49932 | 35 | `<section` | 06:40:12Z |
+| summary | 200 | 32198 | 69 | `**` | 06:41:02Z |
+| problem-solve | 200 | 40076 | 37 | `#` | 06:41:35Z |
+| benchmark | 200 | 44339 | 47 | `#` | 06:44:41Z (240s window retry — 90s window insufficient for the research phase) |
+| translate | 200 | 2810 | 0 | `ت` (Arabic) | 06:42:57Z |
+| media | 200 | 29875 | 2 | `##` | 06:43:00Z |
+| action-titles | 200 | 5403 | 0 | `**` | 06:43:30Z |
+| country-data | 200 | 38384 | 2 | `##` | 06:43:36Z |
+
+8/8 PASS — routing frame echoed the forced feature + `predefined-gpt-5.6-sol+medium` on every run;
+thinking deltas captured on the wire (collapsed-accordion channel) wherever the model emitted them.
+
+**Problem-1 residual fixes (heuristic/normalise/evidence) probes:**
+- FULL deck heuristic → `["data-scout<-","model<-n1","design<-n2"]`; FULL problem-solve →
+  `["data-scout<-","problem-solve<-n1"]`; FAST problem-solve → single node (unchanged).
+- extractEvidenceClaims sample draft → 6 pattern hits (old single regex: ~0).
+- plan-mode contract tests stayed 8/8 after all edits.
+
+**PRIOR_KNOWLEDGE 5+5 evidence table (verified this pass):**
+| Item | Status | Evidence |
+|---|---|---|
+| B1 brief-schema pipeline | CLOSED | handoff.js:42-57 defects-validated typed handoff (throws on defects) |
+| B2 5-plugin stack (IG+Reddit) | CLOSED | correlation.js:60-66 PLUGINS registry incl. reddit plugin-1748003575, igDownload plugin-1762980461, igUserInfo plugin-1716164040; IG media wired :426 |
+| B3 workflow versioning/diff | CLOSED | correlation.js:796 /api/correlation/diff/:iso; runStore.js:325 artifact supersede versioning |
+| B4 model config sonnet/fable | CLOSED | brains.js BRAINS {kimi3, sonnet-5, opus-4.8, fable}; env.js FABLE_5_MAX/FALLBACK |
+| B5 evidence-JSON download | CLOSED | CorrelationEngine.jsx:395 JSON download button; GET /api/oda/runs/:id full-run JSON |
+| M1 edge extraction | CLOSED | correlation.js:4-5 no-edge-without-evidence rule; :238 merged edge build |
+| M2 weighting/dedupe/contradictions | CLOSED | correlation.js:216-251 (weight = .35 count + .25 diversity + .20 recency + .20 conf); intelligence/weighting.js |
+| M3 Connected Dots | CLOSED | CorrelationGraph.jsx:2 ForceGraph2D import; :142 nodeCanvasObject; :83-91 zoomToFit |
+| M4 GLM Quick Query | CLOSED | QuickQuery.jsx; correlation.js:598 GLM endpoint + :922 /api/quick-query |
+| M5 sonnet-5/fable-5 policy | CLOSED | env.js:89-121 fable primary/fallback + CE_MIN_DATA_POINTS=100 clamp; dataFetch.js:82 enforceEvenBatch |
+| L1 sidebar logo top-left | CLOSED | Sidebar.jsx:40 (suite) + OdaSidebar.jsx:86 (workspace) |
+| L2 cover watermark | CLOSED THIS PASS | exports.js:14 (suite, pre-existing); NEW brandAsset.js ODA_WATERMARK_PATH + pptxBuilder/pdfBuilder cover render |
+
+
 ## 2026-07-25 Plan Mode gate chain — LIVE e2e verification log (05:15–05:23 UTC)
 
 **What ran (all against the local server, real OnDemand API, key ****JZuA):**

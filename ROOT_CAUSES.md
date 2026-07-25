@@ -192,3 +192,26 @@ Five of the eight problems intersect at two commits:
 - **`88bf693` (2026-07-25 00:20:22 +0530, misleadingly titled "added log level fixes")** — introduced fast-collapse pipelines (P1), fast-model authoring + plugin-built finals with 12k truncation (P8), and the sequential imagery/hosted-doc completion tail (P3).
 
 The repository has no test suite for `server/oda/*` (only `tests/{interaction,regression,voice}.test.mjs` and `test/world.test.mjs` targeting other subsystems; `package.json` defines no `test` script), so none of these regressions were caught mechanically.
+
+
+---
+
+# RESOLUTIONS (2026-07-25)
+
+- **Problem 1 — RESOLVED 2026-07-25T06:28Z.** enforceOutputClass fast-collapse keeps planned
+  evidence stages (05:06Z); liveDeck Recommendations gated to the terminal node + honest Evidence
+  stamp (05:06Z); heuristicInterpret multi-node FULL pipelines, normaliseControl illegal-graph
+  REPAIR (drop only illegal edges), and the 4-pattern extractEvidenceClaims() replacing the
+  never-matching '**fact**' regex (06:28Z). Verified: FULL heuristic probes return multi-node
+  chains; extractor hits 6/6 tag shapes on sample; 8/8 contract tests green.
+- **Problem 2 — RESOLVED 2026-07-25T05:09Z.** problem-solve→benchmark edge added (validatePipeline
+  accepts, unit-proven); depth-0 roots sequential (sequential_depth0 notice); interpreter prompt
+  reordered; pre-execution gate restored (raiseRunGate live, orchestrator.js:226-227).
+- **Problem 4 (gates) — RESOLVED 2026-07-25 (prior pass).** Clarification gate chain + GLM 4.7
+  final-prompt synthesis + POST /runs/:id/message; e2e 10/10 with 3 real gates answered.
+- **Problem 8 — RESOLVED 2026-07-25T05:12Z.** autoArtifact merges newest upstream verified
+  artifacts as appendix sections + passes runContext {originalRequest, clarifications,
+  finalPrompt, evidence, assumptions}; pluginDoc renders the RUN CONTEXT block in both templates.
+- Problems 3/5/6/7 tracked separately: 5 (mid-run message channel) shipped with the Plan Mode
+  pass; 3/6/7 mitigations (orphan sweep, never-park removal, terminal-node card gating) shipped
+  across the 2026-07-23→25 passes — see CHANGELOG entries.
