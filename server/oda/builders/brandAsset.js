@@ -24,6 +24,30 @@ function resolveLogo() {
 export const ODA_LOGO_PATH = resolveLogo();
 
 /**
+ * Pre-faded (10% alpha) ODA watermark for document COVERS — the UI-spec
+ * "subtle document-cover watermark". Same graceful-degrade contract as the
+ * logo: null when the asset is absent so builders never crash.
+ * Provenance: derived from the bundled official ODA logo (skills/design/assets
+ * logo-oda.png lineage — oda.gov.ae / mediaoffice.abudhabi were unreachable at
+ * fetch time, per ARCHITECTURE.md §1), pre-faded once so builders that lack
+ * per-image opacity (pdfkit) still render it subtly.
+ */
+function resolveWatermark() {
+  const candidates = [
+    path.join(__dirname, '..', '..', '..', 'public', 'oda-watermark-faded.png'),
+    path.join(__dirname, '..', '..', '..', 'dist', 'oda-watermark-faded.png'),
+    path.join(__dirname, '..', '..', 'data', 'oda-watermark-faded.png'),
+  ];
+  for (const p of candidates) {
+    try { if (fs.existsSync(p)) return p; } catch { /* ignore */ }
+  }
+  return null;
+}
+
+/** Absolute path to the pre-faded ODA cover watermark PNG, or null. */
+export const ODA_WATERMARK_PATH = resolveWatermark();
+
+/**
  * PUBLIC, absolute URL of the ODA logo, for tools that render off-box (the
  * OnDemand Agent builds documents on its own servers and cannot read our local
  * file path). Resolved from an explicit override, else a public base URL, else
