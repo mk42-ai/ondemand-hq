@@ -246,3 +246,38 @@ Model logged per run (`run.model`) and per call in PLUGIN_TESTS.md.
 - `QuickQuery.jsx` — ⚡ floating card: EN/AR context chips, micro prompt, streaming
   answer, latency+TTFT stamps, 'Continue in chat →' handoff.
 - Mounted in `src/intel/CountryPage.jsx` as the `Correlation Engine` tab.
+
+
+---
+
+## 12 · 2026-07-25 addendum — Plan Mode gate chain + grounding fixes (feature/oda-workflow-overhaul)
+
+**Run engine (server/oda/):** full-depth runs now PARK before execution. GLM 4.7 emits
+`clarifying_questions` in the interpreter control JSON; `startRun` builds
+`run.pendingClarifications` and raises them one-at-a-time as `clarification` gates
+(`raiseNextClarification`); `resolveGateAndContinue` records each answer, chains the next
+question, and — once all are answered — calls `synthesizeFinalPrompt` (GLM 4.7) whose output
+(`run.finalPrompt`) rides into worker authoring as the OPTIMISED BRIEF block and into the
+hosted-doc plugin prompt. `POST /api/oda/runs/:id/message` feeds mid-run user text to the open
+gate (or records a note). Depth is a structured run field (`request.depth`) that overrides the
+GLM mode guess. `ODA_NEVER_PARK=1` restores never-park behaviour.
+
+**Sequencing:** `problem-solve → benchmark` is a legal edge; depth-0 roots execute
+sequentially (first root per engine iteration) so evidence/definition lands before sibling
+roots build their briefs.
+
+**Final-document grounding:** `packageRunArtifact` merges the newest upstream verified
+artifacts as appendix sections and passes `runContext` (original request, clarifications,
+finalPrompt, evidence, assumptions) to `generateHostedDoc`, which renders it as a RUN CONTEXT
+block in the plugin instruction.
+
+**Speech:** TTS (`text_to_speech`) is subscribed and live (EN+AR 200, hosted mp3). STT remains
+400 on this key — `server/speech.js` keeps the structured SERVICE_* fallback.
+
+**Chrome:** OnDemand accent tokens `#159a7a`/`#1dac89` drive interactive chrome in both
+surfaces; ODA gold remains the document/deck content brand. Thinking accordion collapsed by
+default; routing trace card, step-wizard panel, plugin-naming skeletons unchanged.
+
+Verification: plan-mode unit tests 8/8; live e2e 10/10 (3-gate chain → final prompt → engine
+resume); 8/8 feature routing probes; vite build clean. Evidence: CHANGELOG.md 2026-07-25 entry,
+PLUGIN_TESTS.md §2026-07-25, NOTES.md §2026-07-25.

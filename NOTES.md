@@ -1,5 +1,35 @@
 # NOTES.md — ODA Productivity Suite engineering log
 
+## 2026-07-25 Plan Mode gate chain — LIVE e2e verification log (05:15–05:23 UTC)
+
+**What ran (all against the local server, real OnDemand API, key ****JZuA):**
+- `/api/health` 200 → `"model":"byoi-6e314690-4eaf-4def-a33c-380809acf1f5+low"` (GLM 4.7 BYOI policy live).
+- **8-feature routing probe** over `/api/chat` (SSE, one POST per feature, forced-feature path):
+  all 8 returned HTTP 200 + a correct `routing` frame (feature echo, plugin set from
+  server/plugins.js, model tag) in 2–74 ms — design, summary, problem-solve, benchmark,
+  translate, media, action-titles, country-data. Full JSON in the run report.
+- **Plan-mode e2e (tests/e2e-plan-mode.mjs) 10/10 PASS** at 2026-07-25T05:20:16Z→05:22Z:
+  POST /api/oda/runs (depth:"full", output:"deck") → 201; SSE emitted `request.interpreted`
+  with `clarifying_questions: 3` (REAL GLM output: "What is the primary focus of the briefing
+  deck?" + options); `question.required` gate 1 → POST gates/{id} 200 → gates 2, 3 chained
+  (each parked, no illegal transition); after gate 3: `skill.progress` notice
+  `final_prompt_ready` (GLM synthesised the optimised brief) then `skill.started` — engine
+  resumed; POST /runs/:id/message 200 (mid-run note recorded); run snapshot: 3 approved
+  gates, clarifications:3, finalPrompt key present, status executing; cancel 200.
+- **Bug found by the harness and fixed:** the SECOND clarification of a chain raised while
+  the run was already parked → `transition(waiting_for_user → waiting_for_user)` threw
+  ODA_ILLEGAL_TRANSITION (HTTP 500 on gate 1's resolution). Fix: `raiseRunGate` only
+  transitions when `run.status !== 'waiting_for_user'` (orchestrator.js). Re-run: green.
+- **Speech re-probe:** TTS EN/AR now 200 with hosted mp3 (subscribe block lifted);
+  STT still 400 on every documented `audioUrl` form — see PLUGIN_TESTS.md §2026-07-25 for
+  the full table (status/latency/ISO ts per probe). server/speech.js fallback unchanged.
+
+**Thinking-token rendering note (UI spec):** the suite accordion now defaults COLLAPSED
+(`Messages.jsx effectiveOpen = userToggled ? open : false`) with the live pulse dot while
+streaming — thinking deltas still captured from planning_thinking/step_thinking/
+fulfillment_thinking exactly as before; only the default visibility changed.
+
+
 ## 2026-07-20 Model switch — ALL non-workflow calls → GLM 4.7 Cerebras BYOI (default reasoningEffort 'low')
 
 **Registry verification (live, `GET /config/v1/public/endpoints`, fetched 2026-07-20T20:57:56Z UTC):**

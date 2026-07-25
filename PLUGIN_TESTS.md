@@ -406,3 +406,24 @@ fires on request-body consumption under Node ≥16, so every deployed turn abort
 (`interrupted` immediately after `model`). Abort now keys off `res.on('close')` (real
 connection teardown) — barge-in semantics preserved, normal turns stream fully.
 First deployed token: `"The MoU"` at 2026-07-20T04:04:45.847Z.
+
+---
+
+## 2026-07-25 Speech Services re-probe (STT + TTS, EN + AR) — TTS NOW LIVE, STT still 400
+
+Live re-probe against `${ONDEMAND_BASE_URL}/services/v1/public/service/execute/*` with the workspace key (previous state: BOTH services HTTP 400 `{"message":"Please subscribe to the service to use it","errorCode":"invalid_request"}`).
+
+| Probe | Endpoint | Payload | HTTP | Latency (ms) | Timestamp (UTC) | Result |
+|---|---|---|---|---|---|---|
+| TTS EN | `POST /execute/text_to_speech` | `{model:"tts-1", input:"The ODA Productivity Suite verification pass.", voice:"alloy"}` | **200** | 2526 | 2026-07-25T05:15:18.843Z | `Service executed successfully` → hosted `.mp3` audioUrl returned |
+| TTS AR | `POST /execute/text_to_speech` | `{model:"tts-1", input:"مكتب شؤون التنمية — اختبار الخدمة الصوتية.", voice:"alloy"}` | **200** | 1608 | 2026-07-25T05:15:21.370Z | `Service executed successfully` → hosted `.mp3` audioUrl returned (Arabic input accepted) |
+| TTS EN (2nd, for STT source) | same | longer EN sentence | **200** | 1826 | 2026-07-25T05:15:57.254Z | audioUrl obtained |
+| TTS AR (2nd, for STT source) | same | longer AR sentence | **200** | 3510 | 2026-07-25T05:15:59.081Z | audioUrl obtained |
+| STT EN | `POST /execute/speech_to_text` | `{audioUrl:<hosted TTS mp3 (SAS)>}` | **400** | 243 | 2026-07-25T05:16:02.592Z | `{"message":"Unknown error","errorCode":"400"}` |
+| STT AR | `POST /execute/speech_to_text` | `{audioUrl:<hosted TTS mp3 (SAS)>}` | **400** | 164 | 2026-07-25T05:16:02.836Z | `{"message":"Unknown error","errorCode":"400"}` |
+| STT (base64 body variant) | `POST /execute/speech_to_text` | `{model,audio:<b64 wav>,language}` | **400** | 321/111 | 2026-07-25T05:15:22.979Z / :23.300Z | `Missing required body parameter audioUrl` — confirms `audioUrl` is the required parameter |
+| STT (plain public wav) | `POST /execute/speech_to_text` | `{audioUrl:<public .wav, no SAS>}` | **400** | 384 | 2026-07-25T05:16:28.153Z | `{"message":"Unknown error","errorCode":"400"}` — 3-attempt cap reached, stopped |
+
+**Verdict 2026-07-25T05:17Z:**
+- **TTS: SUBSCRIBED + WORKING** (both EN and AR, 200 with hosted mp3). The old "Please subscribe" block is gone for `text_to_speech`. `server/speech.js` `ttsGenerate` (documented `{model, input, voice}` body) is the correct live contract — `AudioPlayer` speaker buttons now function on this key.
+- **STT: STILL UNUSABLE** — the subscribe message is gone but every documented `audioUrl` form returns 400 `Unknown error` (SAS-signed mp3, plain public wav alike). The graceful `SERVICE_*` fallback in `server/speech.js` (`classifyServiceError`) and the frontend "speech unavailable" state **stay in place** for STT; no code change required.

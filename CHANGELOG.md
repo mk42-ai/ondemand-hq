@@ -1,3 +1,63 @@
+## 2026-07-25 — Plan Mode restoration + ROOT_CAUSES 1/2/8 fixes + OnDemand rebrand (feature/oda-workflow-overhaul)
+
+Master entry for the 2026-07-25 build pass (verification window 05:15–05:23 UTC; all items live-proven, evidence in PLUGIN_TESTS.md + tests/e2e-plan-mode.mjs report):
+
+1. **Plan Mode end-to-end restored (AUDIT.md RC-1..RC-6).** `raiseRunGate` is live again:
+   full-depth runs raise GLM-4.7-generated `clarification` gates (2–3 per run, interpreter
+   `clarifying_questions` field), chain one-at-a-time (`raiseNextClarification`), and on
+   completion GLM 4.7 synthesises the final optimised prompt (`synthesizeFinalPrompt` →
+   `run.finalPrompt`, injected into authoring as the OPTIMISED BRIEF block) before the
+   user-selected brain authors the deliverable. New `POST /api/oda/runs/:id/message`
+   (RC-5) answers the open gate or records a mid-run note (`handleRunMessage`).
+   Depth travels structurally (`request.depth`, RC-6); workspace chips submit (RC-2);
+   rail Open-decision rows are buttons (RC-3); suite chips fixed for the stale-closure
+   double-conversation bug (RC-4). `ODA_NEVER_PARK=1` env flag restores old behaviour.
+   **Live e2e proof 2026-07-25T05:20–05:22Z: 10/10 steps PASS** — create-run 201 (depth full),
+   `question.required` ×3 via real GLM, 3 gate POSTs 200, `final_prompt_ready` notice emitted,
+   engine resumed `skill.started`, snapshot showed 3 approved gates + clarifications persisted.
+   Fix found during e2e: `raiseRunGate` no longer self-transitions waiting_for_user→waiting_for_user
+   (was a 500 ODA_ILLEGAL_TRANSITION on the 2nd question of a chain).
+2. **ROOT_CAUSES Problem 1 (evidence/analysis skipped).** `interpreter.js` FAST no longer
+   deletes a planned evidence stage — a planned `data-scout` survives as a 2-node
+   `data-scout → author` pipeline when the edge is legal; `liveDeck.js` slide 4
+   (Recommendations) is no longer pre-filled at planning time and only fills from the
+   TERMINAL node's artifact; the empty Evidence card stamp is honest
+   ("Evidence stage ran — no claims extracted" vs "No external evidence required").
+3. **ROOT_CAUSES Problem 2 (benchmark before problem definition).** `sequencing.js` gains the
+   `problem-solve → benchmark` edge (validatePipeline accepts benchmark dependsOn problem-solve —
+   unit-proven); `orchestrator.js` executePipeline runs depth-0 ROOT nodes SEQUENTIALLY
+   (first root per iteration, `sequential_depth0` notice) so a root benchmark can no longer race
+   ahead; interpreter prompt reordered ("Both wanted → problem-solve FIRST, THEN benchmark
+   dependsOn it"); the restored pre-execution gate (item 1) parks full runs before execution.
+4. **ROOT_CAUSES Problem 8 (final-output grounding).** `autoArtifact.js` merges the newest
+   version of every upstream verified artifact (evidence pack, workbook, model) into the final
+   document input as capped appendix sections AND passes `runContext` {originalRequest,
+   clarifications, finalPrompt, evidence, assumptions} to `pluginDoc.js`, which renders a
+   RUN CONTEXT block into BOTH plugin instruction templates (doc/deck + xlsx).
+5. **Speech Services re-probe (PLUGIN_TESTS.md §2026-07-25).** TTS `text_to_speech` is now
+   SUBSCRIBED AND WORKING: EN 200/2526ms + AR 200/1608ms with hosted mp3 URLs
+   (old "Please subscribe" block gone). STT `speech_to_text` still fails 400
+   ("Unknown error" on every documented audioUrl variant; "Missing required body parameter
+   audioUrl" proves the contract) — graceful `SERVICE_*` fallback stays in place.
+6. **OnDemand rebrand + UI modernisation.** App chrome accents #159a7a/#1dac89 across
+   styles.css + oda.css (buttons, chips, focus rings, options pills, running states);
+   thinking accordion collapsed by default; options buttons busy-guarded; composer
+   bottom-anchored with auto-grow; ODA gold retained ONLY for document/deck content branding.
+   Logo: bundled official asset `public/oda-logo.png` (+ watermarks) referenced by the UI;
+   hosted-doc pipeline resolves a public logo URL via `ODA_LOGO_URL`/`PUBLIC_BASE_URL`/`VERCEL_URL`
+   with the bundled asset as fallback (`server/oda/builders/brandAsset.js:33-45`).
+7. **Model policy (verified this pass, NOT changed):** suite chat = GLM 4.7 Cerebras BYOI
+   `byoi-6e314690-4eaf-4def-a33c-380809acf1f5` + reasoningEffort low, streaming ON, thinking
+   tokens rendered in the collapsed accordion (`/api/health` live: `"model":"byoi-…+low"`).
+   The 2026-07-20 NOTES.md capture proved gpt-5.6-sol+low as a diagnostic config; the shipped
+   default remains the GLM BYOI policy from the same pass. FAST/FULL split, verify-gate
+   contract (`verifyOn = node.mode==='full'`, env `ODA_VERIFY` override) and the
+   never-invent-a-number rule are preserved verbatim.
+8. **Verification pass:** 8/8 suite features routing-probed live over `/api/chat` SSE
+   (design/summary/problem-solve/benchmark/translate/media/action-titles/country-data —
+   all HTTP 200, correct feature + plugin set + model tag, 2–74ms to routing frame,
+   2026-07-25T05:18:22Z); plan-mode unit tests 8/8; vite build clean.
+
 ## 2026-07-22 — ODA bilateral correlation core: cross-cluster UAE↔country mandate (checkpoint/correlation-engine-fixes)
 
 Master entry for the 3-commit ODA intelligence series:
