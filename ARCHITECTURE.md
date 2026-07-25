@@ -382,3 +382,16 @@ bad_json|skipped_paused|skipped_dead`, `dedup_dropped`, `image_validation_failed
 **Section-19 validation (2026-07-25, LIVE build sb-hgyxlw16s5y5): 16/16 scenarios PASS** —
 API scenarios via real OnDemand sessions (agents 1+2), UI scenarios via real headless-Chromium
 clicks; TTFV 3.4–7.6 s; evidence: NOTES.md §2026-07-25-17Z matrix + vi-shots/ screenshots.
+
+
+---
+
+## 15 · 2026-07-25 (22Z) verification addendum
+
+Speech: TTS EN/AR ADOPT re-confirmed (200 @22:17Z, fresh hosted mp3); STT EN/AR REJECT
+re-confirmed with a REAL round-trip (the platform's own TTS output 400s — service-side gap,
+`server/speech.js` SERVICE_* fallback remains the shipped contract). Model policy: gpt-5.6-sol +
+medium + streaming enforced (env.js:62, ondemand.js:174) with thinking rendered separately in
+the collapsed accordion (Messages.jsx:126); live TTFT 4097ms @22:25:44.719Z. ROOT_CAUSES
+Problems 3/5/6/7 and all 10 PRIOR_KNOWLEDGE items now carry in-file resolution stamps with
+file:line evidence (P3 keeps one honest open gap: no total per-run wall-clock cap).

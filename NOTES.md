@@ -1,5 +1,18 @@
 # NOTES.md — ODA Productivity Suite engineering log
 
+## 2026-07-25 22:15-22:30Z — Verification pass log
+
+- **STT real-audio round-trip:** TTS-generated EN/AR mp3s fed straight back to speech_to_text —
+  400 'Unknown error' both (22:18:02.585Z / .982Z). Failure is service-side (platform's own
+  hosted audio rejected). TTS ADOPT re-confirmed (200: EN 2378ms, AR 3489ms).
+- **Live TTFT probe (policy proof):** predefined-gpt-5.6-sol + reasoningEffort medium +
+  responseMode stream @22:25:44.719Z → first fulfillment token at **4097ms**; frame families
+  statusLog 2, heartbeat 2, fulfillment 24, metricsLog 1, [DONE] 1.
+- **Stamps landed:** ROOT_CAUSES P3 (partial, wall-clock gap honest), P5 (re-verified), P6
+  (by-design), P7 (full); PRIOR_KNOWLEDGE §5 — 10/10 items CLOSED with quotes; evidence tables
+  in the files themselves.
+
+
 ## 2026-07-25 17Z — Section 19 Visual Intelligence: 16-scenario live validation matrix
 
 Live build: https://sb-hgyxlw16s5y5.vercel.run (sandbox sbx_VagOTu4mC3Z7VnxdpJJ8tyl18WTb,

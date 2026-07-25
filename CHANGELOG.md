@@ -1,3 +1,28 @@
+## 2026-07-25 (22:15-22:30Z) — Verification pass: STT real-audio round-trip, P3/5/6/7 + PRIOR_KNOWLEDGE stamps, live TTFT probe
+
+1. **Speech re-probe with REAL audio (PLUGIN_TESTS.md §22:17Z).** TTS re-confirmed: EN 200/2378ms
+   @22:17:56.718Z, AR 200/3489ms @22:17:59.096Z (hosted mp3, ADOPT). STT probed with the freshly
+   generated TTS mp3s themselves (true round-trip): EN 400/396ms @22:18:02.585Z, AR 400/142ms
+   @22:18:02.982Z — 'Unknown error' on platform-hosted audio proves the failure is service-side.
+   **REJECT re-confirmed; gap explicitly flagged; graceful `SERVICE_*` fallback stays shipped.**
+2. **ROOT_CAUSES.md — Problems 3/5/6/7 stamped in place** (replacing the 'tracked separately'
+   note): P3 PARTIALLY RESOLVED (90s stall watchdog ondemand.js:263-264, REVISE cap
+   verifier.js:361-369, orphan sweep runStore.js:150-165, sequential depth-0; HONEST GAP — no
+   total per-run wall-clock cap, flagged as future work). P5 RESOLVED re-verified
+   (routes.js:157, orchestrator.js:351, OdaWorkspace.jsx:43/56, OdaSidebar.jsx:125).
+   P6 RESOLVED BY DESIGN (14 stage renderers / 15 STAGES stageMap.js:7-23; liveDeck preemption
+   at :82 is the intentional universal live render). P7 RESOLVED (SSE seq replay events.js:112,
+   LEGAL_TRANSITIONS runStore.js:192-204, 7 emit + 12 persist sites, orphan sweep).
+3. **PRIOR_KNOWLEDGE.md — §5 Resolution stamps added**: all 5 EXISTS-BUT-BROKEN + 5 MISSING
+   items CLOSED 2026-07-25 with file:line evidence (handoff.js:42; correlation.js:63-64/323/356
+   w/ Reddit chat-attach caveat; :796 + runStore.js:17; brains.js:57,59; CorrelationEngine.jsx:395;
+   correlation.js:5/239-251; :251; CorrelationGraph.jsx:2,337; :922; env.js:123 +
+   dataFetch.js:82). WORKS(1) streaming re-verified live.
+4. **gpt-5.6-sol-medium streaming policy re-verified**: static enforcement (env.js:62 decomposed
+   endpoint+effort, ondemand.js:174 responseMode stream, Messages.jsx:126 collapsed thinking
+   accordion) + LIVE streamed probe @22:25:44.719Z — **TTFT 4097ms**, 24 fulfillment frames,
+   statusLog×2/heartbeat×2/metricsLog/[DONE], 158-char answer.
+
 ## 2026-07-25 (16:40-17:15Z) — Real-time Visual Intelligence (Section 19): dual-session build + 16/16 live validation `[ts: 2026-07-25T17:13:00Z]`
 
 1. **Feature landed (prior attempt had died with 'argument list too long' before writing any
