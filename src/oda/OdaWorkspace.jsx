@@ -15,7 +15,7 @@ import { installDownloadDelegationListener, downloadFile } from './downloadFinal
 import './oda.css';
 
 export default function OdaWorkspace({ onExit }) {
-  const { run, connected, start, retry, attach, resolveGate, lifecycle, reset, fetchArtifact } = useOdaRun();
+  const { run, connected, start, retry, attach, resolveGate, sendMessage, lifecycle, reset, fetchArtifact } = useOdaRun();
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [history, setHistory] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -38,6 +38,10 @@ export default function OdaWorkspace({ onExit }) {
   // native save-to-disk fires even when the child sits in a download sandbox.
   useEffect(() => { installDownloadDelegationListener(); }, []);
 
+  // Conversational continuation (RC-5): while the active run waits on an open
+  // gate, the composer ANSWERS that run instead of forking a fresh one.
+  const runIsWaiting = run.status === 'waiting_for_user' && (run.gates || []).some((g) => g.status === 'open');
+
   const onSubmit = useCallback(async ({ text, files = [] }) => {
     // Widget fast-path: 'widget:' prefix renders a live widget card in-canvas
     // (GLM 4.7 streamed assembly) instead of a full document run.
@@ -46,18 +50,31 @@ export default function OdaWorkspace({ onExit }) {
       if (prompt) setWidgets((w) => [{ id: `w${Date.now()}`, prompt }, ...w]);
       return;
     }
+    if (runIsWaiting) {
+      // Answer the open gate on the ACTIVE run — never start a new one here.
+      setBusy(true); setError(null);
+      try { await sendMessage(text); } catch (e) { setError(e.message); }
+      finally { setBusy(false); }
+      return;
+    }
     setBusy(true); setError(null);
     try {
       let finalText = text;
       const extras = [];
       if (controls.lang !== 'en') extras.push(`Language: ${controls.lang === 'ar' ? 'Arabic' : 'bilingual English and Arabic'}`);
       if (controls.output !== 'auto') extras.push(`Output: ${controls.output}`);
-      if (controls.depth !== 'fast') extras.push('Depth: full engagement with approval gates');
       if (extras.length) finalText += ` — ${extras.join('; ')}`;
-      await start({ text: finalText, attachments: files.map((f) => ({ name: f.name, size: f.size })), brain: controls.brain || 'sonnet-5', output: controls.output });
+      // Depth travels structurally (RC-6) — never as a prose hint.
+      await start({
+        text: finalText,
+        attachments: files.map((f) => ({ name: f.name, size: f.size })),
+        brain: controls.brain || 'sonnet-5',
+        output: controls.output,
+        depth: controls.depth === 'fast' ? 'fast' : 'full',
+      });
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
-  }, [start, controls]);
+  }, [start, sendMessage, controls, runIsWaiting]);
 
   const onLifecycle = useCallback(async (op) => {
     setError(null);
@@ -82,12 +99,15 @@ export default function OdaWorkspace({ onExit }) {
         controls={controls}
         onControlsChange={setControls}
         onSubmit={onSubmit}
+        answering={runIsWaiting}
+        activeGateOpen={runIsWaiting}
+        onAnswer={async (text) => { await sendMessage(text); }}
         onLifecycle={onLifecycle}
         onNewTask={() => { reset(); setError(null); }}
         onSelectRun={(id) => attach(id).catch((e) => setError(e.message))}
         onExit={onExit}
       />
-      <div style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div id="oda-canvas-scroll" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {error && <div className="oda-wserr">{error}</div>}
         {widgets.length > 0 && (
           <div style={{ padding: '18px 34px 0', display: 'grid', gap: 14 }}>
@@ -105,6 +125,11 @@ export default function OdaWorkspace({ onExit }) {
         onToggle={() => setRailCollapsed((c) => !c)}
         onDownload={onDownload}
         onPreview={() => { /* preview opens in-canvas via the document stage */ }}
+        onFocusGate={() => {
+          // The canvas already renders the open gate's stage — focusing a
+          // decision simply brings the canvas back into view (RC-3).
+          document.getElementById('oda-canvas-scroll')?.scrollIntoView({ behavior: 'smooth' });
+        }}
       />
     </div>
   );

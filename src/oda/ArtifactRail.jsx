@@ -81,7 +81,7 @@ function NodeBadge({ status }) {
   );
 }
 
-export default function ArtifactRail({ run, collapsed, onToggle, onDownload, onPreview }) {
+export default function ArtifactRail({ run, collapsed, onToggle, onDownload, onPreview, onFocusGate }) {
   if (collapsed) {
     return (
       <aside className="oda-rail oda-rail--collapsed">
@@ -193,10 +193,16 @@ export default function ArtifactRail({ run, collapsed, onToggle, onDownload, onP
           <div className="oda-empty">No open decisions</div>
         ) : (
           openGates.map((g) => (
-            <div className="oda-rail__row oda-rail__row--gate" key={g.gateId}>
+            // RC-3: real button — clicking focuses the gate's canvas stage.
+            <button
+              type="button"
+              className="oda-rail__row oda-rail__row--gate oda-rail__row--clickable"
+              key={g.gateId}
+              onClick={() => onFocusGate?.(g)}
+            >
               <span className="oda-pill">{g.gateType}</span>
               <span className="oda-rail__claim">{truncate(g.prompt, 90)}</span>
-            </div>
+            </button>
           ))
         )}
       </section>

@@ -21,6 +21,7 @@ export default function GateCard({ gate, onResolve, allowEdits = false, editLabe
 
   if (!gate) return null;
   const resolved = gate.status && gate.status !== 'open';
+  const isClarification = gate.gateType === 'clarification';
 
   const act = async (args) => {
     setBusy(true); setErr(null);
@@ -31,8 +32,17 @@ export default function GateCard({ gate, onResolve, allowEdits = false, editLabe
 
   return (
     <div className={`oda-gate${resolved ? ' oda-gate--resolved' : ''}`} data-gate-type={gate.gateType}>
-      <div className="oda-gate__label">Decision required</div>
+      <div className="oda-gate__label">{isClarification ? 'Clarifying question' : 'Decision required'}</div>
+      {/* Plan Mode clarification context: question N of M + why it matters. */}
+      {isClarification && (gate.payload?.total ?? 0) > 1 && (
+        <div className="oda-muted" style={{ fontSize: 12, marginBottom: 4 }}>
+          Question {(gate.payload.index ?? 0) + 1} of {gate.payload.total}
+        </div>
+      )}
       <div className="oda-gate__prompt">{gate.prompt}</div>
+      {isClarification && gate.payload?.why && (
+        <div className="oda-muted" style={{ fontSize: 12, marginTop: 2 }}>{gate.payload.why}</div>
+      )}
       {resolved ? (
         <div className="oda-gate__resolved">
           {gate.status === 'rejected' ? <XCircle size={14} aria-hidden /> : <CheckCircle2 size={14} aria-hidden />}
@@ -52,7 +62,7 @@ export default function GateCard({ gate, onResolve, allowEdits = false, editLabe
           <div className="oda-gate__actions">
             {(gate.options || []).map((opt) => {
               const negative = /reject|request changes|return/i.test(opt);
-              const editish = /edit|changes/i.test(opt) && !/request changes/i.test(opt);
+              const editish = (/edit|changes|answer in your own words/i.test(opt)) && !/request changes/i.test(opt);
               if (editish && allowEdits && !editing) {
                 return (
                   <button key={opt} className="oda-btn oda-btn--ghost" disabled={busy}

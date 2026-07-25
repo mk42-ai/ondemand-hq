@@ -234,9 +234,16 @@ export default function App() {
 
   /* ---------- send ---------- */
   const send = async (text, fileId = null, fileName = null, extra = {}) => {
-    let convId = activeId;
+    if (busy) return; // re-entrancy guard — one in-flight stream at a time
+    // RC-4 fix: callers that just created a conversation (chips, handoffs) pass the id
+    // explicitly so we never read a stale activeId (null) and open a SECOND conversation.
+    let convId = extra.convId || activeId;
     if (!convId) convId = await newChat(pendingTool || 'chat');
     if (!convId) return;
+    // RC-4 fix (wizard): chip-started wizard flows send before the setWizard state
+    // update has flushed — honour an explicit override from the caller.
+    const wizardActive = extra.wizardActive ?? wizard.active;
+    const wizardStep = extra.wizardStep ?? wizard.step;
 
     // Re-affirm connector selection for this conversation after convId is known.
     // This beats a race where the activeId effect loads [] from storage before the
@@ -279,7 +286,7 @@ export default function App() {
       fileId,
       feature: extra.feature || pendingTool || undefined,
       mode: extra.mode || undefined, // explicit FAST/FULL override (e.g. MSM 'Analyse deeper' → one-shot FAST)
-      wizard: wizard.active ? { active: true, step: wizard.step } : undefined,
+      wizard: wizardActive ? { active: true, step: wizardStep } : undefined,
       editTarget: extra.editTarget || undefined,
       msmVideoId: extra.msmVideoId || undefined,
       pluginIds: ids.length ? ids : undefined,
@@ -386,8 +393,9 @@ export default function App() {
         }
       }
       patchLive({ live: false });
-      // advance wizard on success
-      if (wizard.active && wizard.step < 4) setWizard(w => ({ ...w, step: Math.min(w.step + 1, 4) }));
+      // advance wizard on success (wizardActive covers chip-started flows whose
+      // state update had not flushed when this closure was captured)
+      if (wizardActive && wizardStep < 4) setWizard(w => ({ ...w, step: Math.min(w.step + 1, 4) }));
       draftRef.current = null;
       await refreshConvs();
     } catch (e) {
@@ -529,8 +537,19 @@ export default function App() {
                 <div className="chips">
                   {CHIPS.map(c => (
                     <button key={c.label} className="chip" onClick={async () => {
-                      await newChat(c.feature, { wizard: Boolean(c.wizard) });
-                      if (!c.text.endsWith(' ')) send(c.text, null, null, { feature: c.feature });
+                      const id = await newChat(c.feature, { wizard: Boolean(c.wizard) });
+                      if (!id) return;
+                      if (c.text.endsWith(' ')) {
+                        // Trailing-space chips are prompt STARTERS — prefill the composer
+                        // for the user to complete instead of silently doing nothing.
+                        setComposePrefill({ text: c.text, ts: Date.now() });
+                        return;
+                      }
+                      send(c.text, null, null, {
+                        feature: c.feature,
+                        convId: id, // RC-4: bypass the stale activeId closure
+                        ...(c.wizard ? { wizardActive: true, wizardStep: 0 } : {}),
+                      });
                     }}>{c.label}</button>
                   ))}
                 </div>
@@ -541,7 +560,7 @@ export default function App() {
                   <div className="stream__inner">
                     {messages.map(m => m.role === 'user'
                       ? <UserMessage key={m.id} msg={m} />
-                      : <AssistantMessage key={m.id} msg={m} live={m.live} onOption={onOption} onExport={doExport} exportBusy={exportBusy} artifacts={artifacts} onRetry={regenerate} />)}
+                      : <AssistantMessage key={m.id} msg={m} live={m.live} busy={busy} onOption={onOption} onExport={doExport} exportBusy={exportBusy} artifacts={artifacts} onRetry={regenerate} />)}
                   </div>
                 </div>
                 {!atBottom && (
@@ -560,7 +579,7 @@ export default function App() {
                       <span className="stopgen__sq" aria-hidden /> Stop generating
                     </button>
                   )}
-                  <div className="composer-hint">glm-4.7 (Cerebras BYOI) · max reasoning · every figure sourced or flagged · one verified deliverable per run</div>
+                  <div className="composer-hint">Fast clarifications on GLM 4.7 · your selected model writes the final answer · every figure sourced or flagged</div>
                 </div>
               </>
             )}
