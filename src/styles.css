@@ -158,7 +158,7 @@ textarea, input { font-family: inherit; }
   box-shadow: 0 1px 4px rgba(29,37,44,0.04);
   transition: border-color .15s;
 }
-.composer:focus-within { border-color: var(--gold); }
+.composer:focus-within { border-color: var(--ink); }
 .composer textarea {
   flex: 1; border: none; outline: none; resize: none;
   font-size: 14px; line-height: 20px; padding: 8px 0;
@@ -2446,7 +2446,9 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
   --pg-panel:      #F7F8F9;   /* thinking / fulfillment panel */
   --pg-log:        #FAFBFC;   /* status-log panel */
   --pg-head:       #EEF0F2;   /* collapsible header band */
-  --pg-green:      #159a7a;
+  /* HQ is a black & white theme — no green. "green" token repointed to ink so status
+     dots / shimmer render in the app's monochrome palette. */
+  --pg-green:      #1D252C;
   --pg-fg:         rgba(29,37,44,0.62);
   --pg-fg-strong:  rgba(29,37,44,0.92);
   --pg-fg-muted:   rgba(29,37,44,0.42);
@@ -2508,7 +2510,7 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
 .pglog2__dot--red    { background: var(--pg-red); }
 .pglog2__dot.blink   { animation: pglog-pulse 1.3s ease-in-out infinite; }
 @keyframes pglog-pulse { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
-.pglog2__label { font-size: 13.5px; color: var(--pg-green); flex: 1 1 auto; }
+.pglog2__label { font-size: 13.5px; color: var(--pg-fg-strong); flex: 1 1 auto; }
 .pglog2__chev { flex-shrink: 0; color: var(--pg-fg-muted); transition: transform .25s ease; }
 .pglog2__chev.open { transform: rotate(180deg); }
 
@@ -2516,11 +2518,11 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
 .pglog2__stepq { padding-inline-start: 19px; font-size: 13px; line-height: 1.6; color: var(--pg-fg-muted); word-break: break-word; }
 .pglog2__stepq--flush { margin-top: 2px; }
 .pglog2__detail { padding-inline-start: 19px; border-inline-start: 1px solid var(--pg-border); margin-inline-start: 4px; display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
-.pglog2__section { font-size: 13px; color: var(--pg-green); }
+.pglog2__section { font-size: 13px; color: var(--pg-fg-strong); }
 .pglog2__agent { display: flex; align-items: center; gap: 8px; }
 .pglog2__avatar {
   width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
-  background: linear-gradient(135deg, #3bb795, #2b7a86); color: #fff;
+  background: var(--btn-primary-bg, #1a1a1a); color: #fff;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700;
 }
@@ -2538,7 +2540,7 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
    toggle — a faithful port of the playground's components/Loader. */
 .pgspin {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  color: var(--od-green, #159a7a);
+  color: var(--ink, #1D252C);
   animation: pgspin-rotate 1.5s linear infinite; transform-origin: 50% 50%;
   transition: color 1s ease; will-change: transform;
 }
@@ -2550,7 +2552,7 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
 .skel--spin { display: flex; align-items: center; gap: 10px; padding: 2px 0; }
 .answer-spin { display: inline-flex; vertical-align: -3px; margin-left: 4px; }
 .pgloader-shimmer {
-  background: linear-gradient(90deg, var(--pg-fg-muted, #8d8d8d) 0%, var(--pg-green, #3bb795) 50%, var(--pg-fg-muted, #8d8d8d) 100%);
+  background: linear-gradient(90deg, var(--pg-fg-muted, #8d8d8d) 0%, var(--pg-fg-strong, #1D252C) 50%, var(--pg-fg-muted, #8d8d8d) 100%);
   background-size: 200% auto; -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; animation: pg-shimmer 2.2s linear infinite; font-size: 13.5px;
 }
