@@ -13,6 +13,8 @@ import IntelDashboard from './intel/IntelDashboard.jsx';
 import MsmDashboard from './msm/MsmDashboard.jsx';
 // ODA Workspace (Phase 3) — lazy-loaded so the suite home bundle stays lean.
 const OdaWorkspace = React.lazy(() => import('./oda/OdaWorkspace.jsx'));
+// Visual Intelligence (Section 19) — lazy: dual-session assistant + visual director.
+const VisualIntel = React.lazy(() => import('./intel/VisualIntel.jsx'));
 import { ArrowDown, X, AlertTriangle } from 'lucide-react';
 import { dissect } from './markdown.jsx';
 
@@ -52,6 +54,10 @@ export default function App() {
   const [msmOpen, setMsmOpen] = useState(() => {
     try { return window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'; } catch { return false; }
   });
+  // Visual Intelligence — /visual-intel route (Section 19), deep-linkable.
+  const [viOpen, setViOpen] = useState(() => {
+    try { return window.location.pathname.replace(/\/+$/, '') === '/visual-intel'; } catch { return false; }
+  });
   // ODA Workspace (Phase 3) — /oda route, deep-linkable; the suite home
   // (executive brief + per-skill quick starts) is preserved untouched at '/'.
   // One universal workspace: /oda (legacy /oda/live deep links land here too —
@@ -64,15 +70,16 @@ export default function App() {
   });
   useEffect(() => {
     if (connectorCallback) return;
-    const want = odaOpen ? '/oda' : (msmOpen ? '/msm-analysis' : '/');
+    const want = odaOpen ? '/oda' : (msmOpen ? '/msm-analysis' : (viOpen ? '/visual-intel' : '/'));
     try { if (window.location.pathname !== want) window.history.pushState({}, '', want); } catch { /* noop */ }
-  }, [msmOpen, odaOpen, connectorCallback]);
+  }, [msmOpen, odaOpen, viOpen, connectorCallback]);
   useEffect(() => {
     const onPop = () => {
       try {
         const p = window.location.pathname.replace(/\/+$/, '');
         setConnectorCallback(p === '/connector/auth/callback');
         setMsmOpen(p === '/msm-analysis');
+        setViOpen(p === '/visual-intel');
         setOdaOpen(/^\/oda(\/live)?$/.test(p));
       } catch { /* noop */ }
     };
@@ -510,6 +517,10 @@ export default function App() {
       ) : odaOpen ? (
         <React.Suspense fallback={<div className="main main--intel" style={{ display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 13 }}>Opening the ODA workspace…</div>}>
           <OdaWorkspace onExit={() => setOdaOpen(false)} />
+        </React.Suspense>
+      ) : viOpen ? (
+        <React.Suspense fallback={<div className="main main--intel" style={{ display: 'grid', placeItems: 'center', color: '#9ca3af', fontSize: 13 }}>Opening Visual Intelligence…</div>}>
+          <VisualIntel onExit={() => setViOpen(false)} />
         </React.Suspense>
       ) : msmOpen ? (
         <div className="main main--intel">
