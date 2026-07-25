@@ -579,7 +579,7 @@ export default function App() {
                       <span className="stopgen__sq" aria-hidden /> Stop generating
                     </button>
                   )}
-                  <div className="composer-hint">Fast clarifications on GLM 4.7 · your selected model writes the final answer · every figure sourced or flagged</div>
+                  <div className="composer-hint">gpt-5.6-sol · medium reasoning · streaming on · every figure sourced or flagged</div>
                 </div>
               </>
             )}
