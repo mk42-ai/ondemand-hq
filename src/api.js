@@ -68,8 +68,14 @@ export async function completeConnectorOAuth(state, code) {
   return jpost('/api/connectors/oauth/complete', { state, code });
 }
 
+/** Fetch the ODA playground preset with resolved skill names. */
+export async function fetchOdaPreset(refresh = false) {
+  return jget(`/api/presets/oda${refresh ? '?refresh=1' : ''}`);
+}
+
 /** sessionStorage key used to auto-select a connector after OAuth callback. */
 export const PENDING_CONNECTOR_KEY = 'oda-pending-connector';
+export const ODA_PRESET_ENABLED_KEY = 'oda-preset-enabled';
 const CONNECTOR_SEL_PREFIX = 'oda-connector-sel-';
 
 /** Load selected connector pluginIds for a conversation (session-scoped). */
@@ -154,7 +160,7 @@ function dropError(e) {
  *    onEvent itself and are never rewrapped here, so callers can tell a
  *    transport drop apart from a real server-side error.
  */
-export async function streamChat(body, onEvent, signal) {
+export async function streamChat(body, onEvent, signal, onIndex) {
   let r;
   try {
     r = await fetch('/api/chat', {
@@ -170,14 +176,70 @@ export async function streamChat(body, onEvent, signal) {
     const errBody = await r.json().catch(() => ({}));
     throw new Error(errorMessage(errBody.error, `HTTP ${r.status}`));
   }
+  await pumpSSE(r, onEvent, onIndex);
+}
+
+/**
+ * Resume a dropped turn from the last event index seen. Replays the missed frames then
+ * continues live — a mid-stream break resumes exactly where it left off, no duplication.
+ * The server emits a `resume_failed` frame (surfaced via onEvent) when the turn is gone, so
+ * the caller can fall back. Throws on transport failure like streamChat.
+ */
+export async function resumeChat(turnId, lastEventIndex, onEvent, signal, onIndex) {
+  const qs = new URLSearchParams({ turnId, lastEventIndex: String(lastEventIndex ?? -1) });
+  let r;
+  try {
+    r = await fetch(`/api/chat/resume?${qs}`, { signal });
+  } catch (e) {
+    throw dropError(e);
+  }
+  if (!r.ok || !r.body) {
+    const errBody = await r.json().catch(() => ({}));
+    throw new Error(errorMessage(errBody.error, `HTTP ${r.status}`));
+  }
+  await pumpSSE(r, onEvent, onIndex);
+}
+
+/** Cancel an in-flight turn server-side (user pressed Stop). Best-effort, never throws. */
+export async function cancelChat(turnId) {
+  if (!turnId) return;
+  try {
+    await fetch('/api/chat/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ turnId }),
+      keepalive: true, // allow the request to complete even if the page is unloading
+    });
+  } catch { /* best effort */ }
+}
+
+/**
+ * Read an SSE response body: dispatches parsed frames to onEvent(type, payload) and every
+ * native SSE `id:` to onIndex(i) so the caller can track the resume position.
+ */
+async function pumpSSE(r, onEvent, onIndex) {
   const reader = r.body.getReader();
   streamDebugBus.emit({ kind: 'lifecycle', type: 'open' });
   const dec = new TextDecoder();
   let buf = '';
   const processLine = (rawLine) => {
     const line = rawLine.replace(/\r$/, '');
-    // Keepalive comment lines (`: keepalive`) — surfaced to the debug bus, never to onEvent.
-    if (line.startsWith(':')) { streamDebugBus.emit({ kind: 'frame', type: 'keepalive', chars: 0 }); return; }
+    // Keepalive comment lines (`: keepalive`) — surfaced to the debug bus AND to onEvent as a
+    // no-op 'heartbeat' so callers with an activity/stall watchdog (App.jsx) see it as live
+    // traffic. Long (up to ~1h) queries can go 10+ minutes between real content frames while
+    // still emitting keepalives every 10s — without this, a caller's stall timer would treat
+    // that as a dead connection even though the transport is fine.
+    if (line.startsWith(':')) {
+      streamDebugBus.emit({ kind: 'frame', type: 'keepalive', chars: 0 });
+      onEvent('heartbeat', {});
+      return;
+    }
+    // Native SSE id — the resume cursor. Track the highest index we've seen.
+    if (line.startsWith('id:')) {
+      const n = Number.parseInt(line.slice(3).trim(), 10);
+      if (Number.isFinite(n)) onIndex?.(n);
+      return;
+    }
     if (line.startsWith('event:')) return; // SSE event-name line (event:thinking/message/heartbeat) — payload routing keys on eventType below
     if (!line.startsWith('data:')) return;
     const payload = line.slice(5).trim();
@@ -201,7 +263,10 @@ export async function streamChat(body, onEvent, signal) {
     }
     const et = evt.eventType;
     if (!et) {
-      if (evt.sessionId && evt.time) streamDebugBus.emit({ kind: 'frame', type: 'heartbeat', chars: 0, raw: evt });
+      if (evt.sessionId && evt.time) {
+        streamDebugBus.emit({ kind: 'frame', type: 'heartbeat', chars: 0, raw: evt });
+        onEvent('heartbeat', {}); // same reasoning as the SSE-comment keepalive above
+      }
       return; // heartbeat — no UI action
     }
     const chars = typeof evt.answer === 'string' ? evt.answer.length

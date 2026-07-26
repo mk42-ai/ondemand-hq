@@ -4,12 +4,15 @@ import BilingualLoader from './BilingualLoader.jsx';
 import Recorder from './Recorder.jsx';
 import ConnectorsMenu, { SelectedConnectorStack } from './ConnectorsMenu.jsx';
 import ConnectorDetailModal from './ConnectorDetailModal.jsx';
+import OdaPresetToggle from './OdaPresetToggle.jsx';
 import { Cable, Paperclip, SendHorizontal, X } from 'lucide-react';
 
 export default function Composer({
-  onSend, busy, onError, placeholder, prefill,
+  onSend, onStop, busy, onError, placeholder, prefill,
   selectedPluginIds = [], onSelectedPluginIdsChange,
   connectors = [], loadingConnectors = false, onEnsureConnectors,
+  odaPreset = null, odaPresetSkills = [], odaPresetEnabled = false,
+  onOdaPresetEnabledChange, loadingOdaPreset = false,
 }) {
   React.useEffect(() => {
     if (!prefill?.text) return;
@@ -40,7 +43,7 @@ export default function Composer({
       t || `Please process the attached file ${attached?.name || ''}`.trim(),
       attached?.id || null,
       attached?.name || null,
-      { pluginIds: selectedPluginIds },
+      { pluginIds: selectedPluginIds, useOdaPreset: odaPresetEnabled },
     );
     setText('');
     try { sessionStorage.removeItem('oda-draft'); } catch { /* noop */ }
@@ -162,6 +165,14 @@ export default function Composer({
             {uploading ? <BilingualLoader size="sm" className="biloader--tight" /> : <Paperclip size={18} strokeWidth={1.9} aria-hidden />}
           </button>
           <div className="composer__connector-wrap" ref={connectorWrapRef}>
+            <OdaPresetToggle
+              enabled={odaPresetEnabled}
+              onToggle={onOdaPresetEnabledChange}
+              preset={odaPreset}
+              skills={odaPresetSkills}
+              loading={loadingOdaPreset}
+              disabled={busy}
+            />
             <button
               className={`iconbtn${connectorsOpen ? ' iconbtn--active' : ''}${selectedPluginIds.length ? ' iconbtn--selected' : ''}`}
               onClick={toggleConnectorsMenu}
@@ -190,9 +201,17 @@ export default function Composer({
           <div className="composer__actions-spacer" />
           <Recorder disabled={busy} onError={() => { /* Recorder shows its own quiet note */ }}
             onTranscript={(t2) => { setText(prev => (prev ? prev + ' ' : '') + t2); taRef.current?.focus(); }} />
-          <button className="send" onClick={submit} disabled={busy || uploading || (!text.trim() && !attached)} title="Send" aria-label="Send">
-            <SendHorizontal size={18} strokeWidth={2} aria-hidden />
-          </button>
+          {/* Playground parity: while generating, the send button becomes the stop button
+              (green square) in place — no separate pill below the composer. */}
+          {busy ? (
+            <button className="send send--stop" onClick={() => onStop?.()} title="Stop generating" aria-label="Stop generating">
+              <span className="send__sq" aria-hidden />
+            </button>
+          ) : (
+            <button className="send" onClick={submit} disabled={uploading || (!text.trim() && !attached)} title="Send" aria-label="Send">
+              <SendHorizontal size={18} strokeWidth={2} aria-hidden />
+            </button>
+          )}
         </div>
       </div>
     </div>
