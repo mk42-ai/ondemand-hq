@@ -15,7 +15,7 @@ import { buildSystemPrompt, WIZARD_STEPS } from './prompts.js';
 import { pluginIdsFor, pluginLabelsFor, FEATURE_PLUGINS, ADOPTED } from './plugins.js';
 import {
   createOdSession, streamQuery, syncQuery, listClientPlugins,
-  initPluginOAuth, unsubscribePluginConfiguration, completePluginOAuth,
+  initPluginOAuth, unsubscribePluginConfiguration, completePluginOAuth, describeError,
 } from './ondemand.js';
 import { getOdaPreset, presetQueryOptions } from './odaPreset.js';
 import { fetchCountryPack, renderDataBlock, resolveCountry } from './countryData.js';
@@ -419,7 +419,9 @@ app.post('/api/chat', async (req, res) => {
     // Turn was explicitly cancelled (user Stop) or abandoned (no resume within grace): the
     // upstream abort surfaces here — don't persist a partial or emit noise to a dead turn.
     if (turn.cancelled) { finishTurn(turn, 'error'); return; }
-    console.error('[FAIL] [chat] stream failed:', e.message);
+    // e.message alone is often just "terminated" — undici's generic body-stream-failure
+    // wrapper. describeError walks e.cause to surface the actual network/socket reason.
+    console.error('[FAIL] [chat] stream failed:', describeError(e));
     if (e.partialAnswer) {
       store.addMessage(conv, {
         role: 'assistant', text: e.partialAnswer, ...reasoning,

@@ -555,6 +555,11 @@ export default function App() {
     //  routing / plugin_status / status / error / done remain locally-synthesized frames.
     const onStreamEvent = (type, evt) => {
       lastFrameRef.current = Date.now(); // stall watchdog heartbeat (any frame)
+      // `attempt` bounds CONSECUTIVE reconnects-with-no-activity, not a lifetime total for the
+      // turn — a long (up to ~1h) query can hit several transient drops over its life, and each
+      // one that actually resumes and sees traffic again should refill the budget rather than
+      // count down against a fixed ceiling until the whole turn is killed.
+      attempt = 0;
       if (type === "turn") {
         // Server handshake: remember this turn so a drop can resume it (never rendered).
         turnIdRef.current = evt.turnId || null;

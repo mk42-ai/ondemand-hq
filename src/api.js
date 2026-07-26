@@ -224,8 +224,16 @@ async function pumpSSE(r, onEvent, onIndex) {
   let buf = '';
   const processLine = (rawLine) => {
     const line = rawLine.replace(/\r$/, '');
-    // Keepalive comment lines (`: keepalive`) — surfaced to the debug bus, never to onEvent.
-    if (line.startsWith(':')) { streamDebugBus.emit({ kind: 'frame', type: 'keepalive', chars: 0 }); return; }
+    // Keepalive comment lines (`: keepalive`) — surfaced to the debug bus AND to onEvent as a
+    // no-op 'heartbeat' so callers with an activity/stall watchdog (App.jsx) see it as live
+    // traffic. Long (up to ~1h) queries can go 10+ minutes between real content frames while
+    // still emitting keepalives every 10s — without this, a caller's stall timer would treat
+    // that as a dead connection even though the transport is fine.
+    if (line.startsWith(':')) {
+      streamDebugBus.emit({ kind: 'frame', type: 'keepalive', chars: 0 });
+      onEvent('heartbeat', {});
+      return;
+    }
     // Native SSE id — the resume cursor. Track the highest index we've seen.
     if (line.startsWith('id:')) {
       const n = Number.parseInt(line.slice(3).trim(), 10);
@@ -255,7 +263,10 @@ async function pumpSSE(r, onEvent, onIndex) {
     }
     const et = evt.eventType;
     if (!et) {
-      if (evt.sessionId && evt.time) streamDebugBus.emit({ kind: 'frame', type: 'heartbeat', chars: 0, raw: evt });
+      if (evt.sessionId && evt.time) {
+        streamDebugBus.emit({ kind: 'frame', type: 'heartbeat', chars: 0, raw: evt });
+        onEvent('heartbeat', {}); // same reasoning as the SSE-comment keepalive above
+      }
       return; // heartbeat — no UI action
     }
     const chars = typeof evt.answer === 'string' ? evt.answer.length

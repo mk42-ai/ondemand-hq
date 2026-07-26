@@ -35,6 +35,44 @@ export const toAgentIds = (ids = []) => ids.map((id) =>
 // STREAM_DEBUG one-liner: key=value pairs only — NEVER the API key, NEVER frame text content.
 const dbg = (fields) => { if (STREAM_DEBUG) console.log('[stream-debug] ' + Object.entries(fields).map(([k, v]) => `${k}=${v}`).join(' ')); };
 
+// 2026-07-26 (incident: "[FAIL] stream failed: terminated" on nearly every turn):
+// Node's built-in fetch (undici) collapses EVERY body-stream failure — socket reset, proxy/
+// idle-timeout close, TLS drop — into the same generic `TypeError('terminated', { cause })`.
+// The real reason always lives in `err.cause` (and sometimes `err.cause.code`), but call sites
+// were logging `e.message` only, so the actual network fault was being thrown away before
+// anyone could see it. This renders the FULL chain so it shows up in logs going forward.
+export function describeError(err) {
+  const parts = [];
+  let cur = err;
+  let depth = 0;
+  while (cur && depth < 4) {
+    const code = cur.code || cur.errno || cur.errorCode;
+    parts.push(`${cur.name || 'Error'}: ${cur.message}${code ? ` (code=${code})` : ''}`);
+    cur = cur.cause;
+    depth++;
+  }
+  return parts.join(' <- caused by: ');
+}
+
+// Failures worth a bounded retry: generic undici stream termination and common socket/
+// network reset codes, surfaced either directly or nested in `err.cause`. Distinct from a
+// genuine upstream error FRAME (errorCode UPSTREAM_ERROR_FRAME) or the STREAM_STALLED
+// watchdog, both of which mean the upstream responded and should not be retried the same way.
+const TRANSIENT_CODES = new Set(['ECONNRESET', 'EPIPE', 'ETIMEDOUT', 'ECONNREFUSED', 'UND_ERR_SOCKET']);
+function isTransientStreamError(err) {
+  if (!err) return false;
+  if (err.errorCode === 'UPSTREAM_ERROR_FRAME') return false;
+  if (err.message === 'terminated' || err.message === 'fetch failed') return true;
+  let cur = err;
+  let depth = 0;
+  while (cur && depth < 4) {
+    if (TRANSIENT_CODES.has(cur.code) || TRANSIENT_CODES.has(cur.errno)) return true;
+    cur = cur.cause;
+    depth++;
+  }
+  return false;
+}
+
 /**
  * fetch() wrapper with retry-with-exponential-backoff for the OnDemand API.
  * Retries ONLY on network/fetch errors (TypeError/ECONNRESET/etc.) and HTTP 5xx responses;
@@ -190,6 +228,33 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], skillIds
       ...(modelConfigOverrides || {}),
     },
   };
+
+  // 2026-07-26: bounded retry around the WHOLE fetch+read attempt, for the transient
+  // "terminated" class of error (see describeError/isTransientStreamError above) — this is
+  // what was killing nearly every turn with no diagnosable cause. Only safe to retry a
+  // FRESH attempt when the failed attempt produced ZERO fulfillment answer text
+  // (err.partialAnswer is empty): nothing was shown to the user yet, so re-submitting the
+  // same query cannot duplicate visible answer content. (The thinking/status panels from the
+  // dead attempt may still show a few stray frames before the retry's own frames arrive —
+  // a cosmetic cost, not a correctness one, and far better than the turn hard-failing.)
+  const MAX_STREAM_RETRIES = 2;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await runStreamAttempt({ odSessionId, body, onRaw, onEvent, signal });
+    } catch (err) {
+      if (!err.partialAnswer && isTransientStreamError(err) && attempt < MAX_STREAM_RETRIES) {
+        const delay = 500 * (attempt + 1);
+        console.error(`[stream-retry] attempt=${attempt + 1}/${MAX_STREAM_RETRIES} session=${odSessionId} next=${delay}ms cause=${describeError(err)}`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      console.error(`[FAIL] [HARD-FAIL] OnDemand stream ended on ${body.endpointId}+${body.reasoningEffort} session=${odSessionId}: ${describeError(err)}`);
+      throw err;
+    }
+  }
+}
+
+async function runStreamAttempt({ odSessionId, body, onRaw, onEvent, signal }) {
   // odFetch retry is safe here ONLY because no bytes have been consumed yet (pre-stream).
   // Once reading begins below, the existing watchdog/error paths — not retry — handle failures.
   // 2026-07-23: pre-stream fetches also get the bounded 401/403 auth retry.
