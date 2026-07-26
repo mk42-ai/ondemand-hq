@@ -68,8 +68,14 @@ export async function completeConnectorOAuth(state, code) {
   return jpost('/api/connectors/oauth/complete', { state, code });
 }
 
+/** Fetch the ODA playground preset with resolved skill names. */
+export async function fetchOdaPreset(refresh = false) {
+  return jget(`/api/presets/oda${refresh ? '?refresh=1' : ''}`);
+}
+
 /** sessionStorage key used to auto-select a connector after OAuth callback. */
 export const PENDING_CONNECTOR_KEY = 'oda-pending-connector';
+export const ODA_PRESET_ENABLED_KEY = 'oda-preset-enabled';
 const CONNECTOR_SEL_PREFIX = 'oda-connector-sel-';
 
 /** Load selected connector pluginIds for a conversation (session-scoped). */

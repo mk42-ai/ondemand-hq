@@ -4,7 +4,7 @@ import LightboxHost from './components/Lightbox.jsx';
 import Composer from './components/Composer.jsx';
 import PreviewPane from './components/PreviewPane.jsx';
 import { AssistantMessage, UserMessage } from './components/Messages.jsx';
-import { jget, jpost, loadConversationConnectors, normalizePluginIds, saveConversationConnectors, streamChat, PENDING_CONNECTOR_KEY, fetchConnectors } from './api.js';
+import { jget, jpost, loadConversationConnectors, normalizePluginIds, saveConversationConnectors, streamChat, PENDING_CONNECTOR_KEY, fetchConnectors, fetchOdaPreset, ODA_PRESET_ENABLED_KEY } from './api.js';
 import { parseConnectorsResponse } from './components/ConnectorsMenu.jsx';
 import DebugDrawer from './components/DebugDrawer.jsx';
 import BilingualLoader from './components/BilingualLoader.jsx';
@@ -129,12 +129,52 @@ export default function App() {
   const [connectors, setConnectors] = useState([]);
   const [loadingConnectors, setLoadingConnectors] = useState(false);
   const connectorsFetchRef = useRef(null);
+  const [odaPreset, setOdaPreset] = useState(null);
+  const [odaPresetSkills, setOdaPresetSkills] = useState([]);
+  const [loadingOdaPreset, setLoadingOdaPreset] = useState(true);
+  const [odaPresetEnabled, setOdaPresetEnabled] = useState(() => {
+    try { return sessionStorage.getItem(ODA_PRESET_ENABLED_KEY) === '1'; } catch { return false; }
+  });
+  const odaPresetEnabledRef = useRef(odaPresetEnabled);
 
   /* ---------- data loading ---------- */
   const refreshConvs = useCallback(async () => {
     try { setConvs((await jget('/api/conversations')).conversations); } catch { /* non-fatal */ }
   }, []);
   useEffect(() => { refreshConvs(); }, [refreshConvs]);
+
+  useEffect(() => {
+    odaPresetEnabledRef.current = odaPresetEnabled;
+    try { sessionStorage.setItem(ODA_PRESET_ENABLED_KEY, odaPresetEnabled ? '1' : '0'); } catch { /* noop */ }
+  }, [odaPresetEnabled]);
+
+  useEffect(() => {
+    if (!odaPresetEnabled || !odaPreset?.chatPlugins?.length) return;
+    setSelectedPluginIds((prev) => {
+      const merged = [...new Set([...prev, ...normalizePluginIds(odaPreset.chatPlugins)])];
+      selectedPluginIdsRef.current = merged;
+      if (activeId) saveConversationConnectors(activeId, merged);
+      return merged;
+    });
+  }, [odaPresetEnabled, odaPreset, activeId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingOdaPreset(true);
+      try {
+        const data = await fetchOdaPreset();
+        if (cancelled) return;
+        setOdaPreset(data.preset || null);
+        setOdaPresetSkills(Array.isArray(data.skills) ? data.skills : []);
+      } catch (err) {
+        if (!cancelled) setToast({ message: `Could not load ODA preset: ${err.message}` });
+      } finally {
+        if (!cancelled) setLoadingOdaPreset(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // OAuth callback lands on a full page load with activeId usually still null.
   // Consume the pending plugin pick here (not inside the activeId effect).
@@ -311,6 +351,7 @@ export default function App() {
       editTarget: extra.editTarget || undefined,
       msmVideoId: extra.msmVideoId || undefined,
       pluginIds: ids.length ? ids : undefined,
+      useOdaPreset: Boolean(extra.useOdaPreset ?? odaPresetEnabledRef.current),
     };
     // 2026-07-17 passthrough refactor: raw upstream eventTypes arrive directly. Each one
     // owns exactly one field on the live message (playground parity — see liveMsg above):
@@ -579,7 +620,9 @@ export default function App() {
                   {busy && !messages.some(m => m.live && (m.answerStarted || m.thinking)) && <div className="composer-wait"><BilingualLoader size="sm" label="Working…" /></div>}
                   <ComposerInline onSend={send} busy={busy} onError={(m) => setToast({ message: m })} activeFeature={activeFeature} prefill={composePrefill}
                     selectedPluginIds={selectedPluginIds} onSelectedPluginIdsChange={updateSelectedPluginIds}
-                    connectors={connectors} loadingConnectors={loadingConnectors} onEnsureConnectors={ensureConnectors} />
+                    connectors={connectors} loadingConnectors={loadingConnectors} onEnsureConnectors={ensureConnectors}
+                    odaPreset={odaPreset} odaPresetSkills={odaPresetSkills} odaPresetEnabled={odaPresetEnabled}
+                    onOdaPresetEnabledChange={setOdaPresetEnabled} loadingOdaPreset={loadingOdaPreset} />
                 </div>
                 <div className="chips">
                   {CHIPS.map(c => (
@@ -609,7 +652,9 @@ export default function App() {
                   <Composer onSend={send} onStop={stopGeneration} busy={busy} onError={(m) => setToast({ message: m })} prefill={composePrefill}
                     placeholder={activeFeature ? placeholderFor(activeFeature) : 'Message the ODA suite…'}
                     selectedPluginIds={selectedPluginIds} onSelectedPluginIdsChange={updateSelectedPluginIds}
-                    connectors={connectors} loadingConnectors={loadingConnectors} onEnsureConnectors={ensureConnectors} />
+                    connectors={connectors} loadingConnectors={loadingConnectors} onEnsureConnectors={ensureConnectors}
+                    odaPreset={odaPreset} odaPresetSkills={odaPresetSkills} odaPresetEnabled={odaPresetEnabled}
+                    onOdaPresetEnabledChange={setOdaPresetEnabled} loadingOdaPreset={loadingOdaPreset} />
                   <div className="composer-hint">glm-4.7 (Cerebras BYOI) · max reasoning · every figure sourced or flagged · one verified deliverable per run</div>
                 </div>
               </>
@@ -651,13 +696,15 @@ function placeholderFor(f) {
 }
 
 /* Slim composer reused inside the empty state (no border box duplication) */
-function ComposerInline({ onSend, busy, onError, activeFeature, prefill, selectedPluginIds, onSelectedPluginIdsChange, connectors, loadingConnectors, onEnsureConnectors }) {
+function ComposerInline({ onSend, busy, onError, activeFeature, prefill, selectedPluginIds, onSelectedPluginIdsChange, connectors, loadingConnectors, onEnsureConnectors, odaPreset, odaPresetSkills, odaPresetEnabled, onOdaPresetEnabledChange, loadingOdaPreset }) {
   // Reuse the standard Composer but style-flattened: simplest is to render it directly.
   return (
     <div style={{ width: '100%' }}>
       <Composer onSend={onSend} busy={busy} onError={onError} prefill={prefill}
         selectedPluginIds={selectedPluginIds} onSelectedPluginIdsChange={onSelectedPluginIdsChange}
         connectors={connectors} loadingConnectors={loadingConnectors} onEnsureConnectors={onEnsureConnectors}
+        odaPreset={odaPreset} odaPresetSkills={odaPresetSkills} odaPresetEnabled={odaPresetEnabled}
+        onOdaPresetEnabledChange={onOdaPresetEnabledChange} loadingOdaPreset={loadingOdaPreset}
         placeholder={activeFeature ? placeholderFor(activeFeature) : 'Describe the deliverable — a deck, a one-pager, a benchmark, a translation…'} />
     </div>
   );

@@ -161,7 +161,7 @@ export async function createOdSession(externalUserId, pluginIds = []) {
  * suffixed ids like 'gpt-5.6-sol-medium' are a proven HTTP 400). Main chat default:
  * predefined-gpt-5.6-sol + 'low' (2026-07-20 streaming fix). Streaming always ON.
  */
-export async function streamQuery({ odSessionId, query, pluginIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false, modelConfigs: modelConfigOverrides }) {
+export async function streamQuery({ odSessionId, query, pluginIds = [], skillIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false, modelConfigs: modelConfigOverrides, chatMode: chatModeOverride }) {
   assertApiKey('query stream');
   const body = {
     query,
@@ -170,16 +170,15 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
                                           // NOTE: `reasoningEffort` is not in the documented submitquery schema but is
                                           // accepted by the live API — live-accepted extension beyond the documented schema.
     responseMode: 'stream',
-    // ALWAYS standard. Re-verified live 2026-07-25 against the public API: chatMode 'plan'
-    // (the playground's "Plan mode") returns HTTP 400 invalid_request
-    // "chatMode 'plan' is not supported on the public API". Do not retry it.
-    chatMode: 'standard',
+    // Default standard. Preset flows may override (e.g. playground "plan" mode) via chatModeOverride.
+    chatMode: chatModeOverride || 'standard',
     // Planning/step decomposition frames (planning_thinking, planning_output, step_thinking,
     // step_output) are gated on ATTACHED AGENTS, not on chatMode — verified live 2026-07-25:
     // the same query with agentIds=[] emitted only fulfillment_thinking, while
     // agentIds=[agent-1713924030] emitted the full set. An empty pluginIds here means the
     // playground's Thinking/plan panels will have nothing to render.
     agentIds: toAgentIds(pluginIds),
+    ...(Array.isArray(skillIds) && skillIds.length ? { skillIds: skillIds.filter((id) => typeof id === 'string' && id) } : {}),
     ...(fulfillmentOnly ? { fulfillmentOnly: true } : {}),
     // Documented modelConfigs surface (live OpenAPI submitquery spec, NOTES.md §2026-07-17):
     // fulfillmentPrompt, stopSequences (≤4), temperature, topP, presencePenalty, frequencyPenalty.
@@ -403,6 +402,53 @@ export async function completePluginOAuth({ state, code } = {}) {
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
     console.error(`[FAIL] OnDemand oauth complete HTTP ${r.status}: ${message}`);
     const err = new Error(`OnDemand oauth complete failed (HTTP ${r.status}): ${message}`);
+    err.status = r.status;
+    err.errorCode = `UPSTREAM_HTTP_${r.status}`;
+    err.upstreamErrorCode = upstreamErrorCode;
+    throw err;
+  }
+  return r.json();
+}
+
+/** List presets (GET /plugin/v1/preset). */
+export async function listPresets({ page = 1, limit = 100, sortBy = 'updatedAt' } = {}) {
+  assertApiKey('preset list');
+  const qs = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    sortBy,
+  });
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/plugin/v1/preset?${qs}`, {
+    method: 'GET',
+    headers: { apikey: ONDEMAND_API_KEY },
+  }), 'preset list');
+  if (!r.ok) {
+    const { message, upstreamErrorCode } = await parseUpstreamError(r);
+    console.error(`[FAIL] OnDemand preset list HTTP ${r.status}: ${message}`);
+    const err = new Error(`OnDemand preset list failed (HTTP ${r.status}): ${message}`);
+    err.status = r.status;
+    err.errorCode = `UPSTREAM_HTTP_${r.status}`;
+    err.upstreamErrorCode = upstreamErrorCode;
+    throw err;
+  }
+  return r.json();
+}
+
+/** List skills by id (GET /plugin/v1/skill/list?skillId[]=…). */
+export async function listSkills(skillIds = []) {
+  assertApiKey('skill list');
+  const ids = [...new Set((Array.isArray(skillIds) ? skillIds : []).filter((id) => typeof id === 'string' && id))];
+  if (!ids.length) return { data: { skills: [] } };
+  const qs = new URLSearchParams();
+  for (const id of ids) qs.append('skillId[]', id);
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/plugin/v1/skill/list?${qs}`, {
+    method: 'GET',
+    headers: { apikey: ONDEMAND_API_KEY },
+  }), 'skill list');
+  if (!r.ok) {
+    const { message, upstreamErrorCode } = await parseUpstreamError(r);
+    console.error(`[FAIL] OnDemand skill list HTTP ${r.status}: ${message}`);
+    const err = new Error(`OnDemand skill list failed (HTTP ${r.status}): ${message}`);
     err.status = r.status;
     err.errorCode = `UPSTREAM_HTTP_${r.status}`;
     err.upstreamErrorCode = upstreamErrorCode;

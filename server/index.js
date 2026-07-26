@@ -16,6 +16,7 @@ import {
   createOdSession, streamQuery, syncQuery, listClientPlugins,
   initPluginOAuth, unsubscribePluginConfiguration, completePluginOAuth,
 } from './ondemand.js';
+import { getOdaPreset, presetQueryOptions } from './odaPreset.js';
 import { fetchCountryPack, renderDataBlock, resolveCountry } from './countryData.js';
 import { buildExport } from './exports.js';
 import { extractText } from './extract.js';
@@ -170,10 +171,23 @@ app.get('/api/country-data/:query', async (req, res) => {
 });
 
 // ---------- the main chat SSE endpoint ----------
-// POST /api/chat  {conversationId, text, feature?, fileId?, pluginIds?, wizard?:{active,step}, editTarget?}
+// GET /api/presets/oda — ODA playground preset + resolved skill names
+app.get('/api/presets/oda', async (req, res) => {
+  try {
+    const data = await getOdaPreset({ refresh: req.query.refresh === '1' });
+    if (!data.preset) return res.status(404).json({ error: 'ODA preset not found' });
+    res.json(data);
+  } catch (e) {
+    console.error('[FAIL] [presets/oda]', e.message);
+    res.status(e.status || 502).json({ error: e.message, errorCode: e.errorCode });
+  }
+});
+
+// POST /api/chat  {conversationId, text, feature?, fileId?, pluginIds?, useOdaPreset?, wizard?:{active,step}, editTarget?}
 // Streams SSE frames: routing, plugin_status, thinking, answer, artifact_hint, error, done
 app.post('/api/chat', async (req, res) => {
-  const { conversationId, text = '', feature: forcedFeature, mode: forcedMode, fileId, wizard, editTarget, msmVideoId, pluginIds: clientPluginIds } = req.body || {};
+  const { conversationId, text = '', feature: forcedFeature, mode: forcedMode, fileId, wizard, editTarget, msmVideoId, pluginIds: clientPluginIds, useOdaPreset: useOdaPresetRaw } = req.body || {};
+  const useOdaPreset = Boolean(useOdaPresetRaw);
   if (!text.trim() && !fileId) return res.status(400).json({ error: 'Empty message' });
   // The conversation store is in-memory, so a server restart (locally) or a fresh serverless
   // instance (every Vercel cold start) drops all conversations. A client still holding a valid
@@ -251,14 +265,36 @@ app.post('/api/chat', async (req, res) => {
     const extraPluginIds = Array.isArray(clientPluginIds)
       ? clientPluginIds.filter((id) => typeof id === 'string' && id.startsWith('plugin-'))
       : [];
-    const pluginIds = extraPluginIds.length
-      ? [...new Set([...defaultPluginIds, ...extraPluginIds])]
-      : defaultPluginIds;
+
+    let odaPreset = null;
+    let presetOpts = {};
+    if (useOdaPreset) {
+      const { preset } = await getOdaPreset();
+      odaPreset = preset;
+      presetOpts = presetQueryOptions(preset);
+      if (!preset) {
+        send('error', { message: 'ODA preset is enabled but could not be loaded from the platform.' });
+        send('done', { messageId: null, fullAnswerPresent: false, sawAnswer: false });
+        clearInterval(hb);
+        res.end();
+        return;
+      }
+    }
+
+    const pluginIds = [...new Set([
+      ...defaultPluginIds,
+      ...extraPluginIds,
+      ...(presetOpts.pluginIds || []),
+    ])];
     const pluginLabels = pluginLabelsFor(feature);
+    const modelLabel = odaPreset
+      ? `${odaPreset.endpoint}+${odaPreset.reasoningEffort}${odaPreset.skillIds?.length ? ` · ${odaPreset.skillIds.length} skills` : ''}`
+      : `${ENDPOINT_ID}+${REASONING_EFFORT}`;
     send('routing', {
       feature, mode, reason: route.reason, source: route.source,
       analysisFirst: Boolean(route.analysisFirst), outOfScope: Boolean(route.outOfScope),
-      plugins: pluginLabels, model: `${ENDPOINT_ID}+${REASONING_EFFORT}`,
+      plugins: pluginLabels, model: modelLabel,
+      odaPreset: odaPreset ? { id: odaPreset.id, name: odaPreset.name, enabled: true } : undefined,
     });
 
     // 2) Per-conversation OnDemand session (create once, reuse)
@@ -327,7 +363,9 @@ app.post('/api/chat', async (req, res) => {
     queryParts.push(`USER REQUEST: ${text}`);
 
     const wizardStep = wizard?.active ? (WIZARD_STEPS[wizard.step] || 'Scope') : null;
-    const systemPrompt = buildSystemPrompt(feature, mode, wizardStep);
+    const systemPrompt = useOdaPreset && odaPreset?.fulfillmentPrompt
+      ? odaPreset.fulfillmentPrompt
+      : buildSystemPrompt(feature, mode, wizardStep);
 
     // 4) STREAM from OnDemand — thinking tokens separated from answer tokens
     if (pluginLabels.length) send('plugin_status', { plugin: pluginLabels[0], message: `Working with ${pluginLabels.join(', ')}…` });
@@ -366,7 +404,12 @@ app.post('/api/chat', async (req, res) => {
       odSessionId: conv.odSessionId,
       query: queryParts.join('\n\n'),
       pluginIds,
+      skillIds: useOdaPreset ? (presetOpts.skillIds || []) : [],
       systemPrompt,
+      endpointId: useOdaPreset ? presetOpts.endpointId : undefined,
+      reasoningEffort: useOdaPreset ? presetOpts.reasoningEffort : undefined,
+      chatMode: useOdaPreset ? presetOpts.chatMode : undefined,
+      modelConfigs: useOdaPreset ? presetOpts.modelConfigs : undefined,
       signal: upstreamAbort.signal, // WS1: cancel upstream when the browser disconnects
       onRaw: sendRaw,
       onEvent: (type) => { if (type === 'answer') sawAnswer = true; },
@@ -375,7 +418,7 @@ app.post('/api/chat', async (req, res) => {
     // 5) Persist + finish
     const asstMsg = store.addMessage(conv, {
       role: 'assistant', text: fullAnswer, ...reasoning,
-      routing: { feature, mode, plugins: pluginLabels, model: `${ENDPOINT_ID}+${REASONING_EFFORT}`, reason: route.reason },
+      routing: { feature, mode, plugins: pluginLabels, model: modelLabel, reason: route.reason, odaPreset: odaPreset ? { id: odaPreset.id, name: odaPreset.name } : undefined },
     });
     if (conv.title === 'New chat' && text.trim()) {
       conv.title = text.trim().slice(0, 48) + (text.trim().length > 48 ? '…' : '');
