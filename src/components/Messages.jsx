@@ -1,40 +1,65 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Markdown, dissect } from '../markdown.jsx';
-import BilingualLoader from './BilingualLoader.jsx';
-import AudioPlayer from './AudioPlayer.jsx';
-import { Check, ChevronRight, AlertTriangle, Paperclip, Copy, RotateCcw } from 'lucide-react';
-import ThinkingProcess from './playground/ThinkingProcess.jsx';
-import StatusLogBlock from './playground/StatusLogBlock.jsx';
-import FulfilmentThinking from './playground/FulfilmentThinking.jsx';
-import { SpinningLogo, ShimmerText } from './playground/loaders.jsx';
+import React, { useEffect, useRef, useState } from "react";
+import { Markdown, dissect } from "../markdown.jsx";
+import AudioPlayer from "./AudioPlayer.jsx";
+import {
+  Check,
+  ChevronRight,
+  AlertTriangle,
+  Paperclip,
+  Copy,
+  RotateCcw,
+} from "lucide-react";
+import ThinkingProcess from "./playground/ThinkingProcess.jsx";
+import StatusLogBlock from "./playground/StatusLogBlock.jsx";
+import OndemandAgentStatus from "./playground/OndemandAgentStatus.jsx";
+import FulfilmentThinking from "./playground/FulfilmentThinking.jsx";
+import { SpinningLogo, ShimmerText } from "./playground/loaders.jsx";
 
 /* ---------- copy button (2026-07-20 UX pass) ----------
  * Copies text to clipboard with a 1.5s icon-swap + 'Copied' feedback.
  * Clipboard API first; execCommand fallback for non-secure contexts. */
-export function CopyButton({ text, label = 'Copy' }) {
+export function CopyButton({ text, label = "Copy" }) {
   const [copied, setCopied] = useState(false);
   const tRef = useRef(null);
   useEffect(() => () => clearTimeout(tRef.current), []);
   const doCopy = async () => {
-    const value = typeof text === 'function' ? text() : text;
+    const value = typeof text === "function" ? text() : text;
     if (!value) return;
     try {
-      if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(value);
+      if (navigator.clipboard?.writeText)
+        await navigator.clipboard.writeText(value);
       else {
-        const ta = document.createElement('textarea');
-        ta.value = value; ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+        const ta = document.createElement("textarea");
+        ta.value = value;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
       }
       setCopied(true);
       clearTimeout(tRef.current);
       tRef.current = setTimeout(() => setCopied(false), 1500);
-    } catch { /* clipboard denied — no feedback, no crash */ }
+    } catch {
+      /* clipboard denied — no feedback, no crash */
+    }
   };
   return (
-    <button type="button" className={`copybtn${copied ? ' copybtn--ok' : ''}`} onClick={doCopy}
-      aria-label={copied ? 'Copied' : label} title={copied ? 'Copied' : label} aria-live="polite">
-      {copied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
-      <span className="copybtn__t">{copied ? 'Copied' : ''}</span>
+    <button
+      type="button"
+      className={`copybtn${copied ? " copybtn--ok" : ""}`}
+      onClick={doCopy}
+      aria-label={copied ? "Copied" : label}
+      title={copied ? "Copied" : label}
+      aria-live="polite"
+    >
+      {copied ? (
+        <Check size={13} aria-hidden />
+      ) : (
+        <Copy size={13} aria-hidden />
+      )}
+      <span className="copybtn__t">{copied ? "Copied" : ""}</span>
     </button>
   );
 }
@@ -46,18 +71,52 @@ export function TraceCard({ routing, traceText }) {
   return (
     <div className="trace trace--slim">
       <button className="trace__head" onClick={() => setOpen(!open)}>
-        {routing.feature} · {routing.mode} · {routing.plugins?.length ? `${routing.plugins.length} plugin${routing.plugins.length > 1 ? 's' : ''}` : 'LLM-direct'} · {routing.model}
-        <span className={`chev${open ? ' open' : ''}`}><ChevronRight size={13} strokeWidth={2} aria-hidden /></span>
+        {routing.feature} · {routing.mode} ·{" "}
+        {routing.plugins?.length
+          ? `${routing.plugins.length} plugin${routing.plugins.length > 1 ? "s" : ""}`
+          : "LLM-direct"}{" "}
+        · {routing.model}
+        <span className={`chev${open ? " open" : ""}`}>
+          <ChevronRight size={13} strokeWidth={2} aria-hidden />
+        </span>
       </button>
       {open && (
         <div className="trace__body">
-          <div><b>Worker:</b> {routing.feature} · <b>Mode:</b> {routing.mode} ({routing.reason})</div>
-          <div><b>Model:</b> {routing.model} · <b>Router:</b> {routing.source}</div>
-          <div><b>Plugins attached:</b> {routing.plugins?.length
-            ? routing.plugins.map(p => <span className="trace__plug" key={p}>{p}</span>)
-            : <span className="trace__plug">none — LLM-direct</span>}</div>
-          {routing.analysisFirst && <div style={{ color: 'var(--warn)' }}>analysis-first bright line applied</div>}
-          {traceText && <div style={{ whiteSpace: 'pre-wrap', marginTop: 6, fontFamily: 'inherit' }}>{traceText}</div>}
+          <div>
+            <b>Worker:</b> {routing.feature} · <b>Mode:</b> {routing.mode} (
+            {routing.reason})
+          </div>
+          <div>
+            <b>Model:</b> {routing.model} · <b>Router:</b> {routing.source}
+          </div>
+          <div>
+            <b>Plugins attached:</b>{" "}
+            {routing.plugins?.length ? (
+              routing.plugins.map((p) => (
+                <span className="trace__plug" key={p}>
+                  {p}
+                </span>
+              ))
+            ) : (
+              <span className="trace__plug">none — LLM-direct</span>
+            )}
+          </div>
+          {routing.analysisFirst && (
+            <div style={{ color: "var(--warn)" }}>
+              analysis-first bright line applied
+            </div>
+          )}
+          {traceText && (
+            <div
+              style={{
+                whiteSpace: "pre-wrap",
+                marginTop: 6,
+                fontFamily: "inherit",
+              }}
+            >
+              {traceText}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -66,26 +125,56 @@ export function TraceCard({ routing, traceText }) {
 
 /* ---------- STEP 7: artifact card ---------- */
 export function ArtifactCard({ artifact }) {
-  const fmt = artifact.format?.toUpperCase() || artifact.name.split('.').pop().toUpperCase();
+  const fmt =
+    artifact.format?.toUpperCase() ||
+    artifact.name.split(".").pop().toUpperCase();
   return (
     <div className="artifact">
       <div className="artifact__icon">{fmt}</div>
       <div className="artifact__meta">
         <div className="artifact__name">{artifact.name}</div>
-        <div className="artifact__sub">{fmt} · {(artifact.size / 1024).toFixed(0)} kB · {new Date(artifact.createdAt).toLocaleTimeString('en-GB')}</div>
+        <div className="artifact__sub">
+          {fmt} · {(artifact.size / 1024).toFixed(0)} kB ·{" "}
+          {new Date(artifact.createdAt).toLocaleTimeString("en-GB")}
+        </div>
         {artifact.citations?.length > 0 && (
-          <div className="artifact__cites">Citations: {artifact.citations.slice(0, 3).join(' · ')}{artifact.citations.length > 3 ? ` +${artifact.citations.length - 3} more` : ''}</div>
+          <div className="artifact__cites">
+            Citations: {artifact.citations.slice(0, 3).join(" · ")}
+            {artifact.citations.length > 3
+              ? ` +${artifact.citations.length - 3} more`
+              : ""}
+          </div>
         )}
         {artifact.gaps?.length > 0 && (
-          <div className="artifact__gaps"><AlertTriangle size={12} aria-hidden style={{ verticalAlign: '-2px', marginRight: 4 }} /> Gaps (unverifiable): {artifact.gaps.slice(0, 2).join(' · ')}{artifact.gaps.length > 2 ? '…' : ''}</div>
+          <div className="artifact__gaps">
+            <AlertTriangle
+              size={12}
+              aria-hidden
+              style={{ verticalAlign: "-2px", marginRight: 4 }}
+            />{" "}
+            Gaps (unverifiable): {artifact.gaps.slice(0, 2).join(" · ")}
+            {artifact.gaps.length > 2 ? "…" : ""}
+          </div>
         )}
       </div>
       <div className="artifact__btns">
-        <a className="primary" href={`/api/export/${artifact.id}/download`} download>Download</a>
+        <a
+          className="primary"
+          href={`/api/export/${artifact.id}/download`}
+          download
+        >
+          Download
+        </a>
         {/* Open preview: PDF renders inline in a new tab (disposition=inline). Other formats
             (PPTX/DOCX/XLSX) can't render in-browser, so preview is offered for PDF only. */}
-        {fmt === 'PDF' && (
-          <a href={`/api/export/${artifact.id}/download?disposition=inline`} target="_blank" rel="noopener noreferrer">Open preview</a>
+        {fmt === "PDF" && (
+          <a
+            href={`/api/export/${artifact.id}/download?disposition=inline`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open preview
+          </a>
         )}
       </div>
     </div>
@@ -105,17 +194,32 @@ export function PluginSkeleton({ label }) {
 }
 
 /* ---------- assistant message ---------- */
-export function AssistantMessage({ msg, live, onOption, onExport, exportBusy, artifacts, onRetry }) {
-  const { body, options, trace } = dissect(msg.text || '');
-  const showExports = !live && (msg.text || '').length > 120;
+export function AssistantMessage({
+  msg,
+  live,
+  onOption,
+  artifacts,
+  onRetry,
+}) {
+  const { body, options, trace } = dissect(msg.text || "");
   return (
     <div className="msg-asst msg--hover">
       {/* Hover action toolbar (2026-07-20 UX pass): copy full streamed markdown + retry */}
-      {!live && (msg.text || '').length > 0 && (
-        <div className="msg-actions" role="toolbar" aria-label="Message actions">
+      {!live && (msg.text || "").length > 0 && (
+        <div
+          className="msg-actions"
+          role="toolbar"
+          aria-label="Message actions"
+        >
           <CopyButton text={msg.text} label="Copy answer" />
           {onRetry && (
-            <button type="button" className="copybtn" onClick={() => onRetry(msg)} aria-label="Regenerate answer" title="Regenerate">
+            <button
+              type="button"
+              className="copybtn"
+              onClick={() => onRetry(msg)}
+              aria-label="Regenerate answer"
+              title="Regenerate"
+            >
               <RotateCcw size={13} aria-hidden />
             </button>
           )}
@@ -126,34 +230,51 @@ export function AssistantMessage({ msg, live, onOption, onExport, exportBusy, ar
           panel — it disappears once answer text exists, which is why it sits here too. */}
       <ThinkingProcess message={msg} />
       <StatusLogBlock message={msg} isStreaming={Boolean(live)} />
+      {/* OnDemand Agent (goose) execution — renders after the status log and before
+          fulfillment thinking, only when agent frames were received. Removed once the
+          fulfillment (final answer) text starts streaming. */}
+      {!body.trim() &&
+        ((msg.agentData || []).length ||
+          (msg.todo || []).length ||
+          (msg.terminalLogs || []).length) > 0 && (
+          <OndemandAgentStatus message={msg} isLoading={Boolean(live)} />
+        )}
       {!body.trim() && <FulfilmentThinking message={msg} />}
       {/* Loader vanishes on the FIRST streamed token of any kind. */}
-      {live && !msg.answerStarted && !msg.thinking && !msg.planningAnswer
-        && !(msg.statusLogs || []).length && !msg.pluginThinking
-        && <PluginSkeleton label={msg.pluginStatus || 'Routing your request…'} />}
+      {live &&
+        !msg.answerStarted &&
+        !msg.thinking &&
+        !msg.planningAnswer &&
+        !(msg.statusLogs || []).length &&
+        !msg.pluginThinking && (
+          <PluginSkeleton label={msg.pluginStatus || "Routing your request…"} />
+        )}
       {/* Streamed answer */}
       <Markdown text={body} />
       {/* Playground parity: while the answer streams, the OnDemand mark keeps spinning
           (replaces the old green blinking caret). */}
-      {live && body.trim() && <span className="answer-spin"><SpinningLogo size={16} /></span>}
+      {live && body.trim() && (
+        <span className="answer-spin">
+          <SpinningLogo size={16} />
+        </span>
+      )}
       {!live && options.length > 0 && (
         <div className="options">
-          {options.map((o, i) => <button key={i} onClick={() => onOption?.(o)}>{o}</button>)}
+          {options.map((o, i) => (
+            <button key={i} onClick={() => onOption?.(o)}>
+              {o}
+            </button>
+          ))}
         </div>
       )}
-      {(msg.artifactIds || []).map(id => artifacts[id] && <ArtifactCard key={id} artifact={artifacts[id]} />)}
+      {(msg.artifactIds || []).map(
+        (id) =>
+          artifacts[id] && <ArtifactCard key={id} artifact={artifacts[id]} />,
+      )}
       {/* Speaker — OnDemand text_to_speech playback (fetch-then-play; streaming TTS is not documented).
           Arabic answers auto-select an Arabic-capable voice inside AudioPlayer. */}
-      {!live && (msg.text || '').length > 0 && <AudioPlayer text={msg.text} />}
-      {showExports && (
-        <div className="exportbar">
-          <span>Export:</span>
-          {['pptx', 'docx', 'pdf', 'xlsx'].map(f => (
-            <button key={f} disabled={exportBusy} onClick={() => onExport?.(msg.id, f)}>{f.toUpperCase()}</button>
-          ))}
-          {exportBusy && <BilingualLoader size="sm" label="Generating document…" />}
-        </div>
-      )}
+      {!live && (msg.text || "").length > 0 && <AudioPlayer text={msg.text} />}
+
       <TraceCard routing={msg.routing} traceText={trace} />
     </div>
   );
@@ -163,20 +284,43 @@ export function UserMessage({ msg }) {
   // 2026-07-20: long prompts render as a 6-line clamped capsule with a
   // Read more / Show less toggle (RTL-safe — clamp follows dir="auto").
   const [expanded, setExpanded] = useState(false);
-  const isLong = (msg.text || '').length > 420 || (msg.text || '').split('\n').length > 6;
+  const isLong =
+    (msg.text || "").length > 420 || (msg.text || "").split("\n").length > 6;
   return (
     <div className="msg-user msg--hover">
       <div>
-        <div className={`bubble${isLong && !expanded ? ' bubble--clamped' : ''}`} dir="auto">{msg.text}</div>
+        <div
+          className={`bubble${isLong && !expanded ? " bubble--clamped" : ""}`}
+          dir="auto"
+        >
+          {msg.text}
+        </div>
         {isLong && (
-          <button type="button" className="bubble-expander" onClick={() => setExpanded(e => !e)}
-            aria-expanded={expanded}>
-            {expanded ? 'Show less' : 'Read more'}
+          <button
+            type="button"
+            className="bubble-expander"
+            onClick={() => setExpanded((e) => !e)}
+            aria-expanded={expanded}
+          >
+            {expanded ? "Show less" : "Read more"}
           </button>
         )}
-        {msg.fileName && <div className="fileref"><Paperclip size={12} aria-hidden style={{ verticalAlign: '-2px', marginRight: 4 }} /> {msg.fileName}</div>}
+        {msg.fileName && (
+          <div className="fileref">
+            <Paperclip
+              size={12}
+              aria-hidden
+              style={{ verticalAlign: "-2px", marginRight: 4 }}
+            />{" "}
+            {msg.fileName}
+          </div>
+        )}
         {/* Copy the sent prompt text (2026-07-20 UX pass) */}
-        <div className="msg-actions msg-actions--user" role="toolbar" aria-label="Prompt actions">
+        <div
+          className="msg-actions msg-actions--user"
+          role="toolbar"
+          aria-label="Prompt actions"
+        >
           <CopyButton text={msg.text} label="Copy prompt" />
         </div>
       </div>

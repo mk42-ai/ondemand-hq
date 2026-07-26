@@ -268,13 +268,13 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], skillIds
     return null;
   };
 
-  // 90s inactivity watchdog: if the upstream reader yields no chunk within the window, abort the loop.
-  const STALL_MS = 90000;
+  // 10m inactivity watchdog: if the upstream reader yields no chunk within the window, abort the loop.
+  const STALL_MS = 600_000;
   let stallTimer = null;
   const clearStallTimer = () => { if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; } };
   const armStallTimer = () => new Promise((_, reject) => {
     stallTimer = setTimeout(() => {
-      const err = new Error('No stream activity for 90s — upstream stalled');
+      const err = new Error('No stream activity for 10 minutes — upstream stalled');
       err.errorCode = 'STREAM_STALLED';
       reject(err);
     }, STALL_MS);

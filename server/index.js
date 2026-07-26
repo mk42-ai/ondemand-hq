@@ -9,6 +9,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { PORT, ENDPOINT_ID, REASONING_EFFORT, ONDEMAND_API_KEY, STREAM_DEBUG } from './env.js';
 import * as store from './store.js';
+import { createTurn, getTurn, emit as turnEmit, addSubscriber, removeSubscriber, finishTurn, cancelTurn } from './chatTurns.js';
 import { classify } from './router.js';
 import { buildSystemPrompt, WIZARD_STEPS } from './prompts.js';
 import { pluginIdsFor, pluginLabelsFor, FEATURE_PLUGINS, ADOPTED } from './plugins.js';
@@ -204,40 +205,31 @@ app.post('/api/chat', async (req, res) => {
     'X-Accel-Buffering': 'no',
   });
   res.flushHeaders?.();
-  // WS1 audit fix (2026-07-17): abort the UPSTREAM OnDemand fetch the moment the browser
-  // disconnects, and never write to the response after close. Previously the upstream stream
-  // kept running to completion and frames were written to a dead socket.
-  let clientClosed = false;
+  // RESUMABLE TURN (2026-07-26): the upstream OnDemand query is owned by a Turn, not by this
+  // browser socket. Frames are buffered + SSE-`id:`-tagged so a dropped connection can resume
+  // from the exact break point via /api/chat/resume (no restart, no duplication). The upstream
+  // is aborted only when the turn is abandoned (grace elapsed) or explicitly cancelled (Stop).
   const upstreamAbort = new AbortController();
+  const turn = createTurn(conv.id);
+  turn.onAbandon = () => upstreamAbort.abort();
+  const sub = addSubscriber(turn, res, -1, () => { if (!res.writableEnded) res.end(); });
+  // Tell the client its turn id up front so it can resume this exact turn on a drop.
+  turnEmit(turn, 'message', JSON.stringify({ type: 'turn', turnId: turn.id, ts: new Date().toISOString() }));
   const send = (type, payload) => {
-    if (clientClosed) return; // guard: no frames after client disconnect
-    // Every browser-bound frame carries a server UTC timestamp (frontend debug drawer displays it).
     const ts = new Date().toISOString();
-    res.write(`data:${JSON.stringify({ type, ts, ...payload })}\n\n`);
-    res.flush?.(); // no-op unless compression middleware is present; keeps Vercel serverless streaming flushed
+    turnEmit(turn, 'message', JSON.stringify({ type, ts, ...payload }));
     // Debug line: metadata only — never frame text content, never the API key.
     if (STREAM_DEBUG) console.log(`[stream-debug] ts=${ts} dir=browser type=${type} chars=${typeof payload?.delta === 'string' ? payload.delta.length : 0} conv=${conversationId}`);
   };
-  // Standard SSE comment frame every 10s — keeps intermediary proxies/serverless runtimes from idling the connection out.
-  const hb = setInterval(() => {
-    if (clientClosed) return;
-    res.write(': keepalive\n\n');
-    res.flush?.();
-  }, 10000);
   const onClientClose = () => {
-    if (clientClosed) return;
-    // res 'close' also fires after a NORMAL res.end() — only treat it as a client
-    // disconnect when the response was NOT finished by us (writableEnded false).
+    // res 'close' also fires after a NORMAL res.end() — only detach on a real disconnect.
     if (res.writableEnded) return;
-    clientClosed = true;
-    clearInterval(hb);
-    upstreamAbort.abort(); // stop the OnDemand stream — no orphaned upstream reads
+    removeSubscriber(turn, sub); // keep upstream alive during the grace window for resume
     if (STREAM_DEBUG) console.log(`[stream-debug] ts=${new Date().toISOString()} dir=browser type=client-disconnect conv=${conversationId}`);
   };
   // NOTE (WS1 bug found live): in Node 18+ `req.on('close')` fires as soon as the request
-  // BODY stream is fully consumed — i.e. milliseconds into every POST — NOT on client
-  // disconnect. Wiring the abort to req 'close' killed every upstream stream ~30ms in.
-  // The reliable disconnect signal is the RESPONSE 'close' with writableEnded === false.
+  // BODY stream is fully consumed — NOT on client disconnect. The reliable disconnect signal
+  // is the RESPONSE 'close' with writableEnded === false.
   res.on('close', onClientClose);
 
   // Reasoning channels are reconstructed read-only from the streamed frames so a reloaded
@@ -275,8 +267,8 @@ app.post('/api/chat', async (req, res) => {
       if (!preset) {
         send('error', { message: 'ODA preset is enabled but could not be loaded from the platform.' });
         send('done', { messageId: null, fullAnswerPresent: false, sawAnswer: false });
-        clearInterval(hb);
-        res.end();
+        finishTurn(turn, 'error');
+        if (!res.writableEnded) res.end();
         return;
       }
     }
@@ -394,10 +386,7 @@ app.post('/api/chat', async (req, res) => {
     };
     const sendRaw = (evName, rawData) => {
       accumulate(rawData); // read-only; never mutates what is forwarded below
-      if (clientClosed) return;
-      if (evName && evName !== 'message') res.write(`event:${evName}\n`);
-      res.write(`data:${rawData}\n\n`);
-      res.flush?.();
+      turnEmit(turn, evName, rawData); // buffered + SSE-id-tagged for resume; passthrough stays byte-identical
       if (STREAM_DEBUG) console.log(`[stream-debug] ts=${new Date().toISOString()} dir=browser passthrough event=${evName} bytes=${rawData.length} conv=${conversationId}`);
     };
     const fullAnswer = await streamQuery({
@@ -425,7 +414,11 @@ app.post('/api/chat', async (req, res) => {
     store.touch(conv, { feature: conv.feature === 'chat' ? feature : conv.feature });
 
     send('done', { messageId: asstMsg.id, fullAnswerPresent: Boolean(fullAnswer), sawAnswer });
+    finishTurn(turn, 'done');
   } catch (e) {
+    // Turn was explicitly cancelled (user Stop) or abandoned (no resume within grace): the
+    // upstream abort surfaces here — don't persist a partial or emit noise to a dead turn.
+    if (turn.cancelled) { finishTurn(turn, 'error'); return; }
     console.error('[FAIL] [chat] stream failed:', e.message);
     if (e.partialAnswer) {
       store.addMessage(conv, {
@@ -439,10 +432,50 @@ app.post('/api/chat', async (req, res) => {
       userMessage: 'The response stream was interrupted. Please try again — any partial output has been saved to this conversation.',
     });
     send('done', { aborted: true });
+    finishTurn(turn, 'error');
   } finally {
-    clearInterval(hb);
-    if (!clientClosed) res.end();
+    if (!res.writableEnded) res.end();
   }
+});
+
+// GET /api/chat/resume?turnId=…&lastEventIndex=N — resume a dropped turn from the break point.
+// Replays buffered frames with id > N, then streams live frames until the turn finishes.
+app.get('/api/chat/resume', (req, res) => {
+  const turnId = String(req.query.turnId || '');
+  const lastEventIndex = Number.parseInt(req.query.lastEventIndex, 10);
+  const from = Number.isFinite(lastEventIndex) ? lastEventIndex : -1;
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders?.();
+  const turn = getTurn(turnId);
+  if (!turn) {
+    // Turn is gone (expired, cancelled, or a different serverless instance) — tell the client
+    // so it can fall back (preserve partial / restart pre-answer).
+    res.write(`data:${JSON.stringify({ type: 'resume_failed', reason: 'expired', ts: new Date().toISOString() })}\n\n`);
+    res.flush?.();
+    res.end();
+    return;
+  }
+  const sub = addSubscriber(turn, res, from, () => { if (!res.writableEnded) res.end(); });
+  // A turn that already finished before the reconnect: the tail + `done` frame were just
+  // replayed, so close the socket now.
+  if (turn.status !== 'running') {
+    removeSubscriber(turn, sub);
+    if (!res.writableEnded) res.end();
+    return;
+  }
+  res.on('close', () => { if (!res.writableEnded) removeSubscriber(turn, sub); });
+});
+
+// POST /api/chat/cancel {turnId} — user pressed Stop: abort upstream + drop the turn now.
+app.post('/api/chat/cancel', (req, res) => {
+  const turnId = String(req.body?.turnId || '');
+  const ok = cancelTurn(turnId);
+  res.json({ ok });
 });
 
 function extractCountryGuess(text) {

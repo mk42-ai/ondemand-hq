@@ -34,11 +34,19 @@ export const FEATURE_PLUGINS = {
   chat:            ['internet', 'perplexity', 'onDemandAgent'],
 };
 
+// File Directory Search — attached to EVERY query (default) so file retrieval is always
+// available regardless of the routed feature.
+export const FILE_RETRIEVAL_PLUGIN_ID = 'plugin-1743257072';
+
+// Plugin ids attached to every query on top of the feature-specific set.
+const ALWAYS_ON_PLUGIN_IDS = [FILE_RETRIEVAL_PLUGIN_ID];
+const ALWAYS_ON_LABELS = [ADOPTED.fileDirectory.label];
+
 export function pluginIdsFor(feature) {
   const keys = FEATURE_PLUGINS[feature] || FEATURE_PLUGINS.chat;
-  return keys.map(k => ADOPTED[k].id);
+  return [...new Set([...keys.map(k => ADOPTED[k].id), ...ALWAYS_ON_PLUGIN_IDS])];
 }
 export function pluginLabelsFor(feature) {
   const keys = FEATURE_PLUGINS[feature] || FEATURE_PLUGINS.chat;
-  return keys.map(k => ADOPTED[k].label);
+  return [...new Set([...keys.map(k => ADOPTED[k].label), ...ALWAYS_ON_LABELS])];
 }

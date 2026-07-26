@@ -160,7 +160,7 @@ function dropError(e) {
  *    onEvent itself and are never rewrapped here, so callers can tell a
  *    transport drop apart from a real server-side error.
  */
-export async function streamChat(body, onEvent, signal) {
+export async function streamChat(body, onEvent, signal, onIndex) {
   let r;
   try {
     r = await fetch('/api/chat', {
@@ -176,6 +176,48 @@ export async function streamChat(body, onEvent, signal) {
     const errBody = await r.json().catch(() => ({}));
     throw new Error(errorMessage(errBody.error, `HTTP ${r.status}`));
   }
+  await pumpSSE(r, onEvent, onIndex);
+}
+
+/**
+ * Resume a dropped turn from the last event index seen. Replays the missed frames then
+ * continues live — a mid-stream break resumes exactly where it left off, no duplication.
+ * The server emits a `resume_failed` frame (surfaced via onEvent) when the turn is gone, so
+ * the caller can fall back. Throws on transport failure like streamChat.
+ */
+export async function resumeChat(turnId, lastEventIndex, onEvent, signal, onIndex) {
+  const qs = new URLSearchParams({ turnId, lastEventIndex: String(lastEventIndex ?? -1) });
+  let r;
+  try {
+    r = await fetch(`/api/chat/resume?${qs}`, { signal });
+  } catch (e) {
+    throw dropError(e);
+  }
+  if (!r.ok || !r.body) {
+    const errBody = await r.json().catch(() => ({}));
+    throw new Error(errorMessage(errBody.error, `HTTP ${r.status}`));
+  }
+  await pumpSSE(r, onEvent, onIndex);
+}
+
+/** Cancel an in-flight turn server-side (user pressed Stop). Best-effort, never throws. */
+export async function cancelChat(turnId) {
+  if (!turnId) return;
+  try {
+    await fetch('/api/chat/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ turnId }),
+      keepalive: true, // allow the request to complete even if the page is unloading
+    });
+  } catch { /* best effort */ }
+}
+
+/**
+ * Read an SSE response body: dispatches parsed frames to onEvent(type, payload) and every
+ * native SSE `id:` to onIndex(i) so the caller can track the resume position.
+ */
+async function pumpSSE(r, onEvent, onIndex) {
   const reader = r.body.getReader();
   streamDebugBus.emit({ kind: 'lifecycle', type: 'open' });
   const dec = new TextDecoder();
@@ -184,6 +226,12 @@ export async function streamChat(body, onEvent, signal) {
     const line = rawLine.replace(/\r$/, '');
     // Keepalive comment lines (`: keepalive`) — surfaced to the debug bus, never to onEvent.
     if (line.startsWith(':')) { streamDebugBus.emit({ kind: 'frame', type: 'keepalive', chars: 0 }); return; }
+    // Native SSE id — the resume cursor. Track the highest index we've seen.
+    if (line.startsWith('id:')) {
+      const n = Number.parseInt(line.slice(3).trim(), 10);
+      if (Number.isFinite(n)) onIndex?.(n);
+      return;
+    }
     if (line.startsWith('event:')) return; // SSE event-name line (event:thinking/message/heartbeat) — payload routing keys on eventType below
     if (!line.startsWith('data:')) return;
     const payload = line.slice(5).trim();
