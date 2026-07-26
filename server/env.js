@@ -61,7 +61,7 @@ export const REASONING_EFFORTS = ["low", "medium", "max"];
 // THE only ACTIVE GLM 4.7 endpoint (live registry 2026-07-20T20:57:56Z): Cerebras BYOI,
 // model_id zai-glm-4.7, 65k ctx, streaming true. predefined-glm-4.7 and
 // predefined-glm-4.7-flash are INACTIVE registry entries — never ship against them.
-export const GLM_BYOI_ENDPOINT_ID = "predefined-gemini-3.1-pro-preview";
+export const GLM_BYOI_ENDPOINT_ID = "predefined-glm-5.1";
 export function validEffort(effort, fallback) {
   if (REASONING_EFFORTS.includes(effort)) return effort;
   if (effort)
