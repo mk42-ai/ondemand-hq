@@ -161,7 +161,7 @@ export async function createOdSession(externalUserId, pluginIds = []) {
  * suffixed ids like 'gpt-5.6-sol-medium' are a proven HTTP 400). Main chat default:
  * predefined-gpt-5.6-sol + 'low' (2026-07-20 streaming fix). Streaming always ON.
  */
-export async function streamQuery({ odSessionId, query, pluginIds = [], skillIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false, modelConfigs: modelConfigOverrides, chatMode: chatModeOverride }) {
+export async function streamQuery({ odSessionId, query, pluginIds = [], skillIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false, modelConfigs: modelConfigOverrides }) {
   assertApiKey('query stream');
   const body = {
     query,
@@ -170,8 +170,8 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], skillIds
                                           // NOTE: `reasoningEffort` is not in the documented submitquery schema but is
                                           // accepted by the live API — live-accepted extension beyond the documented schema.
     responseMode: 'stream',
-    // Default standard. Preset flows may override (e.g. playground "plan" mode) via chatModeOverride.
-    chatMode: chatModeOverride || 'standard',
+    // ALWAYS standard — public API rejects chatMode 'plan' (HTTP 400).
+    chatMode: 'standard',
     // Planning/step decomposition frames (planning_thinking, planning_output, step_thinking,
     // step_output) are gated on ATTACHED AGENTS, not on chatMode — verified live 2026-07-25:
     // the same query with agentIds=[] emitted only fulfillment_thinking, while

@@ -42,7 +42,6 @@ export function normalizePreset(raw) {
     fulfillmentPrompt: raw.fulfillmentPrompt || '',
     reasoningEffort: raw.reasoningEffort || 'medium',
     reasoningMode: raw.reasoningMode || null,
-    chatMode: raw.chatMode || 'standard',
     debugMode: Boolean(raw.debugMode),
     maxTokens: raw.maxTokens ?? null,
     status: raw.status || null,
@@ -58,7 +57,6 @@ export function presetQueryOptions(preset) {
   return {
     endpointId: preset.endpoint,
     reasoningEffort: preset.reasoningEffort,
-    chatMode: preset.chatMode,
     skillIds: preset.skillIds,
     pluginIds: preset.chatPlugins,
     systemPrompt: preset.fulfillmentPrompt,

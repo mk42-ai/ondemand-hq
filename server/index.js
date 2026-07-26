@@ -408,7 +408,6 @@ app.post('/api/chat', async (req, res) => {
       systemPrompt,
       endpointId: useOdaPreset ? presetOpts.endpointId : undefined,
       reasoningEffort: useOdaPreset ? presetOpts.reasoningEffort : undefined,
-      chatMode: useOdaPreset ? presetOpts.chatMode : undefined,
       modelConfigs: useOdaPreset ? presetOpts.modelConfigs : undefined,
       signal: upstreamAbort.signal, // WS1: cancel upstream when the browser disconnects
       onRaw: sendRaw,

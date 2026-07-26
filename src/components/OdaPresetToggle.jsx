@@ -133,7 +133,6 @@ export default function OdaPresetToggle({
       <div className="oda-preset-tip__scroll">
         <ConfigRow label="Endpoint" value={preset.endpoint} />
         <ConfigRow label="Reasoning" value={`${preset.reasoningEffort}${preset.reasoningMode ? ` · ${preset.reasoningMode}` : ''}`} />
-        <ConfigRow label="Chat mode" value={preset.chatMode} />
         <ConfigRow label="Temperature" value={preset.temperature} />
         <ConfigRow label="Top P" value={preset.topP} />
         <ConfigRow label="Presence penalty" value={preset.presencePenalty} />
