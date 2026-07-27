@@ -122,14 +122,21 @@ app.get('/api/connectors', async (req, res) => {
   }
 });
 
-// POST /api/connectors/oauth/init  { pluginId, metadata? }
+// POST /api/connectors/oauth/init  { pluginId, redirectUri?, metadata? }
 app.post('/api/connectors/oauth/init', async (req, res) => {
   try {
-    const { pluginId, metadata } = req.body || {};
+    const { pluginId, redirectUri, metadata } = req.body || {};
     if (!pluginId || typeof pluginId !== 'string') {
       return res.status(400).json({ error: 'pluginId is required' });
     }
-    const data = await initPluginOAuth({ pluginId, metadata: metadata || {} });
+    const redirect = typeof redirectUri === 'string' && redirectUri.trim()
+      ? redirectUri.trim()
+      : undefined;
+    const data = await initPluginOAuth({
+      pluginId,
+      redirectUri: redirect,
+      metadata: metadata || {},
+    });
     res.json(data);
   } catch (e) {
     console.error('[FAIL] [connectors] oauth init failed:', e.message);
