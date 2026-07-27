@@ -38,6 +38,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { emitRunEvent } from './events.js';
+import { ODA_DATA_DIR } from '../paths.js';
 
 /**
  * @typedef {import('./contracts.d.ts').ODARun} ODARun
@@ -50,8 +51,12 @@ import { emitRunEvent } from './events.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const RUNS_DIR = path.join(__dirname, 'data', 'runs');
-fs.mkdirSync(RUNS_DIR, { recursive: true });
+const RUNS_DIR = path.join(ODA_DATA_DIR, 'runs');
+// Guarded: an unguarded mkdir here into the read-only Vercel bundle threw EROFS at
+// cold-start module init → FUNCTION_INVOCATION_FAILED for the ENTIRE function
+// (every route 500'd). ODA_DATA_DIR now points at writable /tmp on serverless;
+// the try/catch is defence-in-depth so a data-dir failure can never crash boot.
+try { fs.mkdirSync(RUNS_DIR, { recursive: true }); } catch (e) { console.error('[oda/runStore] runs dir mkdir failed:', e.message); }
 
 /** @type {Map<string, ODARun>} */
 const runs = new Map();

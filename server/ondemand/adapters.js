@@ -37,11 +37,12 @@ export async function createSession(externalUserId, agentIds = [], { timeoutMs =
 // ---------- streamed query (POST /chat/v1/sessions/{id}/query, responseMode:stream) ----------
 // onEvent(eventType, dataObj) fires per SSE frame; returns {fullAnswer, usage|null}.
 // `signal` lets the voice route abort in-flight generation on barge-in.
-export async function streamQuery({ sessionId, query, endpointId, reasoningEffort, fulfillmentPrompt, fulfillmentOnly = true, signal, timeoutMs = 90000, onEvent }) {
+export async function streamQuery({ sessionId, query, endpointId, reasoningEffort, fulfillmentPrompt, fulfillmentOnly = true, signal, timeoutMs = 600_000, onEvent }) {
   const t = withTimeout(timeoutMs);
   const anySignal = signal ? AbortSignal.any([signal, t.signal]) : t.signal;
   try {
-    const body = { query, endpointId, responseMode: 'stream', fulfillmentOnly };
+    const body = { query, endpointId, responseMode: 'stream', chatMode: 'standard', fulfillmentOnly };
+    // chatMode ALWAYS 'standard' — 'plan' is rejected by the public API ("not supported").
     if (fulfillmentPrompt) body.modelConfigs = { fulfillmentPrompt };
     // reasoningEffort is a TOP-LEVEL body key (live-accepted; NOT inside modelConfigs,
     // NEVER a suffixed model id — decomposed form only, 2026-07-20 mode audit).
