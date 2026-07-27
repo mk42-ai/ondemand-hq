@@ -425,12 +425,14 @@ export async function syncQuery({ odSessionId, query, systemPrompt, pluginIds = 
 }
 
 /** Start OAuth for a connector (POST /plugin/v1/oauth/init). */
-export async function initPluginOAuth({ pluginId, metadata = {} } = {}) {
+export async function initPluginOAuth({ pluginId, redirectUri, metadata = {} } = {}) {
   assertApiKey('oauth init');
+  const body = { pluginId, metadata };
+  if (redirectUri) body.redirectUri = redirectUri;
   const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/plugin/v1/oauth/init`, {
     method: 'POST',
     headers: H,
-    body: JSON.stringify({ pluginId, metadata }),
+    body: JSON.stringify(body),
   }), 'oauth init');
   if (!r.ok) {
     const { message, upstreamErrorCode } = await parseUpstreamError(r);

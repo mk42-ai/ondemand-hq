@@ -114,11 +114,14 @@ export async function fetchConnectors(params = {}) {
 }
 
 /** Start OAuth for a connector — returns { data: { authUrl } }. */
-export async function initConnectorOAuth(pluginId) {
-  return jpost('/api/connectors/oauth/init', {
-    pluginId,
-    metadata: { pluginId },
-  });
+export async function initConnectorOAuth(pluginId, opts = {}) {
+  const body = { pluginId, metadata: { pluginId } };
+  const redirectUri = opts.redirectUri
+    ?? (typeof window !== 'undefined' && window.location?.origin
+      ? `${window.location.origin}/connector/auth/callback`
+      : undefined);
+  if (redirectUri) body.redirectUri = redirectUri;
+  return jpost('/api/connectors/oauth/init', body);
 }
 
 /** Unsubscribe / disconnect a connector (id = plugin.id from list response). */
