@@ -17,6 +17,8 @@ import {
   fetchConnectors,
   fetchOdaPreset,
   ODA_PRESET_ENABLED_KEY,
+  persistConversation,
+  presetQueryOptions,
 } from "./api.js";
 import { parseConnectorsResponse } from "./components/ConnectorsMenu.jsx";
 import DebugDrawer from "./components/DebugDrawer.jsx";
@@ -239,6 +241,7 @@ export default function App() {
     }
   });
   const odaPresetEnabledRef = useRef(odaPresetEnabled);
+  const odaPresetRef = useRef(odaPreset);
 
   /* ---------- data loading ---------- */
   const refreshConvs = useCallback(async () => {
@@ -252,6 +255,14 @@ export default function App() {
     refreshConvs();
   }, [refreshConvs]);
 
+  // Direct mode: persist messages to the client-side store so switching/reloading
+  // restores them. No-op on the server path. Skip while a message is still live to
+  // avoid a write on every streamed token — the final write lands when live flips off.
+  useEffect(() => {
+    if (!activeId || messages.some((m) => m.live)) return;
+    persistConversation(activeId, messages);
+  }, [messages, activeId]);
+
   useEffect(() => {
     odaPresetEnabledRef.current = odaPresetEnabled;
     try {
@@ -263,6 +274,10 @@ export default function App() {
       /* noop */
     }
   }, [odaPresetEnabled]);
+
+  useEffect(() => {
+    odaPresetRef.current = odaPreset;
+  }, [odaPreset]);
 
   useEffect(() => {
     if (!odaPresetEnabled || !odaPreset?.chatPlugins?.length) return;
@@ -532,6 +547,12 @@ export default function App() {
     let attempt = 0;
     let forceRestart = false; // set when a resume is impossible and a full re-query is safe
 
+    // ODA preset overrides (direct mode): thread the preset's endpoint, reasoning
+    // effort, skills, fulfillment prompt, and modelConfigs into the query — the work
+    // the server used to do via presetQueryOptions. Only applied when the preset is on.
+    const useOdaPreset = Boolean(extra.useOdaPreset ?? odaPresetEnabledRef.current);
+    const presetOpts = useOdaPreset && odaPresetRef.current ? presetQueryOptions(odaPresetRef.current) : {};
+
     // Built once and reused unchanged across reconnects — same conversation payload.
     const payload = {
       conversationId: convId,
@@ -543,7 +564,17 @@ export default function App() {
       editTarget: extra.editTarget || undefined,
       msmVideoId: extra.msmVideoId || undefined,
       pluginIds: ids.length ? ids : undefined,
-      useOdaPreset: Boolean(extra.useOdaPreset ?? odaPresetEnabledRef.current),
+      useOdaPreset,
+      // Preset-derived query options (endpointId, reasoningEffort, skillIds,
+      // systemPrompt, modelConfigs). streamChatDirect reads these directly.
+      endpointId: presetOpts.endpointId || undefined,
+      reasoningEffort: presetOpts.reasoningEffort || undefined,
+      skillIds: presetOpts.skillIds?.length ? presetOpts.skillIds : undefined,
+      systemPrompt: presetOpts.systemPrompt || undefined,
+      modelConfigs:
+        presetOpts.modelConfigs && Object.keys(presetOpts.modelConfigs).length
+          ? presetOpts.modelConfigs
+          : undefined,
     };
     // 2026-07-17 passthrough refactor: raw upstream eventTypes arrive directly. Each one
     // owns exactly one field on the live message (playground parity — see liveMsg above):

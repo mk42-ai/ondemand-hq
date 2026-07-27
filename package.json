@@ -10,6 +10,7 @@
     "start": "node server/index.js"
   },
   "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
     "cobe": "^0.6.3",
     "d3": "^7.9.0",
     "docx": "^8.5.0",

@@ -24,11 +24,16 @@ function AgentDetail({ plugins, stepQuery, section }) {
   return (
     <div className="pglog2__detail">
       {section && <div className="pglog2__section">{section}</div>}
-      {(plugins || []).map(p => (
-        <div className="pglog2__agent" key={p.id}>
-          <PluginAvatar name={p.name} />
+      {(plugins || []).length > 0 && (
+        <div className="pglog2__agents">
+          {plugins.map(p => (
+            <div className="pglog2__agent" key={p.id}>
+              <PluginAvatar name={p.name} />
+              {p.name && <span className="pglog2__agentname">{p.name}</span>}
+            </div>
+          ))}
         </div>
-      ))}
+      )}
       {stepQuery && <div className="pglog2__stepq">{stepQuery}</div>}
     </div>
   );
