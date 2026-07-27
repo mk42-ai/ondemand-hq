@@ -2645,6 +2645,10 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700;
 }
+.pglog2__avatar--logo {
+  background: transparent; object-fit: cover;
+  border: 1px solid var(--pg-border);
+}
 
 /* live step-reasoning strip */
 .pglog2__thinking { position: relative; display: flex; gap: 12px; padding: 4px 0; }
