@@ -77,27 +77,6 @@ const CHIPS = [
 
 const WIZARD_FEATURES = new Set(["design", "summary", "media"]);
 
-// Detect a document-deliverable request in the user's prompt so we can auto-generate it
-// after the answer (playground parity: "draft a pdf report…" produces a downloadable file).
-// Requires an explicit creation verb OR the words report/document to avoid firing on
-// incidental mentions ("what is a pdf?"). Returns a buildExport format or null.
-function detectDeliverableFormat(prompt) {
-  const t = (prompt || "").toLowerCase();
-  // Require an explicit creation verb so we don't fire on "title these slides" / "what is a pdf".
-  const wantsCreate =
-    /\b(draft|create|generate|make|build|write|prepare|produce|export|compile|design|assemble)\b/.test(
-      t,
-    );
-  if (!wantsCreate) return null;
-  if (/\b(pptx|powerpoint|slides?|deck|presentation)\b/.test(t)) return "pptx";
-  if (/\b(xlsx|excel|spreadsheet|workbook)\b/.test(t)) return "xlsx";
-  if (/\b(docx|word\s+doc(?:ument)?|\.docx)\b/.test(t)) return "docx";
-  if (/\bpdf\b/.test(t)) return "pdf";
-  // A "report"/"document"/"whitepaper" with no explicit format defaults to PDF, like the playground.
-  if (/\b(report|document|whitepaper|one[- ]?pager)\b/.test(t)) return "pdf";
-  return null;
-}
-
 export default function App() {
   const [convs, setConvs] = useState([]);
   const [activeId, setActiveId] = useState(null);
@@ -909,15 +888,6 @@ export default function App() {
         setWizard((w) => ({ ...w, step: Math.min(w.step + 1, 4) }));
       draftRef.current = null;
       await refreshConvs();
-      // Playground parity: when the user asked for a document deliverable ("draft a pdf
-      // report…"), auto-generate it and attach the download card — instead of leaving it
-      // behind the manual Export bar. The answer text is now persisted server-side, so
-      // buildExport has real content to render.
-      const deliverableFmt = detectDeliverableFormat(text);
-      if (deliverableFmt)
-        doExport(liveMsgRef.current.id, deliverableFmt).catch(() => {
-          /* toast handled in doExport */
-        });
     } catch (e) {
       // UX fix (b): user pressed Stop — end cleanly, keep whatever streamed, no error toast
       if (e && e.errorCode === "ABORTED" && userStoppedRef.current) {
