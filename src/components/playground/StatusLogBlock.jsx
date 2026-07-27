@@ -12,11 +12,26 @@ import { ChevronDown } from 'lucide-react';
 import { Markdown } from '../../markdown.jsx';
 import { buildStatusTimeline, summariseParams } from './parseAgentic.js';
 import { SpinningLogo } from './loaders.jsx';
+import { resolvePluginLogoUrl } from './pluginLogos.js';
 
-/** A small avatar for a plugin call — mapped logo if we know it, else a lettered chip. */
-function PluginAvatar({ name }) {
-  const letter = (name || '?').trim().charAt(0).toUpperCase();
-  return <span className="pglog2__avatar" aria-hidden>{letter}</span>;
+/** A small avatar for a plugin call — its mapped logo if we know it, else a lettered chip. */
+function PluginAvatar({ plugin }) {
+  const logoUrl = resolvePluginLogoUrl(plugin);
+  const [failed, setFailed] = useState(false);
+  const letter = (plugin?.name || '?').trim().charAt(0).toUpperCase();
+
+  if (!logoUrl || failed) {
+    return <span className="pglog2__avatar" aria-hidden>{letter}</span>;
+  }
+
+  return (
+    <img
+      className="pglog2__avatar pglog2__avatar--logo"
+      src={logoUrl}
+      alt={plugin?.name || ''}
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 /** The agent detail shown inside an expanded accordion row. */
@@ -24,11 +39,15 @@ function AgentDetail({ plugins, stepQuery, section }) {
   return (
     <div className="pglog2__detail">
       {section && <div className="pglog2__section">{section}</div>}
-      {(plugins || []).map(p => (
-        <div className="pglog2__agent" key={p.id}>
-          <PluginAvatar name={p.name} />
+      {(plugins || []).length > 0 && (
+        <div className="pglog2__agents">
+          {plugins.map(p => (
+            <div className="pglog2__agent" key={p.id} title={p.name || ''}>
+              <PluginAvatar plugin={p} />
+            </div>
+          ))}
         </div>
-      ))}
+      )}
       {stepQuery && <div className="pglog2__stepq">{stepQuery}</div>}
     </div>
   );

@@ -17,6 +17,8 @@ import {
   fetchConnectors,
   fetchOdaPreset,
   ODA_PRESET_ENABLED_KEY,
+  persistConversation,
+  presetQueryOptions,
 } from "./api.js";
 import { parseConnectorsResponse } from "./components/ConnectorsMenu.jsx";
 import DebugDrawer from "./components/DebugDrawer.jsx";
@@ -74,27 +76,6 @@ const CHIPS = [
 ];
 
 const WIZARD_FEATURES = new Set(["design", "summary", "media"]);
-
-// Detect a document-deliverable request in the user's prompt so we can auto-generate it
-// after the answer (playground parity: "draft a pdf report…" produces a downloadable file).
-// Requires an explicit creation verb OR the words report/document to avoid firing on
-// incidental mentions ("what is a pdf?"). Returns a buildExport format or null.
-function detectDeliverableFormat(prompt) {
-  const t = (prompt || "").toLowerCase();
-  // Require an explicit creation verb so we don't fire on "title these slides" / "what is a pdf".
-  const wantsCreate =
-    /\b(draft|create|generate|make|build|write|prepare|produce|export|compile|design|assemble)\b/.test(
-      t,
-    );
-  if (!wantsCreate) return null;
-  if (/\b(pptx|powerpoint|slides?|deck|presentation)\b/.test(t)) return "pptx";
-  if (/\b(xlsx|excel|spreadsheet|workbook)\b/.test(t)) return "xlsx";
-  if (/\b(docx|word\s+doc(?:ument)?|\.docx)\b/.test(t)) return "docx";
-  if (/\bpdf\b/.test(t)) return "pdf";
-  // A "report"/"document"/"whitepaper" with no explicit format defaults to PDF, like the playground.
-  if (/\b(report|document|whitepaper|one[- ]?pager)\b/.test(t)) return "pdf";
-  return null;
-}
 
 export default function App() {
   const [convs, setConvs] = useState([]);
@@ -239,6 +220,7 @@ export default function App() {
     }
   });
   const odaPresetEnabledRef = useRef(odaPresetEnabled);
+  const odaPresetRef = useRef(odaPreset);
 
   /* ---------- data loading ---------- */
   const refreshConvs = useCallback(async () => {
@@ -252,6 +234,14 @@ export default function App() {
     refreshConvs();
   }, [refreshConvs]);
 
+  // Direct mode: persist messages to the client-side store so switching/reloading
+  // restores them. No-op on the server path. Skip while a message is still live to
+  // avoid a write on every streamed token — the final write lands when live flips off.
+  useEffect(() => {
+    if (!activeId || messages.some((m) => m.live)) return;
+    persistConversation(activeId, messages);
+  }, [messages, activeId]);
+
   useEffect(() => {
     odaPresetEnabledRef.current = odaPresetEnabled;
     try {
@@ -263,6 +253,10 @@ export default function App() {
       /* noop */
     }
   }, [odaPresetEnabled]);
+
+  useEffect(() => {
+    odaPresetRef.current = odaPreset;
+  }, [odaPreset]);
 
   useEffect(() => {
     if (!odaPresetEnabled || !odaPreset?.chatPlugins?.length) return;
@@ -532,6 +526,12 @@ export default function App() {
     let attempt = 0;
     let forceRestart = false; // set when a resume is impossible and a full re-query is safe
 
+    // ODA preset overrides (direct mode): thread the preset's endpoint, reasoning
+    // effort, skills, fulfillment prompt, and modelConfigs into the query — the work
+    // the server used to do via presetQueryOptions. Only applied when the preset is on.
+    const useOdaPreset = Boolean(extra.useOdaPreset ?? odaPresetEnabledRef.current);
+    const presetOpts = useOdaPreset && odaPresetRef.current ? presetQueryOptions(odaPresetRef.current) : {};
+
     // Built once and reused unchanged across reconnects — same conversation payload.
     const payload = {
       conversationId: convId,
@@ -543,7 +543,17 @@ export default function App() {
       editTarget: extra.editTarget || undefined,
       msmVideoId: extra.msmVideoId || undefined,
       pluginIds: ids.length ? ids : undefined,
-      useOdaPreset: Boolean(extra.useOdaPreset ?? odaPresetEnabledRef.current),
+      useOdaPreset,
+      // Preset-derived query options (endpointId, reasoningEffort, skillIds,
+      // systemPrompt, modelConfigs). streamChatDirect reads these directly.
+      endpointId: presetOpts.endpointId || undefined,
+      reasoningEffort: presetOpts.reasoningEffort || undefined,
+      skillIds: presetOpts.skillIds?.length ? presetOpts.skillIds : undefined,
+      systemPrompt: presetOpts.systemPrompt || undefined,
+      modelConfigs:
+        presetOpts.modelConfigs && Object.keys(presetOpts.modelConfigs).length
+          ? presetOpts.modelConfigs
+          : undefined,
     };
     // 2026-07-17 passthrough refactor: raw upstream eventTypes arrive directly. Each one
     // owns exactly one field on the live message (playground parity — see liveMsg above):
@@ -878,15 +888,6 @@ export default function App() {
         setWizard((w) => ({ ...w, step: Math.min(w.step + 1, 4) }));
       draftRef.current = null;
       await refreshConvs();
-      // Playground parity: when the user asked for a document deliverable ("draft a pdf
-      // report…"), auto-generate it and attach the download card — instead of leaving it
-      // behind the manual Export bar. The answer text is now persisted server-side, so
-      // buildExport has real content to render.
-      const deliverableFmt = detectDeliverableFormat(text);
-      if (deliverableFmt)
-        doExport(liveMsgRef.current.id, deliverableFmt).catch(() => {
-          /* toast handled in doExport */
-        });
     } catch (e) {
       // UX fix (b): user pressed Stop — end cleanly, keep whatever streamed, no error toast
       if (e && e.errorCode === "ABORTED" && userStoppedRef.current) {

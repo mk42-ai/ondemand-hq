@@ -1,4 +1,61 @@
 // api.js — frontend client for the ODA suite backend. SSE parsing for /api/chat.
+import { streamChatDirect, fetchOdaPresetDirect, presetQueryOptions } from './ondemandDirect.js';
+
+export { presetQueryOptions };
+import {
+  createConversation as localCreateConversation,
+  getConversation as localGetConversation,
+  listConversations as localListConversations,
+  deleteConversation as localDeleteConversation,
+  saveConversation as localSaveConversation,
+} from './localStore.js';
+
+// Direct-to-OnDemand mode (2026-07-27): the chat stream talks to the OnDemand
+// gateway straight from the browser (no Node proxy), using the apikey header and
+// @microsoft/fetch-event-source. Conversations live in localStorage and the ODA
+// preset is fetched straight from OnDemand — so NO Node backend is required for
+// the core chat experience. ON by default; set VITE_ONDEMAND_DIRECT=false to fall
+// back to the server-backed paths below.
+export const DIRECT_MODE = String(import.meta.env.VITE_ONDEMAND_DIRECT ?? 'true').toLowerCase() !== 'false';
+
+/**
+ * In direct mode, serve /api/conversations* from the localStorage store instead
+ * of the Node backend. Returns { handled, value } — or { handled:false } for any
+ * other URL so the real fetch path below runs. Throws a 404-tagged Error for a
+ * missing conversation (mirrors the server response the callers already expect).
+ */
+function routeLocalConversation(method, url, body) {
+  if (!DIRECT_MODE) return { handled: false };
+  const path = url.split('?')[0];
+  if (path === '/api/conversations') {
+    if (method === 'GET') return { handled: true, value: { conversations: localListConversations() } };
+    if (method === 'POST') return { handled: true, value: { conversation: localCreateConversation({ feature: body?.feature || 'chat' }) } };
+  }
+  const m = path.match(/^\/api\/conversations\/([^/]+)$/);
+  if (m) {
+    const id = decodeURIComponent(m[1]);
+    if (method === 'GET') {
+      const conv = localGetConversation(id);
+      if (!conv) {
+        const e = new Error('Conversation not found');
+        e.status = 404;
+        throw e;
+      }
+      return { handled: true, value: { conversation: conv } };
+    }
+    if (method === 'DELETE') {
+      localDeleteConversation(id);
+      return { handled: true, value: {} };
+    }
+  }
+  return { handled: false };
+}
+
+/** Persist a conversation's messages client-side (no-op unless direct mode). */
+export function persistConversation(id, messages) {
+  if (!DIRECT_MODE || !id) return;
+  localSaveConversation(id, messages);
+}
 
 /**
  * Debug event bus — a tiny dependency-free pub/sub tapped by streamChat so the
@@ -23,16 +80,22 @@ export const streamDebugBus = {
 };
 
 export async function jget(url) {
+  const local = routeLocalConversation('GET', url);
+  if (local.handled) return local.value;
   const r = await fetch(url);
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
   return r.json();
 }
 export async function jpost(url, body) {
+  const local = routeLocalConversation('POST', url, body);
+  if (local.handled) return local.value;
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
   return r.json();
 }
 export async function jdelete(url) {
+  const local = routeLocalConversation('DELETE', url);
+  if (local.handled) return local.value;
   const r = await fetch(url, { method: 'DELETE' });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
   return r.json().catch(() => ({}));
@@ -70,6 +133,7 @@ export async function completeConnectorOAuth(state, code) {
 
 /** Fetch the ODA playground preset with resolved skill names. */
 export async function fetchOdaPreset(refresh = false) {
+  if (DIRECT_MODE) return fetchOdaPresetDirect();
   return jget(`/api/presets/oda${refresh ? '?refresh=1' : ''}`);
 }
 
@@ -161,6 +225,17 @@ function dropError(e) {
  *    transport drop apart from a real server-side error.
  */
 export async function streamChat(body, onEvent, signal, onIndex) {
+  // Direct mode: stream straight from OnDemand (browser -> gateway), bypassing the
+  // Node proxy. Same onEvent/onIndex contract, so App.jsx is unchanged.
+  if (DIRECT_MODE) {
+    try {
+      await streamChatDirect(body, onEvent, signal, onIndex, streamDebugBus);
+    } catch (e) {
+      if (e && (e.status || e.errorCode === 'MISSING_ONDEMAND_API_KEY')) throw e;
+      throw dropError(e);
+    }
+    return;
+  }
   let r;
   try {
     r = await fetch('/api/chat', {
