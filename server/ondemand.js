@@ -35,6 +35,44 @@ export const toAgentIds = (ids = []) => ids.map((id) =>
 // STREAM_DEBUG one-liner: key=value pairs only — NEVER the API key, NEVER frame text content.
 const dbg = (fields) => { if (STREAM_DEBUG) console.log('[stream-debug] ' + Object.entries(fields).map(([k, v]) => `${k}=${v}`).join(' ')); };
 
+// 2026-07-26 (incident: "[FAIL] stream failed: terminated" on nearly every turn):
+// Node's built-in fetch (undici) collapses EVERY body-stream failure — socket reset, proxy/
+// idle-timeout close, TLS drop — into the same generic `TypeError('terminated', { cause })`.
+// The real reason always lives in `err.cause` (and sometimes `err.cause.code`), but call sites
+// were logging `e.message` only, so the actual network fault was being thrown away before
+// anyone could see it. This renders the FULL chain so it shows up in logs going forward.
+export function describeError(err) {
+  const parts = [];
+  let cur = err;
+  let depth = 0;
+  while (cur && depth < 4) {
+    const code = cur.code || cur.errno || cur.errorCode;
+    parts.push(`${cur.name || 'Error'}: ${cur.message}${code ? ` (code=${code})` : ''}`);
+    cur = cur.cause;
+    depth++;
+  }
+  return parts.join(' <- caused by: ');
+}
+
+// Failures worth a bounded retry: generic undici stream termination and common socket/
+// network reset codes, surfaced either directly or nested in `err.cause`. Distinct from a
+// genuine upstream error FRAME (errorCode UPSTREAM_ERROR_FRAME) or the STREAM_STALLED
+// watchdog, both of which mean the upstream responded and should not be retried the same way.
+const TRANSIENT_CODES = new Set(['ECONNRESET', 'EPIPE', 'ETIMEDOUT', 'ECONNREFUSED', 'UND_ERR_SOCKET']);
+function isTransientStreamError(err) {
+  if (!err) return false;
+  if (err.errorCode === 'UPSTREAM_ERROR_FRAME') return false;
+  if (err.message === 'terminated' || err.message === 'fetch failed') return true;
+  let cur = err;
+  let depth = 0;
+  while (cur && depth < 4) {
+    if (TRANSIENT_CODES.has(cur.code) || TRANSIENT_CODES.has(cur.errno)) return true;
+    cur = cur.cause;
+    depth++;
+  }
+  return false;
+}
+
 /**
  * fetch() wrapper with retry-with-exponential-backoff for the OnDemand API.
  * Retries ONLY on network/fetch errors (TypeError/ECONNRESET/etc.) and HTTP 5xx responses;
@@ -64,6 +102,27 @@ async function odFetch(url, options, { retries = 3, baseDelayMs = 500 } = {}) {
     }
     return r; // success (2xx), non-retryable 4xx, or 5xx with retries exhausted
   }
+}
+
+/**
+ * 2026-07-23 (incident 2bc9fe01): the live gateway intermittently returns
+ * HTTP 401/403 "Unauthorized" on a small fraction of calls made with a VALID
+ * apikey — a production run died when the verifier's sync query hit one
+ * (run.failed UPSTREAM_HTTP_403, 0.7s into verification). Same shape as the
+ * empirically-transient 404 on session create: a bounded, logged,
+ * auth-specific retry — deliberately NOT folded into odFetch's generic
+ * policy, and a PERSISTENT 401/403 still throws once attempts are exhausted.
+ * @param {() => Promise<Response>} doFetch re-invocable fetch thunk
+ * @param {string} label log label
+ */
+async function odFetchAuthRetry(doFetch, label) {
+  let r = await doFetch();
+  for (let extra = 1; (r.status === 401 || r.status === 403) && extra <= 2; extra++) {
+    console.error(`[od-retry] ${label} transient HTTP ${r.status} (attempt ${extra}/3) — retrying in ${600 * extra}ms`);
+    await new Promise((res) => setTimeout(res, 600 * extra));
+    r = await doFetch();
+  }
+  return r;
 }
 
 /**
@@ -118,8 +177,8 @@ export async function createOdSession(externalUserId, pluginIds = []) {
     err.errorCode = `UPSTREAM_HTTP_${r.status}`;
     err.upstreamErrorCode = upstreamErrorCode;
     lastErr = err;
-    if (r.status === 404 && attempt < 2) {
-      console.error(`[WARN] OnDemand session create transient HTTP 404 (attempt ${attempt + 1}/3) — retrying: ${message}`);
+    if ((r.status === 404 || r.status === 401 || r.status === 403) && attempt < 2) {
+      console.error(`[WARN] OnDemand session create transient HTTP ${r.status} (attempt ${attempt + 1}/3) — retrying: ${message} (upstreamErrorCode=${upstreamErrorCode || 'n/a'})`);
       continue;
     }
     console.error(`[FAIL] [HARD-FAIL] OnDemand session create HTTP ${r.status}: ${message}`);
@@ -140,27 +199,73 @@ export async function createOdSession(externalUserId, pluginIds = []) {
  * suffixed ids like 'gpt-5.6-sol-medium' are a proven HTTP 400). Main chat default:
  * predefined-gpt-5.6-sol + 'low' (2026-07-20 streaming fix). Streaming always ON.
  */
-export async function streamQuery({ odSessionId, query, pluginIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false }) {
+export async function streamQuery({ odSessionId, query, pluginIds = [], skillIds = [], systemPrompt, onRaw, onEvent, signal, endpointId: endpointOverride, reasoningEffort: reasoningOverride, fulfillmentOnly = false, modelConfigs: modelConfigOverrides }) {
   assertApiKey('query stream');
   const body = {
     query,
     endpointId: endpointOverride || ENDPOINT_ID,
-    reasoningEffort: reasoningOverride || REASONING_EFFORT,   // reasoning tokens ON (thinking frames surface when the model emits them)
-                                          // NOTE: `reasoningEffort` is not in the documented submitquery schema but is
-                                          // accepted by the live API — live-accepted extension beyond the documented schema.
+    // reasoning tokens ON by default; pass reasoningEffort: null to OMIT the field
+    // entirely (required by endpoints like predefined-claude-fable-5 that reject
+    // any reasoningEffort value). NOTE: `reasoningEffort` is a live-accepted
+    // extension beyond the documented submitquery schema.
+    ...(reasoningOverride === null ? {} : { reasoningEffort: reasoningOverride || REASONING_EFFORT }),
     responseMode: 'stream',
+    // ALWAYS standard — public API rejects chatMode 'plan' (HTTP 400).
+    chatMode: 'standard',
+    // Planning/step decomposition frames (planning_thinking, planning_output, step_thinking,
+    // step_output) are gated on ATTACHED AGENTS, not on chatMode — verified live 2026-07-25:
+    // the same query with agentIds=[] emitted only fulfillment_thinking, while
+    // agentIds=[agent-1713924030] emitted the full set. An empty pluginIds here means the
+    // playground's Thinking/plan panels will have nothing to render.
     agentIds: toAgentIds(pluginIds),
+    ...(Array.isArray(skillIds) && skillIds.length ? { skillIds: skillIds.filter((id) => typeof id === 'string' && id) } : {}),
     ...(fulfillmentOnly ? { fulfillmentOnly: true } : {}),
-    modelConfigs: systemPrompt ? { fulfillmentPrompt: systemPrompt, temperature: 0.4 } : { temperature: 0.4 },
+    // Documented modelConfigs surface (live OpenAPI submitquery spec, NOTES.md §2026-07-17):
+    // fulfillmentPrompt, stopSequences (≤4), temperature, topP, presencePenalty, frequencyPenalty.
+    // No max-token parameter is documented; the playground's `maxTokens`/`stopTokens` names are
+    // client-API-only and are deliberately NOT sent here.
+    modelConfigs: {
+      temperature: 0.4,
+      ...(systemPrompt ? { fulfillmentPrompt: systemPrompt } : {}),
+      ...(modelConfigOverrides || {}),
+    },
   };
+
+  // 2026-07-26: bounded retry around the WHOLE fetch+read attempt, for the transient
+  // "terminated" class of error (see describeError/isTransientStreamError above) — this is
+  // what was killing nearly every turn with no diagnosable cause. Only safe to retry a
+  // FRESH attempt when the failed attempt produced ZERO fulfillment answer text
+  // (err.partialAnswer is empty): nothing was shown to the user yet, so re-submitting the
+  // same query cannot duplicate visible answer content. (The thinking/status panels from the
+  // dead attempt may still show a few stray frames before the retry's own frames arrive —
+  // a cosmetic cost, not a correctness one, and far better than the turn hard-failing.)
+  const MAX_STREAM_RETRIES = 2;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await runStreamAttempt({ odSessionId, body, onRaw, onEvent, signal });
+    } catch (err) {
+      if (!err.partialAnswer && isTransientStreamError(err) && attempt < MAX_STREAM_RETRIES) {
+        const delay = 500 * (attempt + 1);
+        console.error(`[stream-retry] attempt=${attempt + 1}/${MAX_STREAM_RETRIES} session=${odSessionId} next=${delay}ms cause=${describeError(err)}`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      console.error(`[FAIL] [HARD-FAIL] OnDemand stream ended on ${body.endpointId}+${body.reasoningEffort} session=${odSessionId}: ${describeError(err)}`);
+      throw err;
+    }
+  }
+}
+
+async function runStreamAttempt({ odSessionId, body, onRaw, onEvent, signal }) {
   // odFetch retry is safe here ONLY because no bytes have been consumed yet (pre-stream).
   // Once reading begins below, the existing watchdog/error paths — not retry — handle failures.
-  const r = await odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions/${odSessionId}/query`, {
+  // 2026-07-23: pre-stream fetches also get the bounded 401/403 auth retry.
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions/${odSessionId}/query`, {
     method: 'POST',
     headers: { ...H, Accept: 'text/event-stream' },
     body: JSON.stringify(body),
     signal,
-  });
+  }), 'stream query');
   if (!r.ok || !r.body) {
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
     console.error(`[FAIL] [HARD-FAIL] OnDemand stream HTTP ${r.status} on ${ENDPOINT_ID}+${REASONING_EFFORT}: ${message} — NO silent model fallback; surfacing to caller.`);
@@ -226,17 +331,21 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
     if (et === 'fulfillment' && typeof evt.answer === 'string') {
       fullAnswer += evt.answer; // server-side persistence only — browser already got the raw frame
       onEvent?.('answer', evt.answer);
+    } else if (et === 'fulfillment_thinking' && typeof evt?.thinking?.delta === 'string') {
+      // Forward reasoning/thinking tokens so callers can surface live "thinking"
+      // streaming (never accumulated into fullAnswer — thinking is not deliverable text).
+      onEvent?.('thinking', evt.thinking.delta);
     }
     return null;
   };
 
-  // 90s inactivity watchdog: if the upstream reader yields no chunk within the window, abort the loop.
-  const STALL_MS = 90000;
+  // 10m inactivity watchdog: if the upstream reader yields no chunk within the window, abort the loop.
+  const STALL_MS = 600_000;
   let stallTimer = null;
   const clearStallTimer = () => { if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; } };
   const armStallTimer = () => new Promise((_, reject) => {
     stallTimer = setTimeout(() => {
-      const err = new Error('No stream activity for 90s — upstream stalled');
+      const err = new Error('No stream activity for 10 minutes — upstream stalled');
       err.errorCode = 'STREAM_STALLED';
       reject(err);
     }, STALL_MS);
@@ -287,21 +396,24 @@ export async function streamQuery({ odSessionId, query, pluginIds = [], systemPr
 /** Non-streaming helper for internal calls (router classification, title generation). Same model policy. */
 export async function syncQuery({ odSessionId, query, systemPrompt, pluginIds = [], endpointId, reasoningEffort }) {
   assertApiKey('sync query');
-  const r = await odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions/${odSessionId}/query`, {
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/chat/v1/sessions/${odSessionId}/query`, {
     method: 'POST', headers: H,
     body: JSON.stringify({
       query,
       endpointId: endpointId || ENDPOINT_ID,
-      // reasoningEffort: live-accepted extension beyond the documented submitquery schema (see streamQuery note above).
-      reasoningEffort: reasoningEffort || REASONING_EFFORT,
+      // reasoningEffort: live-accepted extension beyond the documented submitquery
+      // schema. Pass null to OMIT it (endpoints like predefined-claude-fable-5
+      // reject any reasoningEffort value).
+      ...(reasoningEffort === null ? {} : { reasoningEffort: reasoningEffort || REASONING_EFFORT }),
       responseMode: 'sync',
+      chatMode: 'standard', // ALWAYS standard (see streamQuery note) — 'plan' is rejected by the public API.
       agentIds: toAgentIds(pluginIds),
       modelConfigs: systemPrompt ? { fulfillmentPrompt: systemPrompt, temperature: 0.2 } : { temperature: 0.2 },
     }),
-  });
+  }), 'sync query');
   if (!r.ok) {
     const { message, upstreamErrorCode } = await parseUpstreamError(r);
-    console.error(`[FAIL] [HARD-FAIL] OnDemand sync HTTP ${r.status}: ${message}`);
+    console.error(`[FAIL] [HARD-FAIL] OnDemand sync HTTP ${r.status}: ${message} (upstreamErrorCode=${upstreamErrorCode || 'n/a'})`);
     const err = new Error(`OnDemand sync query failed (HTTP ${r.status}): ${message}`);
     err.status = r.status;
     err.errorCode = `UPSTREAM_HTTP_${r.status}`;
@@ -310,4 +422,138 @@ export async function syncQuery({ odSessionId, query, systemPrompt, pluginIds = 
   }
   const j = await r.json();
   return j?.data?.answer || '';
+}
+
+/** Start OAuth for a connector (POST /plugin/v1/oauth/init). */
+export async function initPluginOAuth({ pluginId, redirectUri, metadata = {} } = {}) {
+  assertApiKey('oauth init');
+  const body = { pluginId, metadata };
+  if (redirectUri) body.redirectUri = redirectUri;
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/plugin/v1/oauth/init`, {
+    method: 'POST',
+    headers: H,
+    body: JSON.stringify(body),
+  }), 'oauth init');
+  if (!r.ok) {
+    const { message, upstreamErrorCode } = await parseUpstreamError(r);
+    console.error(`[FAIL] OnDemand oauth init HTTP ${r.status}: ${message}`);
+    const err = new Error(`OnDemand oauth init failed (HTTP ${r.status}): ${message}`);
+    err.status = r.status;
+    err.errorCode = `UPSTREAM_HTTP_${r.status}`;
+    err.upstreamErrorCode = upstreamErrorCode;
+    throw err;
+  }
+  return r.json();
+}
+
+/** Unsubscribe / disconnect a connector (DELETE /plugin/v1/plugin_configuration/:id). */
+export async function unsubscribePluginConfiguration(id) {
+  assertApiKey('plugin unsubscribe');
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/plugin/v1/plugin_configuration/${id}`, {
+    method: 'DELETE',
+    headers: H,
+  }), 'plugin unsubscribe');
+  if (!r.ok) {
+    const { message, upstreamErrorCode } = await parseUpstreamError(r);
+    console.error(`[FAIL] OnDemand plugin unsubscribe HTTP ${r.status}: ${message}`);
+    const err = new Error(`OnDemand plugin unsubscribe failed (HTTP ${r.status}): ${message}`);
+    err.status = r.status;
+    err.errorCode = `UPSTREAM_HTTP_${r.status}`;
+    err.upstreamErrorCode = upstreamErrorCode;
+    throw err;
+  }
+  return r.json().catch(() => ({}));
+}
+
+/** Complete OAuth after provider redirect (POST /plugin/v1/plugin_configuration/oauth/complete). */
+export async function completePluginOAuth({ state, code } = {}) {
+  assertApiKey('oauth complete');
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/plugin/v1/plugin_configuration/oauth/complete`, {
+    method: 'POST',
+    headers: H,
+    body: JSON.stringify({ state, code }),
+  }), 'oauth complete');
+  if (!r.ok) {
+    const { message, upstreamErrorCode } = await parseUpstreamError(r);
+    console.error(`[FAIL] OnDemand oauth complete HTTP ${r.status}: ${message}`);
+    const err = new Error(`OnDemand oauth complete failed (HTTP ${r.status}): ${message}`);
+    err.status = r.status;
+    err.errorCode = `UPSTREAM_HTTP_${r.status}`;
+    err.upstreamErrorCode = upstreamErrorCode;
+    throw err;
+  }
+  return r.json();
+}
+
+/** List presets (GET /plugin/v1/preset). */
+export async function listPresets({ page = 1, limit = 100, sortBy = 'updatedAt' } = {}) {
+  assertApiKey('preset list');
+  const qs = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    sortBy,
+  });
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/plugin/v1/preset?${qs}`, {
+    method: 'GET',
+    headers: { apikey: ONDEMAND_API_KEY },
+  }), 'preset list');
+  if (!r.ok) {
+    const { message, upstreamErrorCode } = await parseUpstreamError(r);
+    console.error(`[FAIL] OnDemand preset list HTTP ${r.status}: ${message}`);
+    const err = new Error(`OnDemand preset list failed (HTTP ${r.status}): ${message}`);
+    err.status = r.status;
+    err.errorCode = `UPSTREAM_HTTP_${r.status}`;
+    err.upstreamErrorCode = upstreamErrorCode;
+    throw err;
+  }
+  return r.json();
+}
+
+/** List skills by id (GET /plugin/v1/skill/list?skillId[]=…). */
+export async function listSkills(skillIds = []) {
+  assertApiKey('skill list');
+  const ids = [...new Set((Array.isArray(skillIds) ? skillIds : []).filter((id) => typeof id === 'string' && id))];
+  if (!ids.length) return { data: { skills: [] } };
+  const qs = new URLSearchParams();
+  for (const id of ids) qs.append('skillId[]', id);
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/plugin/v1/skill/list?${qs}`, {
+    method: 'GET',
+    headers: { apikey: ONDEMAND_API_KEY },
+  }), 'skill list');
+  if (!r.ok) {
+    const { message, upstreamErrorCode } = await parseUpstreamError(r);
+    console.error(`[FAIL] OnDemand skill list HTTP ${r.status}: ${message}`);
+    const err = new Error(`OnDemand skill list failed (HTTP ${r.status}): ${message}`);
+    err.status = r.status;
+    err.errorCode = `UPSTREAM_HTTP_${r.status}`;
+    err.upstreamErrorCode = upstreamErrorCode;
+    throw err;
+  }
+  return r.json();
+}
+
+/** List OAuth connectors (GET /plugin/v1/list — apikey only). */
+export async function listClientPlugins({ v2 = 1, limit = 50, page = 1, scope = '', authType = 'OAUTH' } = {}) {
+  assertApiKey('plugin list');
+  const qs = new URLSearchParams({
+    v2: String(v2),
+    limit: String(limit),
+    page: String(page),
+    scope,
+    authType,
+  });
+  const r = await odFetchAuthRetry(() => odFetch(`${ONDEMAND_BASE_URL}/plugin/v1/list?${qs}`, {
+    method: 'GET',
+    headers: { apikey: ONDEMAND_API_KEY },
+  }), 'plugin list');
+  if (!r.ok) {
+    const { message, upstreamErrorCode } = await parseUpstreamError(r);
+    console.error(`[FAIL] OnDemand plugin list HTTP ${r.status}: ${message}`);
+    const err = new Error(`OnDemand plugin list failed (HTTP ${r.status}): ${message}`);
+    err.status = r.status;
+    err.errorCode = `UPSTREAM_HTTP_${r.status}`;
+    err.upstreamErrorCode = upstreamErrorCode;
+    throw err;
+  }
+  return r.json();
 }

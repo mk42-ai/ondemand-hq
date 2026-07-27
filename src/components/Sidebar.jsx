@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   LayoutGrid, FileText, Scale, BarChart3, Languages, Newspaper, Type, PieChart,
-  Globe, Plus, MonitorPlay,
+  Globe, Plus, MonitorPlay, PanelsTopLeft,
 } from 'lucide-react';
 import { LANG } from '../i18n.js';
 
@@ -26,7 +26,7 @@ function groupLabel(iso) {
   return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
-export default function Sidebar({ conversations, activeId, onSelect, onNew, onTool, onIntel, intelActive, onMsm, msmActive, open }) {
+export default function Sidebar({ conversations, activeId, onSelect, onNew, onTool, onIntel, intelActive, onMsm, msmActive, onOda, odaActive, open }) {
   const groups = [];
   let last = null;
   for (const c of conversations) {
@@ -48,6 +48,9 @@ export default function Sidebar({ conversations, activeId, onSelect, onNew, onTo
       <button className={`sidebar__intel${msmActive ? ' active' : ''}`} onClick={() => onMsm?.()}
         dir={LANG === 'ar' ? 'rtl' : 'ltr'}>
         <MonitorPlay size={15} strokeWidth={2} aria-hidden /> {LANG === 'ar' ? 'تحليل الإعلام' : 'MSM Analysis'}
+      </button>
+      <button className={`sidebar__intel${odaActive ? ' active' : ''}`} onClick={() => onOda?.()}>
+        <PanelsTopLeft size={15} strokeWidth={2} aria-hidden /> ODA Workspace
       </button>
       <div className="sidebar__history">
         <div className="sidebar__sessions-label">Sessions</div>

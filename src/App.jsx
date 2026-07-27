@@ -1,36 +1,88 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Sidebar from './components/Sidebar.jsx';
-import LightboxHost from './components/Lightbox.jsx';
-import Composer from './components/Composer.jsx';
-import PreviewPane from './components/PreviewPane.jsx';
-import { AssistantMessage, UserMessage } from './components/Messages.jsx';
-import { jget, jpost, streamChat } from './api.js';
-import DebugDrawer from './components/DebugDrawer.jsx';
-import BilingualLoader from './components/BilingualLoader.jsx';
-import IntelDashboard from './intel/IntelDashboard.jsx';
-import MsmDashboard from './msm/MsmDashboard.jsx';
-import { ArrowDown, X, AlertTriangle } from 'lucide-react';
-import { dissect } from './markdown.jsx';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import Sidebar from "./components/Sidebar.jsx";
+import LightboxHost from "./components/Lightbox.jsx";
+import Composer from "./components/Composer.jsx";
+import PreviewPane from "./components/PreviewPane.jsx";
+import { AssistantMessage, UserMessage } from "./components/Messages.jsx";
+import {
+  jget,
+  jpost,
+  loadConversationConnectors,
+  normalizePluginIds,
+  saveConversationConnectors,
+  streamChat,
+  resumeChat,
+  cancelChat,
+  PENDING_CONNECTOR_KEY,
+  fetchConnectors,
+  fetchOdaPreset,
+  ODA_PRESET_ENABLED_KEY,
+  persistConversation,
+  presetQueryOptions,
+} from "./api.js";
+import { parseConnectorsResponse } from "./components/ConnectorsMenu.jsx";
+import DebugDrawer from "./components/DebugDrawer.jsx";
+import BilingualLoader from "./components/BilingualLoader.jsx";
+import ConnectorAuthCallback from "./components/ConnectorAuthCallback.jsx";
+import IntelDashboard from "./intel/IntelDashboard.jsx";
+import MsmDashboard from "./msm/MsmDashboard.jsx";
+// ODA Workspace (Phase 3) — lazy-loaded so the suite home bundle stays lean.
+const OdaWorkspace = React.lazy(() => import("./oda/OdaWorkspace.jsx"));
+import { ArrowDown, X, AlertTriangle } from "lucide-react";
+import { dissect } from "./markdown.jsx";
 
 const CHIPS = [
-  { label: 'Summarise this deck', feature: 'summary', text: 'Summarise the attached deck into a five-zone executive one-pager.' },
-  { label: 'Benchmark cash-transfer programmes', feature: 'benchmark', text: 'Benchmark cash-transfer programmes in developing countries — what has worked elsewhere and what should the UAE take from it?' },
-  { label: 'Translate for the Chairman', feature: 'translate', text: 'Translate the following note into Emirati-register Arabic suitable for the Chairman: ' },
-  { label: 'Build a briefing deck', feature: 'design', text: 'Build a 6-page ODA briefing deck on our development partnership priorities for 2026.', wizard: true },
-  { label: 'Fast facts on Kenya', feature: 'country-data', text: 'Fast facts on Kenya — population, GDP, life expectancy, poverty, with sources.' },
-  { label: 'Draft a WAM press release', feature: 'media', text: 'Draft a bilingual WAM-style press release announcing a new ODA health partnership in East Africa.' },
-  { label: 'Title these slides', feature: 'action-titles', text: 'Give me 3 ranked action titles for this slide: ' },
-  { label: 'Structure a problem', feature: 'problem-solve', text: 'What should we do about slow disbursement of our development commitments?' },
+  {
+    label: "Summarise this deck",
+    feature: "summary",
+    text: "Summarise the attached deck into a five-zone executive one-pager.",
+  },
+  {
+    label: "Benchmark cash-transfer programmes",
+    feature: "benchmark",
+    text: "Benchmark cash-transfer programmes in developing countries — what has worked elsewhere and what should the UAE take from it?",
+  },
+  {
+    label: "Translate for the Chairman",
+    feature: "translate",
+    text: "Translate the following note into Emirati-register Arabic suitable for the Chairman: ",
+  },
+  {
+    label: "Build a briefing deck",
+    feature: "design",
+    text: "Build a 6-page ODA briefing deck on our development partnership priorities for 2026.",
+    wizard: true,
+  },
+  {
+    label: "Fast facts on Kenya",
+    feature: "country-data",
+    text: "Fast facts on Kenya — population, GDP, life expectancy, poverty, with sources.",
+  },
+  {
+    label: "Draft a WAM press release",
+    feature: "media",
+    text: "Draft a bilingual WAM-style press release announcing a new ODA health partnership in East Africa.",
+  },
+  {
+    label: "Title these slides",
+    feature: "action-titles",
+    text: "Give me 3 ranked action titles for this slide: ",
+  },
+  {
+    label: "Structure a problem",
+    feature: "problem-solve",
+    text: "What should we do about slow disbursement of our development commitments?",
+  },
 ];
 
-const WIZARD_FEATURES = new Set(['design', 'summary', 'media']);
+const WIZARD_FEATURES = new Set(["design", "summary", "media"]);
 
 export default function App() {
   const [convs, setConvs] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [busy, setBusy] = useState(false);
-  const [toast, setToast] = useState(null);        // {message, retry}
+  const [toast, setToast] = useState(null); // {message, retry}
   const [offline, setOffline] = useState(false);
   const [pendingTool, setPendingTool] = useState(null); // feature key selected from sidebar
   const [wizard, setWizard] = useState({ active: false, step: 0 });
@@ -40,21 +92,70 @@ export default function App() {
   const [sidebarOpen] = useState(false);
   const [intelOpen, setIntelOpen] = useState(() => {
     // deep link: /correlation-engine opens Intelligence → country → Correlation tab
-    try { return window.location.pathname.replace(/\/+$/, '') === '/correlation-engine'; } catch { return false; }
+    try {
+      return (
+        window.location.pathname.replace(/\/+$/, "") === "/correlation-engine"
+      );
+    } catch {
+      return false;
+    }
   }); // ODA Intelligence module view
   const [composePrefill, setComposePrefill] = useState(null); // 'oda:compose' handoff (Correlation Engine 'Send to chat' / Quick Query 'Continue in chat')
+  const [selectedPluginIds, setSelectedPluginIds] = useState([]);
   // MSM Analysis module view — /msm-analysis route (deep-linkable + history-integrated)
   const [msmOpen, setMsmOpen] = useState(() => {
-    try { return window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'; } catch { return false; }
+    try {
+      return window.location.pathname.replace(/\/+$/, "") === "/msm-analysis";
+    } catch {
+      return false;
+    }
+  });
+  // ODA Workspace (Phase 3) — /oda route, deep-linkable; the suite home
+  // (executive brief + per-skill quick starts) is preserved untouched at '/'.
+  // One universal workspace: /oda (legacy /oda/live deep links land here too —
+  // the separate Live Render screen was removed 2026-07-23).
+  const [odaOpen, setOdaOpen] = useState(() => {
+    try {
+      return /^\/oda(\/live)?$/.test(
+        window.location.pathname.replace(/\/+$/, ""),
+      );
+    } catch {
+      return false;
+    }
+  });
+  const [connectorCallback, setConnectorCallback] = useState(() => {
+    try {
+      return (
+        window.location.pathname.replace(/\/+$/, "") ===
+        "/connector/auth/callback"
+      );
+    } catch {
+      return false;
+    }
   });
   useEffect(() => {
-    const want = msmOpen ? '/msm-analysis' : '/';
-    try { if (window.location.pathname !== want) window.history.pushState({}, '', want); } catch { /* noop */ }
-  }, [msmOpen]);
+    if (connectorCallback) return;
+    const want = odaOpen ? "/oda" : msmOpen ? "/msm-analysis" : "/";
+    try {
+      if (window.location.pathname !== want)
+        window.history.pushState({}, "", want);
+    } catch {
+      /* noop */
+    }
+  }, [msmOpen, odaOpen, connectorCallback]);
   useEffect(() => {
-    const onPop = () => { try { setMsmOpen(window.location.pathname.replace(/\/+$/, '') === '/msm-analysis'); } catch { /* noop */ } };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
+    const onPop = () => {
+      try {
+        const p = window.location.pathname.replace(/\/+$/, "");
+        setConnectorCallback(p === "/connector/auth/callback");
+        setMsmOpen(p === "/msm-analysis");
+        setOdaOpen(/^\/oda(\/live)?$/.test(p));
+      } catch {
+        /* noop */
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
 
   // Correlation Engine handoff: any component may dispatch
@@ -69,53 +170,260 @@ export default function App() {
       await newChat();
       setComposePrefill({ text, ts: Date.now() });
     };
-    window.addEventListener('oda:compose', onCompose);
-    return () => window.removeEventListener('oda:compose', onCompose);
+    window.addEventListener("oda:compose", onCompose);
+    return () => window.removeEventListener("oda:compose", onCompose);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const streamRef = useRef(null);
-  const draftRef = useRef(null);   // keeps the in-flight user text so an error never loses it
+  const draftRef = useRef(null); // keeps the in-flight user text so an error never loses it
   const liveMsgRef = useRef(null);
   // 2026-07-20 UX pass: stop-generation + stall watchdog + composer refocus
-  const abortRef = useRef(null);         // AbortController for the in-flight stream
-  const lastFrameRef = useRef(0);        // ms timestamp of the last received frame (stall detection)
-  const composerFocus = () => { try { document.querySelector('.composer textarea')?.focus(); } catch { /* noop */ } };
+  const abortRef = useRef(null); // AbortController for the in-flight stream
+  const lastFrameRef = useRef(0); // ms timestamp of the last received frame (stall detection)
+  const composerFocus = () => {
+    try {
+      document.querySelector(".composer textarea")?.focus();
+    } catch {
+      /* noop */
+    }
+  };
   const userStoppedRef = useRef(false); // distinguishes user Stop (clean end) from stall-abort (retryable)
-  const stopGeneration = () => { userStoppedRef.current = true; try { abortRef.current?.abort(); } catch { /* done */ } };
+  // Resumable-turn tracking (2026-07-26): the server assigns each answer a turnId and tags every
+  // SSE frame with a native id. On a mid-stream drop we reconnect to /api/chat/resume with the
+  // last id seen, so the answer continues from the break point instead of restarting.
+  const turnIdRef = useRef(null);
+  const lastEventIndexRef = useRef(-1);
+  const resumeFailedRef = useRef(false);
+  const stopGeneration = () => {
+    userStoppedRef.current = true;
+    cancelChat(turnIdRef.current); // abort the upstream turn server-side too
+    try {
+      abortRef.current?.abort();
+    } catch {
+      /* done */
+    }
+  };
+  const selectedPluginIdsRef = useRef([]);
+  const lastLoadedConvRef = useRef(null);
+  const [connectors, setConnectors] = useState([]);
+  const [loadingConnectors, setLoadingConnectors] = useState(false);
+  const connectorsFetchRef = useRef(null);
+  const [odaPreset, setOdaPreset] = useState(null);
+  const [odaPresetSkills, setOdaPresetSkills] = useState([]);
+  const [loadingOdaPreset, setLoadingOdaPreset] = useState(true);
+  const [odaPresetEnabled, setOdaPresetEnabled] = useState(() => {
+    try {
+      return sessionStorage.getItem(ODA_PRESET_ENABLED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const odaPresetEnabledRef = useRef(odaPresetEnabled);
+  const odaPresetRef = useRef(odaPreset);
 
   /* ---------- data loading ---------- */
   const refreshConvs = useCallback(async () => {
-    try { setConvs((await jget('/api/conversations')).conversations); } catch { /* non-fatal */ }
+    try {
+      setConvs((await jget("/api/conversations")).conversations);
+    } catch {
+      /* non-fatal */
+    }
   }, []);
-  useEffect(() => { refreshConvs(); }, [refreshConvs]);
+  useEffect(() => {
+    refreshConvs();
+  }, [refreshConvs]);
+
+  // Direct mode: persist messages to the client-side store so switching/reloading
+  // restores them. No-op on the server path. Skip while a message is still live to
+  // avoid a write on every streamed token — the final write lands when live flips off.
+  useEffect(() => {
+    if (!activeId || messages.some((m) => m.live)) return;
+    persistConversation(activeId, messages);
+  }, [messages, activeId]);
 
   useEffect(() => {
-    const on = () => setOffline(false), off = () => setOffline(true);
-    window.addEventListener('online', on); window.addEventListener('offline', off);
-    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+    odaPresetEnabledRef.current = odaPresetEnabled;
+    try {
+      sessionStorage.setItem(
+        ODA_PRESET_ENABLED_KEY,
+        odaPresetEnabled ? "1" : "0",
+      );
+    } catch {
+      /* noop */
+    }
+  }, [odaPresetEnabled]);
+
+  useEffect(() => {
+    odaPresetRef.current = odaPreset;
+  }, [odaPreset]);
+
+  useEffect(() => {
+    if (!odaPresetEnabled || !odaPreset?.chatPlugins?.length) return;
+    setSelectedPluginIds((prev) => {
+      const merged = [
+        ...new Set([...prev, ...normalizePluginIds(odaPreset.chatPlugins)]),
+      ];
+      selectedPluginIdsRef.current = merged;
+      if (activeId) saveConversationConnectors(activeId, merged);
+      return merged;
+    });
+  }, [odaPresetEnabled, odaPreset, activeId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingOdaPreset(true);
+      try {
+        const data = await fetchOdaPreset();
+        if (cancelled) return;
+        setOdaPreset(data.preset || null);
+        setOdaPresetSkills(Array.isArray(data.skills) ? data.skills : []);
+      } catch (err) {
+        if (!cancelled)
+          setToast({ message: `Could not load ODA preset: ${err.message}` });
+      } finally {
+        if (!cancelled) setLoadingOdaPreset(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // OAuth callback lands on a full page load with activeId usually still null.
+  // Consume the pending plugin pick here (not inside the activeId effect).
+  const oauthCarryRef = useRef(false);
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem(PENDING_CONNECTOR_KEY);
+      if (!pending) return;
+      sessionStorage.removeItem(PENDING_CONNECTOR_KEY);
+      const pluginId = normalizePluginIds([pending])[0];
+      if (!pluginId) return;
+
+      oauthCarryRef.current = true;
+      setSelectedPluginIds((prev) => {
+        const ids = prev.includes(pluginId) ? prev : [...prev, pluginId];
+        selectedPluginIdsRef.current = ids;
+        return ids;
+      });
+    } catch {
+      /* private mode */
+    }
+  }, []);
+
+  // Restore connector picks when switching conversations.
+  useEffect(() => {
+    if (!activeId) return;
+    if (lastLoadedConvRef.current === activeId) return;
+    lastLoadedConvRef.current = activeId;
+
+    let ids = loadConversationConnectors(activeId);
+
+    // First activeId attach after OAuth — merge the pick we applied on mount.
+    if (oauthCarryRef.current) {
+      ids = [
+        ...new Set([
+          ...ids,
+          ...normalizePluginIds(selectedPluginIdsRef.current),
+        ]),
+      ];
+      saveConversationConnectors(activeId, ids);
+      oauthCarryRef.current = false;
+    }
+
+    selectedPluginIdsRef.current = ids;
+    setSelectedPluginIds(ids);
+  }, [activeId]);
+
+  const updateSelectedPluginIds = useCallback(
+    (next) => {
+      setSelectedPluginIds((prev) => {
+        const resolved = typeof next === "function" ? next(prev) : next;
+        const ids = normalizePluginIds(resolved);
+        selectedPluginIdsRef.current = ids;
+        saveConversationConnectors(activeId, ids);
+        return ids;
+      });
+    },
+    [activeId],
+  );
+
+  const ensureConnectors = useCallback(
+    async (force = false) => {
+      if (!force && connectors.length) return connectors;
+      if (connectorsFetchRef.current) return connectorsFetchRef.current;
+      setLoadingConnectors(true);
+      connectorsFetchRef.current = (async () => {
+        try {
+          const data = await fetchConnectors();
+          const items = parseConnectorsResponse(data);
+          setConnectors(items);
+          return items;
+        } catch {
+          return [];
+        } finally {
+          setLoadingConnectors(false);
+          connectorsFetchRef.current = null;
+        }
+      })();
+      return connectorsFetchRef.current;
+    },
+    [connectors],
+  );
+
+  useEffect(() => {
+    if (selectedPluginIds.length && !connectors.length && !loadingConnectors) {
+      ensureConnectors();
+    }
+  }, [
+    selectedPluginIds,
+    connectors.length,
+    loadingConnectors,
+    ensureConnectors,
+  ]);
+
+  useEffect(() => {
+    const on = () => setOffline(false),
+      off = () => setOffline(true);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
   }, []);
 
   const loadConversation = async (id) => {
     try {
       const { conversation } = await jget(`/api/conversations/${id}`);
+      lastLoadedConvRef.current = null;
       setActiveId(id);
-      setMessages(conversation.messages.map(m => ({ ...m, live: false })));
+      setMessages(conversation.messages.map((m) => ({ ...m, live: false })));
       setWizard({ active: false, step: 0 });
-    } catch (e) { setToast({ message: e.message }); }
+    } catch (e) {
+      setToast({ message: e.message });
+    }
   };
 
-  const newChat = async (feature = 'chat', opts = {}) => {
+  const newChat = async (feature = "chat", opts = {}) => {
     try {
-      const { conversation } = await jpost('/api/conversations', { feature });
+      const { conversation } = await jpost("/api/conversations", { feature });
+      lastLoadedConvRef.current = null;
       setActiveId(conversation.id);
       setMessages([]);
       setArtifacts({});
-      setPendingTool(feature !== 'chat' ? feature : null);
-      setWizard(opts.wizard ? { active: true, step: 0 } : { active: false, step: 0 });
+      setPendingTool(feature !== "chat" ? feature : null);
+      setWizard(
+        opts.wizard ? { active: true, step: 0 } : { active: false, step: 0 },
+      );
       await refreshConvs();
       return conversation.id;
-    } catch (e) { setToast({ message: e.message }); return null; }
+    } catch (e) {
+      setToast({ message: e.message });
+      return null;
+    }
   };
 
   /* ---------- autoscroll ---------- */
@@ -124,38 +432,105 @@ export default function App() {
     setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 60);
   };
   useEffect(() => {
-    if (atBottom && streamRef.current) streamRef.current.scrollTop = streamRef.current.scrollHeight;
+    if (atBottom && streamRef.current)
+      streamRef.current.scrollTop = streamRef.current.scrollHeight;
   }, [messages, atBottom]);
 
   /* ---------- send ---------- */
   const send = async (text, fileId = null, fileName = null, extra = {}) => {
     let convId = activeId;
-    if (!convId) convId = await newChat(pendingTool || 'chat');
+    if (!convId) convId = await newChat(pendingTool || "chat");
     if (!convId) return;
 
+    // Re-affirm connector selection for this conversation after convId is known.
+    // This beats a race where the activeId effect loads [] from storage before the
+    // first save, and keeps picks visible after the empty-state composer remounts.
+    const sentPluginIds = normalizePluginIds(extra.pluginIds);
+    const ids = sentPluginIds.length
+      ? sentPluginIds
+      : selectedPluginIdsRef.current;
+    selectedPluginIdsRef.current = ids;
+    setSelectedPluginIds(ids);
+    saveConversationConnectors(convId, ids);
+    if (lastLoadedConvRef.current !== convId)
+      lastLoadedConvRef.current = convId;
+
     draftRef.current = { text, fileId, fileName, extra };
-    const userMsg = { id: `u-${Date.now()}`, role: 'user', text, fileName };
+    const userMsg = { id: `u-${Date.now()}`, role: "user", text, fileName };
     const liveMsg = {
-      id: `a-${Date.now()}`, role: 'assistant', text: '', thinking: '',
-      routing: null, pluginStatus: null, answerStarted: false, artifactIds: [], live: true,
+      id: `a-${Date.now()}`,
+      role: "assistant",
+      text: "",
+      // Five independent reasoning channels, one per upstream eventType, mirroring the
+      // OnDemand playground's BotMessageType. Collapsing them into one string loses the
+      // plan/step/answer distinction the status-log and thinking panels render from.
+      thinking: "", // planning_thinking.thinking.delta
+      planningAnswer: "", // planning_output.output.delta
+      pluginThinking: "", // step_thinking.thinking.delta
+      pluginAnswer: "", // step_output.output.delta
+      fulfillmentThinking: "", // fulfillment_thinking.thinking.delta
+      statusLogs: [],
+      // OnDemand Agent (goose) execution channels — one per ondemand_agent.* eventType.
+      // Mirrors the playground's TAgentData handling: append-only agentData, a todo list
+      // (subagent_status merges into it), terminal logs, plus code/token/vnc side-state.
+      agentData: [], // init / progress / thinking / tool_call / tool_result / ...
+      todo: null, // ondemand_agent.todo (+ subagent_status merges)
+      terminalLogs: [], // ondemand_agent.terminal
+      agentCode: "", // code_generated deltas concatenated
+      agentCodeMeta: null, // { title, language }
+      agentTokens: null, // { totalTokens, contextWindow }
+      agentVncUrl: null, // novnc_ready url
+      agentThinking: false, // filler_start/end animation flag
+      agentInitializing: false, // before_init/no_init flag
+      agentCredsRequest: null, // require_creds payload
+      executedAgents: [],
+      retrievedAgents: [],
+      executionLog: null,
+      metrics: null,
+      isOpenLogs: true,
+      routing: null,
+      pluginStatus: null,
+      answerStarted: false,
+      artifactIds: [],
+      live: true,
     };
     liveMsgRef.current = liveMsg;
-    setMessages(m => [...m, userMsg, liveMsg]);
+    // Fresh turn — reset the resume cursor for this answer.
+    turnIdRef.current = null;
+    lastEventIndexRef.current = -1;
+    resumeFailedRef.current = false;
+    setMessages((m) => [...m, userMsg, liveMsg]);
     setBusy(true);
     setToast(null);
 
     const patchLive = (patch) => {
-      Object.assign(liveMsgRef.current, typeof patch === 'function' ? patch(liveMsgRef.current) : patch);
-      setMessages(m => m.map(x => x.id === liveMsgRef.current.id ? { ...liveMsgRef.current } : x));
+      Object.assign(
+        liveMsgRef.current,
+        typeof patch === "function" ? patch(liveMsgRef.current) : patch,
+      );
+      setMessages((m) =>
+        m.map((x) =>
+          x.id === liveMsgRef.current.id ? { ...liveMsgRef.current } : x,
+        ),
+      );
     };
 
     // Auto-reconnect (STEP 9): on a dropped transport we retry with exponential
     // backoff instead of surfacing an error immediately. `attempt` is declared
     // here (not inside the try) so the catch block can still report how many
     // reconnect attempts were made once retries are exhausted.
-    const MAX_RECONNECT_ATTEMPTS = 4;
-    const RECONNECT_BACKOFF_MS = [1000, 2000, 4000, 8000]; // 1s, 2s, 4s, 8s (capped)
+    // With resumable turns (2026-07-26) a reconnect replays from the break point rather than
+    // re-running the query, so it's cheap and safe — we allow more attempts before giving up.
+    const MAX_RECONNECT_ATTEMPTS = 8;
+    const RECONNECT_BACKOFF_MS = [1000, 2000, 4000, 8000]; // 1s, 2s, 4s, 8s (last value reused)
     let attempt = 0;
+    let forceRestart = false; // set when a resume is impossible and a full re-query is safe
+
+    // ODA preset overrides (direct mode): thread the preset's endpoint, reasoning
+    // effort, skills, fulfillment prompt, and modelConfigs into the query — the work
+    // the server used to do via presetQueryOptions. Only applied when the preset is on.
+    const useOdaPreset = Boolean(extra.useOdaPreset ?? odaPresetEnabledRef.current);
+    const presetOpts = useOdaPreset && odaPresetRef.current ? presetQueryOptions(odaPresetRef.current) : {};
 
     // Built once and reused unchanged across reconnects — same conversation payload.
     const payload = {
@@ -163,69 +538,238 @@ export default function App() {
       text,
       fileId,
       feature: extra.feature || pendingTool || undefined,
+      mode: extra.mode || undefined, // explicit FAST/FULL override (e.g. MSM 'Analyse deeper' → one-shot FAST)
       wizard: wizard.active ? { active: true, step: wizard.step } : undefined,
       editTarget: extra.editTarget || undefined,
-      msmVideoId: extra.msmVideoId || undefined, // MSM 'Analyse deeper': server injects the stored transcript as context
+      msmVideoId: extra.msmVideoId || undefined,
+      pluginIds: ids.length ? ids : undefined,
+      useOdaPreset,
+      // Preset-derived query options (endpointId, reasoningEffort, skillIds,
+      // systemPrompt, modelConfigs). streamChatDirect reads these directly.
+      endpointId: presetOpts.endpointId || undefined,
+      reasoningEffort: presetOpts.reasoningEffort || undefined,
+      skillIds: presetOpts.skillIds?.length ? presetOpts.skillIds : undefined,
+      systemPrompt: presetOpts.systemPrompt || undefined,
+      modelConfigs:
+        presetOpts.modelConfigs && Object.keys(presetOpts.modelConfigs).length
+          ? presetOpts.modelConfigs
+          : undefined,
     };
-    // 2026-07-17 passthrough refactor: raw upstream eventTypes arrive directly.
-    //  planning_thinking / step_thinking → live Thinking… accordion (thinking.delta)
-    //  step_output → tool-call lines (deltas assemble {"plugins":[{pluginId,name,api_request_parameters,…}]})
-    //  fulfillment → answer tokens (evt.answer)
-    //  statusLog / metricsLog → status line / metrics (also to debug bus)
+    // 2026-07-17 passthrough refactor: raw upstream eventTypes arrive directly. Each one
+    // owns exactly one field on the live message (playground parity — see liveMsg above):
+    //  planning_thinking  → thinking            step_thinking → pluginThinking
+    //  planning_output    → planningAnswer      step_output   → pluginAnswer (+ tool-call lines)
+    //  fulfillment_thinking → fulfillmentThinking
+    //  fulfillment → answer tokens (evt.answer) → text
+    //  statusLog → statusLogs[] + executed/retrievedAgents · metricsLog → metrics
     //  routing / plugin_status / status / error / done remain locally-synthesized frames.
     const onStreamEvent = (type, evt) => {
       lastFrameRef.current = Date.now(); // stall watchdog heartbeat (any frame)
-      if (type === 'routing') patchLive({ routing: evt });
-      else if (type === 'plugin_status') patchLive({ pluginStatus: `${evt.message}` });
-      else if (type === 'status') { if (!liveMsgRef.current.answerStarted) patchLive({ pluginStatus: evt.message }); }
-      else if (type === 'planning_thinking' || type === 'step_thinking' || type === 'fulfillment_thinking') {
-        // (2026-07-20 fix) GLM 4.7 BYOI in max mode emits fulfillment_thinking deltas
-        // (92 frames in the live eritrea/sudan capture) — previously dropped here, so
-        // the accordion looked stalled while real reasoning streamed. All three
-        // thinking channels now feed the same accordion; answer rendering below is
-        // fully independent of this branch.
+      // `attempt` bounds CONSECUTIVE reconnects-with-no-activity, not a lifetime total for the
+      // turn — a long (up to ~1h) query can hit several transient drops over its life, and each
+      // one that actually resumes and sees traffic again should refill the budget rather than
+      // count down against a fixed ceiling until the whole turn is killed.
+      attempt = 0;
+      if (type === "turn") {
+        // Server handshake: remember this turn so a drop can resume it (never rendered).
+        turnIdRef.current = evt.turnId || null;
+        return;
+      }
+      if (type === "resume_failed") {
+        // The turn is gone server-side — flag it; the retry loop decides fallback.
+        resumeFailedRef.current = true;
+        return;
+      }
+      if (type === "routing") patchLive({ routing: evt });
+      else if (type === "plugin_status")
+        patchLive({ pluginStatus: `${evt.message}` });
+      else if (type === "status") {
+        if (!liveMsgRef.current.answerStarted)
+          patchLive({ pluginStatus: evt.message });
+      } else if (type === "planning_thinking") {
         const delta = evt?.thinking?.delta;
-        if (typeof delta === 'string' && delta.length) patchLive(prev => ({ thinking: (prev.thinking || '') + delta }));
-      } else if (type === 'step_output') {
+        if (typeof delta === "string" && delta.length)
+          patchLive((prev) => ({ thinking: (prev.thinking || "") + delta }));
+      } else if (type === "planning_output") {
+        const delta = evt?.output?.delta;
+        if (typeof delta === "string" && delta.length)
+          patchLive((prev) => ({
+            planningAnswer: (prev.planningAnswer || "") + delta,
+          }));
+      } else if (type === "step_thinking") {
+        const delta = evt?.thinking?.delta;
+        if (typeof delta === "string" && delta.length)
+          patchLive((prev) => ({
+            pluginThinking: (prev.pluginThinking || "") + delta,
+          }));
+      } else if (type === "fulfillment_thinking") {
+        // (2026-07-20) GLM 4.7 BYOI in max mode emits these during the answer itself,
+        // which is why they render below the answer rather than in the thinking panel.
+        const delta = evt?.thinking?.delta;
+        if (typeof delta === "string" && delta.length)
+          patchLive((prev) => ({
+            fulfillmentThinking: (prev.fulfillmentThinking || "") + delta,
+          }));
+      } else if (type === "step_output") {
         // Accumulate raw deltas; parse the plugin-call JSON opportunistically as it completes.
-        patchLive(prev => {
-          const rawArgs = (prev.toolRaw || '') + (evt?.output?.delta || '');
+        patchLive((prev) => {
+          const delta = evt?.output?.delta || "";
+          const rawArgs = (prev.toolRaw || "") + delta;
           let toolCalls = prev.toolCalls || [];
           try {
             const parsed = JSON.parse(rawArgs);
             if (Array.isArray(parsed?.plugins)) {
               toolCalls = parsed.plugins.map((p, i) => ({
-                id: `${p.pluginId || 'plugin'}-${i}`,
-                pluginId: p.pluginId, name: p.name || p.identifier || p.pluginId,
+                id: `${p.pluginId || "plugin"}-${i}`,
+                pluginId: p.pluginId,
+                name: p.name || p.identifier || p.pluginId,
                 args: p.api_request_parameters || p.parameters || {},
-                raw: p, status: 'running',
+                raw: p,
+                status: "running",
               }));
             }
-          } catch { /* JSON still assembling — keep accumulating */ }
-          return { toolRaw: rawArgs, toolCalls };
+          } catch {
+            /* JSON still assembling — keep accumulating */
+          }
+          return {
+            toolRaw: rawArgs,
+            toolCalls,
+            pluginAnswer: (prev.pluginAnswer || "") + delta,
+          };
         });
-      } else if (type === 'fulfillment') {
-        if (typeof evt.answer === 'string') {
+      } else if (type === "fulfillment") {
+        if (typeof evt.answer === "string") {
           // First answer token: flip running tool calls to done (their result feeds this answer).
-          patchLive(prev => ({
-            text: (prev.text || '') + evt.answer,
+          patchLive((prev) => ({
+            text: (prev.text || "") + evt.answer,
             answerStarted: true,
             pluginStatus: null,
-            toolCalls: (prev.toolCalls || []).map(tc => tc.status === 'running' ? { ...tc, status: 'done' } : tc),
+            toolCalls: (prev.toolCalls || []).map((tc) =>
+              tc.status === "running" ? { ...tc, status: "done" } : tc,
+            ),
           }));
         }
-      } else if (type === 'statusLog') {
+      } else if (type === "statusLog") {
         const sl = evt.currentStatusLog;
-        if (sl && !liveMsgRef.current.answerStarted) patchLive({ pluginStatus: sl.statusMessage });
-        // fulfillment_completed → ensure tool lines show done
-        if (sl?.statusType === 'fulfillment_completed') {
-          patchLive(prev => ({ toolCalls: (prev.toolCalls || []).map(tc => ({ ...tc, status: 'done' })) }));
-        }
-      } else if (type === 'metricsLog') {
+        if (!sl) return;
+        if (!liveMsgRef.current.answerStarted)
+          patchLive({ pluginStatus: sl.statusMessage });
+        patchLive((prev) => ({
+          // A summarize_history.completed supersedes its own .initialized entry rather
+          // than stacking a second row for the same operation.
+          statusLogs:
+            sl.statusType === "summarize_history.completed"
+              ? (prev.statusLogs || []).filter(
+                  (x) => x.statusType !== "summarize_history.initialized",
+                )
+              : [...(prev.statusLogs || []), sl],
+          executedAgents: sl.executedAgents?.length
+            ? [...(prev.executedAgents || []), ...sl.executedAgents]
+            : prev.executedAgents,
+          retrievedAgents: sl.retrievedAgents?.length
+            ? [...(prev.retrievedAgents || []), ...sl.retrievedAgents]
+            : prev.retrievedAgents,
+          executionLog:
+            sl.statusType === "execution_log_created" && sl.executionLog
+              ? sl.executionLog
+              : prev.executionLog,
+          toolCalls:
+            sl.statusType === "fulfillment_completed"
+              ? (prev.toolCalls || []).map((tc) => ({ ...tc, status: "done" }))
+              : prev.toolCalls,
+        }));
+      } else if (type === "metricsLog") {
         if (evt.publicMetrics) patchLive({ metrics: evt.publicMetrics });
-      } else if (type === 'planning_output' || type === 'stream_end') {
-        // planning_output: internal plan JSON — debug bus only; stream_end: [DONE] passthrough marker
-      } else if (type === 'error') {
+      } else if (type.startsWith("ondemand_agent.")) {
+        // OnDemand Agent (goose) execution frames. Port of the playground's
+        // handleAgentEvent — same eventType handling, adapted to this app's state model
+        // (fields on the live message) instead of DOM manipulation.
+        const et = type;
+        const data = evt.data || {};
+        if (et === "ondemand_agent.filler_start") {
+          patchLive({ agentThinking: true });
+        } else if (et === "ondemand_agent.filler_end") {
+          patchLive({ agentThinking: false });
+        } else if (et === "ondemand_agent.before_init") {
+          patchLive({ agentInitializing: true });
+        } else if (et === "ondemand_agent.no_init") {
+          patchLive({ agentInitializing: false });
+        } else if (et === "ondemand_agent.novnc_ready") {
+          patchLive({ agentVncUrl: data.novncUrl || data.url || null });
+        } else if (et === "ondemand_agent.novnc_ended") {
+          patchLive({ agentVncUrl: null });
+        } else if (et === "ondemand_agent.todo") {
+          const todo = Array.isArray(data) ? data : data.todo || data.todos || [];
+          patchLive({ todo });
+        } else if (et === "ondemand_agent.subagent_status") {
+          patchLive((prev) => ({
+            todo: (prev.todo || []).map((item) =>
+              item.agent === data.agent
+                ? {
+                    ...item,
+                    status: data.status ?? item.status,
+                    done: data.status === "done" || item.done,
+                    description: data.description ?? item.description,
+                  }
+                : item,
+            ),
+          }));
+        } else if (et === "ondemand_agent.terminal") {
+          patchLive((prev) => ({
+            terminalLogs: [...(prev.terminalLogs || []), data],
+          }));
+        } else if (et === "ondemand_agent.unknown") {
+          /* ignored */
+        } else if (
+          et === "ondemand_agent.code_generation_init" ||
+          et === "ondemand_agent.code_generated"
+        ) {
+          patchLive((prev) => ({
+            agentCodeMeta: {
+              title: data.title ?? prev.agentCodeMeta?.title,
+              language: data.language ?? prev.agentCodeMeta?.language,
+            },
+            agentCode:
+              et === "ondemand_agent.code_generation_init"
+                ? data.delta || ""
+                : (prev.agentCode || "") + (data.delta || ""),
+          }));
+        } else if (et === "ondemand_agent.token_usage") {
+          patchLive({
+            agentTokens: {
+              totalTokens: data.inputTokens ?? data.totalTokens ?? 0,
+              contextWindow: data.contextWindow,
+            },
+          });
+        } else if (et === "ondemand_agent.require_creds") {
+          patchLive({
+            agentCredsRequest: {
+              pluginId: data.pluginId,
+              service: data.service,
+              fields: data.fields,
+              sessionId: evt.sessionId,
+              messageId: evt.messageId,
+            },
+          });
+        } else {
+          // init / progress / tool_call / tool_result / tool_details / completed /
+          // error / skills_used / preview_ready / sandbox_created / file_written / ...
+          patchLive((prev) => ({
+            agentData: [
+              ...(prev.agentData || []),
+              {
+                eventType: et,
+                status: evt.status,
+                agent: evt.agent,
+                data,
+                eventIndex: evt.eventIndex,
+              },
+            ],
+          }));
+        }
+      } else if (type === "stream_end") {
+        // [DONE] passthrough marker — terminal handling lives in the stream loop below
+      } else if (type === "error") {
         // (2026-07-20 fix) Server error frames were ALWAYS fatal+non-retryable, which
         // killed the first typed prompt of a new conversation on the transient
         // session-create 404 — thinking had streamed, then rendering just stopped.
@@ -234,8 +778,11 @@ export default function App() {
         // anything else stays fatal. If answer text already streamed, the retry loop
         // is skipped (retryable=false below) and the partial answer is preserved.
         const err = new Error(evt.userMessage || evt.message);
-        if (/^UPSTREAM_HTTP_(404|5\d\d)$/.test(evt.errorCode || '') && !liveMsgRef.current.answerStarted) {
-          err.errorCode = 'STREAM_DROPPED'; // reuse the bounded 1/2/4/8s backoff path
+        if (
+          /^UPSTREAM_HTTP_(404|5\d\d)$/.test(evt.errorCode || "") &&
+          !liveMsgRef.current.answerStarted
+        ) {
+          err.errorCode = "STREAM_DROPPED"; // reuse the bounded 1/2/4/8s backoff path
         }
         throw err;
       }
@@ -244,57 +791,144 @@ export default function App() {
     try {
       // eslint-disable-next-line no-constant-condition
       while (true) {
+        const ac = new AbortController();
+        abortRef.current = ac;
+        lastFrameRef.current = Date.now();
+        userStoppedRef.current = false;
+        // Retry-on-stall: if NO frame of any kind arrives for 10 minutes the stream is
+        // considered stalled — abort locally; the catch path resumes.
+        const STREAM_STALL_MS = 600_000;
+        const stallTimer = setInterval(() => {
+          if (Date.now() - lastFrameRef.current > STREAM_STALL_MS) {
+            clearInterval(stallTimer);
+            try {
+              ac.abort();
+            } catch {
+              /* done */
+            }
+          }
+        }, 5000);
+        // Track the resume cursor: the highest SSE id forwarded to us this turn.
+        const onIndex = (i) => {
+          if (i > lastEventIndexRef.current) lastEventIndexRef.current = i;
+        };
         try {
-          const ac = new AbortController();
-          abortRef.current = ac;
-          lastFrameRef.current = Date.now();
-          userStoppedRef.current = false;
-          // Retry-on-stall (UX fix e): if NO frame of any kind arrives for 60s the
-          // stream is considered stalled — abort locally; the catch path offers Retry.
-          const stallTimer = setInterval(() => {
-            if (Date.now() - lastFrameRef.current > 60000) { clearInterval(stallTimer); try { ac.abort(); } catch { /* done */ } }
-          }, 5000);
-          try {
-            await streamChat(payload, onStreamEvent, ac.signal);
-          } finally { clearInterval(stallTimer); abortRef.current = null; }
+          const canResume =
+            Boolean(turnIdRef.current) &&
+            lastEventIndexRef.current >= 0 &&
+            !forceRestart;
+          if (canResume) {
+            // Reconnect to the SAME turn and replay only what we missed — no restart.
+            resumeFailedRef.current = false;
+            await resumeChat(
+              turnIdRef.current,
+              lastEventIndexRef.current,
+              onStreamEvent,
+              ac.signal,
+              onIndex,
+            );
+            if (resumeFailedRef.current) {
+              resumeFailedRef.current = false;
+              // Nothing meaningful streamed yet → a full re-query is safe (no duplication).
+              if (
+                !liveMsgRef.current.answerStarted &&
+                !(liveMsgRef.current.text || "").trim()
+              ) {
+                forceRestart = true;
+                turnIdRef.current = null;
+                lastEventIndexRef.current = -1;
+                continue;
+              }
+              // Partial answer already rendered → restarting would duplicate; give up cleanly.
+              throw Object.assign(
+                new Error(
+                  "The stream was interrupted and could not be resumed.",
+                ),
+                { errorCode: "RESUME_FAILED" },
+              );
+            }
+          } else {
+            forceRestart = false;
+            await streamChat(payload, onStreamEvent, ac.signal, onIndex);
+          }
           break; // clean end of stream — leave the retry loop
         } catch (err) {
-          const retryable = err && (err.errorCode === 'STREAM_DROPPED' || err.errorCode === 'NETWORK') && attempt < MAX_RECONNECT_ATTEMPTS;
-          if (!retryable) throw err; // ABORTED, explicit server errors, or retries exhausted
+          // A local stall-abort (not a user Stop) is retryable too — resume past the stall.
+          const isStall =
+            err && err.errorCode === "ABORTED" && !userStoppedRef.current;
+          const retryable =
+            err &&
+            (err.errorCode === "STREAM_DROPPED" ||
+              err.errorCode === "NETWORK" ||
+              isStall) &&
+            attempt < MAX_RECONNECT_ATTEMPTS;
+          if (!retryable) throw err; // user Stop, RESUME_FAILED, explicit server errors, or retries exhausted
           attempt += 1;
-          // Same live message object — only its pluginStatus changes while we wait.
-          patchLive({ pluginStatus: `Reconnecting… (attempt ${attempt})` });
-          await new Promise(resolve => setTimeout(resolve, RECONNECT_BACKOFF_MS[attempt - 1]));
-          // loop re-invokes streamChat with the SAME payload; liveMsgRef/text untouched
+          const resuming = Boolean(turnIdRef.current);
+          patchLive({
+            pluginStatus: `${resuming ? "Resuming" : "Reconnecting"}… (attempt ${attempt})`,
+          });
+          await new Promise((resolve) =>
+            setTimeout(
+              resolve,
+              RECONNECT_BACKOFF_MS[
+                Math.min(attempt - 1, RECONNECT_BACKOFF_MS.length - 1)
+              ],
+            ),
+          );
+          // loop resumes the same turn (or restarts if no turn/answer yet)
+        } finally {
+          clearInterval(stallTimer);
+          abortRef.current = null;
         }
       }
       patchLive({ live: false });
       // advance wizard on success
-      if (wizard.active && wizard.step < 4) setWizard(w => ({ ...w, step: Math.min(w.step + 1, 4) }));
+      if (wizard.active && wizard.step < 4)
+        setWizard((w) => ({ ...w, step: Math.min(w.step + 1, 4) }));
       draftRef.current = null;
       await refreshConvs();
     } catch (e) {
       // UX fix (b): user pressed Stop — end cleanly, keep whatever streamed, no error toast
-      if (e && e.errorCode === 'ABORTED' && userStoppedRef.current) {
+      if (e && e.errorCode === "ABORTED" && userStoppedRef.current) {
         patchLive({ live: false });
         draftRef.current = null;
         await refreshConvs().catch(() => {});
         return;
       }
       // Stall-abort (watchdog) surfaces as ABORTED too — reframe it as a stall with Retry
-      if (e && e.errorCode === 'ABORTED' && !userStoppedRef.current) {
-        e = Object.assign(new Error('The stream stalled (no data for 60s).'), { errorCode: 'STALLED' });
+      if (e && e.errorCode === "ABORTED" && !userStoppedRef.current) {
+        e = Object.assign(
+          new Error("The stream stalled (no data for 10 minutes)."),
+          { errorCode: "STALLED" },
+        );
       }
       // STEP 8: graceful error — keep the draft, offer retry
       // (only reached once all reconnect attempts are exhausted, or for a
       // non-retryable error — a STREAM_DROPPED being retried never lands here)
-      const msg = (e && (e.userMessage || e.message)) || 'Unknown error';
-      const reconnectNote = attempt > 0 ? ` (gave up after ${attempt} reconnect attempt${attempt > 1 ? 's' : ''})` : '';
-      patchLive({ live: false, text: (liveMsgRef.current.text || '') + (liveMsgRef.current.text ? '\n\n' : '') + `> Warning — the stream stopped: ${msg}${reconnectNote}` });
+      const msg = (e && (e.userMessage || e.message)) || "Unknown error";
+      const reconnectNote =
+        attempt > 0
+          ? ` (gave up after ${attempt} reconnect attempt${attempt > 1 ? "s" : ""})`
+          : "";
+      patchLive({
+        live: false,
+        text:
+          (liveMsgRef.current.text || "") +
+          (liveMsgRef.current.text ? "\n\n" : "") +
+          `> Warning — the stream stopped: ${msg}${reconnectNote}`,
+      });
       const draft = draftRef.current;
       setToast({
-        message: /rate|429/i.test(msg) ? 'Rate limited by the model service — your draft is preserved.' : `Something went wrong: ${msg}${reconnectNote}`,
-        retry: draft ? () => { setMessages(m => m.slice(0, -2)); send(draft.text, draft.fileId, draft.fileName, draft.extra); } : null,
+        message: /rate|429/i.test(msg)
+          ? "Rate limited by the model service — your draft is preserved."
+          : `Something went wrong: ${msg}${reconnectNote}`,
+        retry: draft
+          ? () => {
+              setMessages((m) => m.slice(0, -2));
+              send(draft.text, draft.fileId, draft.fileName, draft.extra);
+            }
+          : null,
       });
     } finally {
       setBusy(false);
@@ -305,7 +939,7 @@ export default function App() {
 
   /* ---------- regenerate (hover toolbar retry) ---------- */
   const regenerate = () => {
-    const lastUser = [...messages].reverse().find(m => m.role === 'user');
+    const lastUser = [...messages].reverse().find((m) => m.role === "user");
     if (lastUser && !busy) send(lastUser.text, null, lastUser.fileName || null);
   };
 
@@ -313,8 +947,17 @@ export default function App() {
   const onOption = (optionText) => {
     if (/export as (pptx|docx|pdf|xlsx)/i.test(optionText)) {
       const fmt = optionText.match(/pptx|docx|pdf|xlsx/i)[0].toLowerCase();
-      const lastAsst = [...messages].reverse().find(m => m.role === 'assistant' && !m.live && (m.text || '').length > 120);
-      if (lastAsst) { doExport(lastAsst.id, fmt); if (wizard.active) setWizard(w => ({ ...w, step: 4 })); return; }
+      const lastAsst = [...messages]
+        .reverse()
+        .find(
+          (m) =>
+            m.role === "assistant" && !m.live && (m.text || "").length > 120,
+        );
+      if (lastAsst) {
+        doExport(lastAsst.id, fmt);
+        if (wizard.active) setWizard((w) => ({ ...w, step: 4 }));
+        return;
+      }
     }
     send(optionText);
   };
@@ -325,122 +968,295 @@ export default function App() {
     try {
       // server messages have real ids; live client ids need the latest server message — fall back to server fetch
       let msgId = messageId;
-      if (String(messageId).startsWith('a-')) {
+      if (String(messageId).startsWith("a-")) {
         const { conversation } = await jget(`/api/conversations/${activeId}`);
-        const lastAsst = [...conversation.messages].reverse().find(m => m.role === 'assistant');
+        const lastAsst = [...conversation.messages]
+          .reverse()
+          .find((m) => m.role === "assistant");
         msgId = lastAsst?.id;
       }
-      const { artifact } = await jpost('/api/export', { conversationId: activeId, messageId: msgId, format });
-      setArtifacts(a => ({ ...a, [artifact.id]: artifact }));
-      setMessages(m => m.map(x => x.id === messageId ? { ...x, artifactIds: [...(x.artifactIds || []), artifact.id] } : x));
+      const { artifact } = await jpost("/api/export", {
+        conversationId: activeId,
+        messageId: msgId,
+        format,
+      });
+      setArtifacts((a) => ({ ...a, [artifact.id]: artifact }));
+      setMessages((m) =>
+        m.map((x) =>
+          x.id === messageId
+            ? { ...x, artifactIds: [...(x.artifactIds || []), artifact.id] }
+            : x,
+        ),
+      );
     } catch (e) {
-      setToast({ message: `Export failed: ${e.message}`, retry: () => doExport(messageId, format) });
-    } finally { setExportBusy(false); }
+      setToast({
+        message: `Export failed: ${e.message}`,
+        retry: () => doExport(messageId, format),
+      });
+    } finally {
+      setExportBusy(false);
+    }
   };
 
   /* ---------- preview edit click (STEP 6) ---------- */
   const onEditRequest = (sectionHeading) => {
     const note = prompt(`Edit "${sectionHeading}" — what should change?`);
-    if (note) send(`In the section/slide "${sectionHeading}": ${note}`, null, null, { editTarget: sectionHeading });
+    if (note)
+      send(`In the section/slide "${sectionHeading}": ${note}`, null, null, {
+        editTarget: sectionHeading,
+      });
   };
 
   /* ---------- derived ---------- */
-  const latestDraftMsg = [...messages].reverse().find(m => m.role === 'assistant' && (m.text || '').length > 0);
+  const latestDraftMsg = [...messages]
+    .reverse()
+    .find((m) => m.role === "assistant" && (m.text || "").length > 0);
   const latestDraft = latestDraftMsg ? dissect(latestDraftMsg.text) : null;
   const isEmpty = messages.length === 0;
   const activeFeature = pendingTool;
 
   const startTool = (key) => {
-    setIntelOpen(false); setMsmOpen(false);
+    setIntelOpen(false);
+    setMsmOpen(false);
     newChat(key, { wizard: WIZARD_FEATURES.has(key) });
   };
 
   /* MSM 'Analyse deeper' — open a chat with the stored transcript injected server-side */
   const analyseDeeper = async (video) => {
     setMsmOpen(false);
-    const convId = await newChat('chat');
+    const convId = await newChat("chat");
     if (!convId) return;
     const title = video.title || `YouTube ${video.videoId}`;
     send(
       `Analyse this broadcast segment in depth for ODA leadership: "${title}" (${video.videoId}). Assess the framing, the implications for UAE/Gulf development narratives, and any follow-up ODA should consider. Ground everything in the attached transcript.`,
-      null, null, { msmVideoId: video.videoId },
+      // Force problem-solve in FAST mode: deliver ONE complete analysis workbook in a single
+      // reply, not the interactive stepwise FULL flow ("shall we proceed to step 2?").
+      null,
+      null,
+      { msmVideoId: video.videoId, feature: "problem-solve", mode: "FAST" },
     );
   };
 
   return (
     <div className="app">
       <LightboxHost />
-      <Sidebar conversations={convs} activeId={activeId}
-        onSelect={(id) => { setIntelOpen(false); setMsmOpen(false); loadConversation(id); }}
-        onNew={() => { setIntelOpen(false); setMsmOpen(false); newChat('chat'); }}
-        onTool={startTool}
-        onIntel={() => { setMsmOpen(false); setIntelOpen(true); }} intelActive={intelOpen}
-        onMsm={() => { setIntelOpen(false); setMsmOpen(true); }} msmActive={msmOpen}
-        open={sidebarOpen} />
-      {msmOpen ? (
+      <Sidebar
+        conversations={convs}
+        activeId={activeId}
+        onSelect={(id) => {
+          setIntelOpen(false);
+          setMsmOpen(false);
+          setOdaOpen(false);
+          loadConversation(id);
+        }}
+        onNew={() => {
+          setIntelOpen(false);
+          setMsmOpen(false);
+          setOdaOpen(false);
+          newChat("chat");
+        }}
+        onTool={(k) => {
+          setOdaOpen(false);
+          startTool(k);
+        }}
+        onIntel={() => {
+          setMsmOpen(false);
+          setOdaOpen(false);
+          setIntelOpen(true);
+        }}
+        intelActive={intelOpen}
+        onMsm={() => {
+          setIntelOpen(false);
+          setOdaOpen(false);
+          setMsmOpen(true);
+        }}
+        msmActive={msmOpen}
+        onOda={() => {
+          setIntelOpen(false);
+          setMsmOpen(false);
+          setOdaOpen(true);
+        }}
+        odaActive={odaOpen}
+        open={sidebarOpen}
+      />
+      {connectorCallback ? (
+        <ConnectorAuthCallback />
+      ) : odaOpen ? (
+        <React.Suspense
+          fallback={
+            <div
+              className="main main--intel"
+              style={{
+                display: "grid",
+                placeItems: "center",
+                color: "#9ca3af",
+                fontSize: 13,
+              }}
+            >
+              Opening the ODA workspace…
+            </div>
+          }
+        >
+          <OdaWorkspace onExit={() => setOdaOpen(false)} />
+        </React.Suspense>
+      ) : msmOpen ? (
         <div className="main main--intel">
-          <MsmDashboard onExit={() => setMsmOpen(false)} onAnalyseDeeper={analyseDeeper} />
+          <MsmDashboard
+            onExit={() => setMsmOpen(false)}
+            onAnalyseDeeper={analyseDeeper}
+          />
         </div>
       ) : intelOpen ? (
         <div className="main main--intel">
           <IntelDashboard onExit={() => setIntelOpen(false)} />
         </div>
       ) : (
-      <div className="main">
-        {offline && <div className="banner">You appear to be offline — your draft is kept locally and nothing has been lost. Reconnect to continue.</div>}
-        <div className="canvas-row">
-          <div className="chatcol">
-            {isEmpty ? (
-              /* STEP 3 — empty state */
-              <div className="empty">
-                <h1>What are we producing today?</h1>
-                <div style={{ width: 'min(720px, 92%)' }}>
-                  {busy && !messages.some(m => m.live && (m.answerStarted || m.thinking)) && <div className="composer-wait"><BilingualLoader size="sm" label="Working…" /></div>}
-                  <ComposerInline onSend={send} busy={busy} onError={(m) => setToast({ message: m })} activeFeature={activeFeature} prefill={composePrefill} />
-                </div>
-                <div className="chips">
-                  {CHIPS.map(c => (
-                    <button key={c.label} className="chip" onClick={async () => {
-                      await newChat(c.feature, { wizard: Boolean(c.wizard) });
-                      if (!c.text.endsWith(' ')) send(c.text, null, null, { feature: c.feature });
-                    }}>{c.label}</button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="stream" ref={streamRef} onScroll={onScroll}>
-                  <div className="stream__inner">
-                    {messages.map(m => m.role === 'user'
-                      ? <UserMessage key={m.id} msg={m} />
-                      : <AssistantMessage key={m.id} msg={m} live={m.live} onOption={onOption} onExport={doExport} exportBusy={exportBusy} artifacts={artifacts} onRetry={regenerate} />)}
+        <div className="main">
+          {offline && (
+            <div className="banner">
+              You appear to be offline — your draft is kept locally and nothing
+              has been lost. Reconnect to continue.
+            </div>
+          )}
+          <div className="canvas-row">
+            <div className="chatcol">
+              {isEmpty ? (
+                /* STEP 3 — empty state */
+                <div className="empty">
+                  <h1>What are we producing today?</h1>
+                  <div style={{ width: "min(720px, 92%)" }}>
+                    {busy &&
+                      !messages.some(
+                        (m) => m.live && (m.answerStarted || m.thinking),
+                      ) && (
+                        <div className="composer-wait">
+                          <BilingualLoader size="sm" label="Working…" />
+                        </div>
+                      )}
+                    <ComposerInline
+                      onSend={send}
+                      busy={busy}
+                      onError={(m) => setToast({ message: m })}
+                      activeFeature={activeFeature}
+                      prefill={composePrefill}
+                      selectedPluginIds={selectedPluginIds}
+                      onSelectedPluginIdsChange={updateSelectedPluginIds}
+                      connectors={connectors}
+                      loadingConnectors={loadingConnectors}
+                      onEnsureConnectors={ensureConnectors}
+                      odaPreset={odaPreset}
+                      odaPresetSkills={odaPresetSkills}
+                      odaPresetEnabled={odaPresetEnabled}
+                      onOdaPresetEnabledChange={setOdaPresetEnabled}
+                      loadingOdaPreset={loadingOdaPreset}
+                    />
+                  </div>
+                  <div className="chips">
+                    {CHIPS.map((c) => (
+                      <button
+                        key={c.label}
+                        className="chip"
+                        onClick={async () => {
+                          await newChat(c.feature, {
+                            wizard: Boolean(c.wizard),
+                          });
+                          if (!c.text.endsWith(" "))
+                            send(c.text, null, null, { feature: c.feature });
+                        }}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                {!atBottom && (
-                  <button className="jump" onClick={() => { streamRef.current.scrollTop = streamRef.current.scrollHeight; setAtBottom(true); }}>
-                    <ArrowDown size={13} aria-hidden style={{ verticalAlign: '-2px' }} /> Jump to bottom
-                  </button>
-                )}
-                <div className="composer-wrap">
-                  {busy && !messages.some(m => m.live && (m.answerStarted || m.thinking)) && <div className="composer-wait"><BilingualLoader size="sm" label="Working…" /></div>}
-                  <Composer onSend={send} busy={busy} onError={(m) => setToast({ message: m })} prefill={composePrefill}
-                    placeholder={activeFeature ? placeholderFor(activeFeature) : 'Message the ODA suite…'} />
-                  {busy && (
-                    <button type="button" className="stopgen" onClick={stopGeneration} aria-label="Stop generating" title="Stop generating">
-                      <span className="stopgen__sq" aria-hidden /> Stop generating
+              ) : (
+                <>
+                  <div className="stream" ref={streamRef} onScroll={onScroll}>
+                    <div className="stream__inner">
+                      {messages.map((m) =>
+                        m.role === "user" ? (
+                          <UserMessage key={m.id} msg={m} />
+                        ) : (
+                          <AssistantMessage
+                            key={m.id}
+                            msg={m}
+                            live={m.live}
+                            onOption={onOption}
+                            artifacts={artifacts}
+                            onRetry={regenerate}
+                          />
+                        ),
+                      )}
+                    </div>
+                  </div>
+                  {!atBottom && (
+                    <button
+                      className="jump"
+                      onClick={() => {
+                        streamRef.current.scrollTop =
+                          streamRef.current.scrollHeight;
+                        setAtBottom(true);
+                      }}
+                    >
+                      <ArrowDown
+                        size={13}
+                        aria-hidden
+                        style={{ verticalAlign: "-2px" }}
+                      />{" "}
+                      Jump to bottom
                     </button>
                   )}
-                  <div className="composer-hint">glm-4.7 (Cerebras BYOI) · max reasoning · every figure sourced or flagged · one verified deliverable per run</div>
-                </div>
-              </>
-            )}
+                  <div className="composer-wrap">
+                    {busy &&
+                      !messages.some(
+                        (m) => m.live && (m.answerStarted || m.thinking),
+                      ) && (
+                        <div className="composer-wait">
+                          <BilingualLoader size="sm" label="Working…" />
+                        </div>
+                      )}
+                    <Composer
+                      onSend={send}
+                      onStop={stopGeneration}
+                      busy={busy}
+                      onError={(m) => setToast({ message: m })}
+                      prefill={composePrefill}
+                      placeholder={
+                        activeFeature
+                          ? placeholderFor(activeFeature)
+                          : "Message the ODA suite…"
+                      }
+                      selectedPluginIds={selectedPluginIds}
+                      onSelectedPluginIdsChange={updateSelectedPluginIds}
+                      connectors={connectors}
+                      loadingConnectors={loadingConnectors}
+                      onEnsureConnectors={ensureConnectors}
+                      odaPreset={odaPreset}
+                      odaPresetSkills={odaPresetSkills}
+                      odaPresetEnabled={odaPresetEnabled}
+                      onOdaPresetEnabledChange={setOdaPresetEnabled}
+                      loadingOdaPreset={loadingOdaPreset}
+                    />
+                    <div className="composer-hint">
+                      glm-4.7 (Cerebras BYOI) · max reasoning · every figure
+                      sourced or flagged · one verified deliverable per run
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            {/* STEP 6 — wizard + live preview */}
+            <PreviewPane
+              wizard={wizard}
+              latestDraft={latestDraft}
+              onEditRequest={onEditRequest}
+              onCloseWizard={() => setWizard({ active: false, step: 0 })}
+            />
           </div>
-          {/* STEP 6 — wizard + live preview */}
-          <PreviewPane wizard={wizard} latestDraft={latestDraft} onEditRequest={onEditRequest}
-            onCloseWizard={() => setWizard({ active: false, step: 0 })} />
+          <footer className="app-footer">
+            <span className="app-footer__brand">ODA Productivity Suite</span>
+          </footer>
         </div>
-        <footer className="app-footer"><span className="app-footer__brand">ODA Productivity Suite</span></footer>
-      </div>
       )}
       <DebugDrawer />
 
@@ -449,8 +1265,24 @@ export default function App() {
         <div className="toast">
           <span className="dot" />
           <span>{toast.message}</span>
-          {toast.retry && <button onClick={() => { const r = toast.retry; setToast(null); r(); }}>Retry</button>}
-          <button className="x" onClick={() => setToast(null)} aria-label="Dismiss"><X size={13} aria-hidden /></button>
+          {toast.retry && (
+            <button
+              onClick={() => {
+                const r = toast.retry;
+                setToast(null);
+                r();
+              }}
+            >
+              Retry
+            </button>
+          )}
+          <button
+            className="x"
+            onClick={() => setToast(null)}
+            aria-label="Dismiss"
+          >
+            <X size={13} aria-hidden />
+          </button>
         </div>
       )}
     </div>
@@ -458,25 +1290,62 @@ export default function App() {
 }
 
 function placeholderFor(f) {
-  return {
-    design: 'Describe the deck or one-pager to build…',
-    summary: 'Attach a deck/doc and ask for the five-zone one-pager…',
-    'problem-solve': 'State the problem to work…',
-    benchmark: 'What programmes should we benchmark?',
-    translate: 'Paste the English text to render in Emirati-register Arabic…',
-    media: 'Describe the announcement or communications need…',
-    'action-titles': 'Paste the slide content to title…',
-    'country-data': 'Which country and which indicators?',
-  }[f] || 'Message the ODA suite…';
+  return (
+    {
+      design: "Describe the deck or one-pager to build…",
+      summary: "Attach a deck/doc and ask for the five-zone one-pager…",
+      "problem-solve": "State the problem to work…",
+      benchmark: "What programmes should we benchmark?",
+      translate: "Paste the English text to render in Emirati-register Arabic…",
+      media: "Describe the announcement or communications need…",
+      "action-titles": "Paste the slide content to title…",
+      "country-data": "Which country and which indicators?",
+    }[f] || "Message the ODA suite…"
+  );
 }
 
 /* Slim composer reused inside the empty state (no border box duplication) */
-function ComposerInline({ onSend, busy, onError, activeFeature, prefill }) {
+function ComposerInline({
+  onSend,
+  busy,
+  onError,
+  activeFeature,
+  prefill,
+  selectedPluginIds,
+  onSelectedPluginIdsChange,
+  connectors,
+  loadingConnectors,
+  onEnsureConnectors,
+  odaPreset,
+  odaPresetSkills,
+  odaPresetEnabled,
+  onOdaPresetEnabledChange,
+  loadingOdaPreset,
+}) {
   // Reuse the standard Composer but style-flattened: simplest is to render it directly.
   return (
-    <div style={{ width: '100%' }}>
-      <Composer onSend={onSend} busy={busy} onError={onError} prefill={prefill}
-        placeholder={activeFeature ? placeholderFor(activeFeature) : 'Describe the deliverable — a deck, a one-pager, a benchmark, a translation…'} />
+    <div style={{ width: "100%" }}>
+      <Composer
+        onSend={onSend}
+        busy={busy}
+        onError={onError}
+        prefill={prefill}
+        selectedPluginIds={selectedPluginIds}
+        onSelectedPluginIdsChange={onSelectedPluginIdsChange}
+        connectors={connectors}
+        loadingConnectors={loadingConnectors}
+        onEnsureConnectors={onEnsureConnectors}
+        odaPreset={odaPreset}
+        odaPresetSkills={odaPresetSkills}
+        odaPresetEnabled={odaPresetEnabled}
+        onOdaPresetEnabledChange={onOdaPresetEnabledChange}
+        loadingOdaPreset={loadingOdaPreset}
+        placeholder={
+          activeFeature
+            ? placeholderFor(activeFeature)
+            : "Describe the deliverable — a deck, a one-pager, a benchmark, a translation…"
+        }
+      />
     </div>
   );
 }

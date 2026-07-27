@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ODA Productivity Suite</title>
   <link rel="icon" type="image/png" href="/oda-logo.png" />
+  <!-- ODA design-system faces (Phase 3): Montserrat + Lora + Noto Naskh Arabic via
+       Google Fonts (all SIL OFL). Sakkal Majalla is a Microsoft/Monotype system font
+       and is NOT web-embeddable — CSS stacks list it FIRST as a local fallback with
+       Noto Naskh Arabic as the embedded Arabic face. The @font-face rules below keep
+       the self-hosted woff2 subsets as an offline fallback for sandbox environments. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;700&display=swap" />
   <style>
     @font-face { font-family: 'Inter'; font-weight: 400; font-style: normal; font-display: swap; src: url('/fonts/inter-latin-400-normal.woff2') format('woff2'); }
       @font-face { font-family: 'Inter'; font-weight: 500; font-style: normal; font-display: swap; src: url('/fonts/inter-latin-500-normal.woff2') format('woff2'); }
