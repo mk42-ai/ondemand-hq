@@ -1,0 +1,10 @@
+{
+  "name": "blender-mcp-status",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Blender MCP Bridge - OnDemand Integration Status dashboard",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {},
+  "engines": { "node": ">=18" }
+}

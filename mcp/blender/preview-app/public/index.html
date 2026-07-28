@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blender MCP Bridge — OnDemand Integration Status</title>
+<style>
+  :root {
+    --green: #159a7a;
+    --green-accent: #1dac89;
+    --green-soft: #e8f6f2;
+    --green-line: #cbe9e0;
+    --amber: #b45309;
+    --amber-soft: #fef3c7;
+    --red: #b91c1c;
+    --red-soft: #fee2e2;
+    --ink: #1f2937;
+    --ink-soft: #4b5563;
+    --ink-faint: #6b7280;
+    --line: #e5e7eb;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 28px 88px; }
+
+  /* ---------- Header ---------- */
+  .masthead {
+    border-top: 5px solid var(--green);
+    background: linear-gradient(180deg, var(--green-soft) 0%, #ffffff 100%);
+    border-bottom: 1px solid var(--green-line);
+    padding: 46px 0 38px;
+    margin-bottom: 44px;
+  }
+  .masthead .wrap { padding-bottom: 0; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--green); background: #fff; border: 1px solid var(--green-line);
+    border-radius: 999px; padding: 5px 13px; margin-bottom: 18px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-accent); display: inline-block; }
+  h1 {
+    margin: 0 0 10px; font-size: clamp(27px, 4vw, 40px);
+    line-height: 1.18; font-weight: 750; letter-spacing: -0.02em; color: #0f2f28;
+  }
+  .subtitle { margin: 0; font-size: 15.5px; color: var(--ink-soft); font-family: var(--mono); }
+
+  /* ---------- Sections ---------- */
+  section { margin-bottom: 48px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    border-bottom: 2px solid var(--green-line); padding-bottom: 11px; margin-bottom: 26px;
+  }
+  h2 {
+    margin: 0; font-size: 13px; font-weight: 750; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--green);
+  }
+  .section-note { margin: 0; font-size: 13.5px; color: var(--ink-faint); }
+
+  /* ---------- Registration ---------- */
+  .reg-card {
+    border: 1px solid var(--line); border-left: 5px solid var(--amber);
+    border-radius: 12px; padding: 30px 32px; background: #fffdf8;
+    box-shadow: 0 1px 3px rgba(16,24,40,.05);
+  }
+  .status-badge {
+    display: inline-block; background: #b45309; color: #fff8e7;
+    font-family: var(--mono); font-size: clamp(15px, 2.2vw, 21px); font-weight: 700;
+    letter-spacing: .01em; padding: 15px 26px; border-radius: 10px;
+    border: 1px solid #92400e; box-shadow: 0 2px 8px rgba(180,83,9,.22);
+  }
+  .kv-row {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin: 22px 0 20px; padding: 13px 18px;
+    background: var(--amber-soft); border: 1px solid #fcd34d; border-radius: 9px;
+  }
+  .kv-row .kv-label {
+    font-size: 11px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; color: #92400e;
+  }
+  .kv-row .kv-value { font-family: var(--mono); font-size: 16px; font-weight: 700; color: #7c2d12; }
+  .code-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 8px;
+  }
+  pre.codeblock {
+    margin: 0; padding: 16px 18px; overflow-x: auto;
+    background: #0f2f28; color: #d7f2ea; border-radius: 9px;
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.6;
+  }
+
+  /* ---------- Tool grid ---------- */
+  .chip {
+    display: inline-block; background: var(--green-soft); color: var(--green);
+    border: 1px solid var(--green-line); border-radius: 999px;
+    padding: 3px 12px; font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  }
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+  .tool-card {
+    border: 1px solid var(--line); border-top: 3px solid var(--green-accent);
+    border-radius: 11px; padding: 18px 20px 20px; background: #fff;
+    transition: box-shadow .16s ease, transform .16s ease, border-color .16s ease;
+  }
+  .tool-card:hover {
+    box-shadow: 0 6px 18px rgba(21,154,122,.13); transform: translateY(-2px); border-color: var(--green-line);
+  }
+  .tool-card--danger { border-top-color: var(--red); background: #fffafa; }
+  .tool-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+  .tool-card__name {
+    margin: 0; font-family: var(--mono); font-size: 14.5px; font-weight: 700;
+    color: #0f2f28; word-break: break-word;
+  }
+  .tool-card__desc { margin: 0; font-size: 13.6px; color: var(--ink-soft); }
+  .pill {
+    flex: none; font-family: var(--mono); font-size: 10px; font-weight: 750; letter-spacing: .09em;
+    padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .pill-danger { background: var(--red); color: #fff; border: 1px solid #7f1d1d; }
+
+  /* ---------- Diagnostics ---------- */
+  .table-shell { border: 1px solid var(--green-line); border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.3px; }
+  th, td { text-align: left; padding: 14px 20px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:nth-child(even) { background: #fafdfc; }
+  th[scope="row"] {
+    width: 240px; font-weight: 650; color: var(--green); background: #f5fbf9;
+    border-right: 1px solid var(--green-line); white-space: nowrap;
+  }
+  td.mono, .mono { font-family: var(--mono); font-size: 13.4px; }
+  footer {
+    border-top: 1px solid var(--line); padding-top: 22px; margin-top: 8px;
+    font-size: 12.5px; color: var(--ink-faint); display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  }
+  @media (max-width: 620px) {
+    .wrap { padding: 0 18px 60px; }
+    th[scope="row"] { width: auto; white-space: normal; }
+    th, td { padding: 11px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot"></span> OnDemand · Integration Report</span>
+    <h1>Blender MCP Bridge — OnDemand Integration Status</h1>
+    <p class="subtitle">ondemand-blender-mcp v1.5.6 · MCP protocol 2025-06-18</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="registration">
+    <div class="section-head">
+      <h2>Registration Status</h2>
+      <p class="section-note">Plugin registration against the OnDemand plugin API</p>
+    </div>
+    <div class="reg-card">
+      <div class="status-badge">REGISTRATION FAILED — HTTP 400 invalid_request</div>
+      <div class="kv-row">
+        <span class="kv-label">Plugin identifier</span>
+        <span class="kv-value">pluginId: NOT ISSUED</span>
+      </div>
+      <p class="code-label">Response body</p>
+      <pre class="codeblock"><code>{&quot;message&quot;:&quot;schema is required&quot;,&quot;errorCode&quot;:&quot;invalid_request&quot;}</code></pre>
+    </div>
+  </section>
+
+  <section id="tools">
+    <div class="section-head">
+      <h2>MCP Tool Surface</h2>
+      <span class="chip">14 tools</span>
+      <p class="section-note">Exposed by the Blender MCP server; none were invoked during verification</p>
+    </div>
+    <div class="tool-grid">
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">get_scene_info</h3>
+        </header>
+        <p class="tool-card__desc">Inspect the active Blender scene. Returns the scene name, the object count and every object with its type, location, rotation and scale. Call this before mutating the scene so you act on real object names.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">get_object_info</h3>
+        </header>
+        <p class="tool-card__desc">Get detailed information about one named object: transform, assigned materials, and mesh statistics (vertex, edge and polygon counts).</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">get_viewport_screenshot</h3>
+        </header>
+        <p class="tool-card__desc">Capture the current 3D viewport as a PNG image and return it base64-encoded, so the agent can visually verify the scene.</p>
+      </article>
+      <article class="tool-card tool-card--danger">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">execute_blender_code</h3>
+          <span class="pill pill-danger">UNSANDBOXED</span>
+        </header>
+        <p class="tool-card__desc">Execute arbitrary Python inside the running Blender process with full bpy access. DANGEROUS: unsandboxed — the snippet runs with the privileges of the Blender process and can read or write the filesystem. Disabled unless EXEC_ENABLED=true and the add-on&#x27;s &#x27;Enable Code Execution&#x27; toggle is on. Prefer a first-class tool.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">create_object</h3>
+        </header>
+        <p class="tool-card__desc">Create a primitive mesh, empty, camera or light in the active scene at an optional location, rotation and scale. Returns the object name Blender assigned.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">modify_object</h3>
+        </header>
+        <p class="tool-card__desc">Modify an existing object: move, rotate, scale, rename or toggle its viewport/render visibility. Only the supplied fields change.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">delete_object</h3>
+        </header>
+        <p class="tool-card__desc">Permanently delete a named object from the Blender scene.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">set_material</h3>
+        </header>
+        <p class="tool-card__desc">Create or reuse a material and assign it to an object, setting the Principled BSDF base colour, metallic and roughness values.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">poly_haven_search</h3>
+        </header>
+        <p class="tool-card__desc">Search the Poly Haven CC0 asset library for HDRIs, textures or models. Requires POLYHAVEN_ENABLED=true and the add-on&#x27;s Poly Haven toggle.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">poly_haven_download</h3>
+        </header>
+        <p class="tool-card__desc">Download a Poly Haven asset by slug and import it into the scene (HDRIs become the world environment; models and textures are linked in).</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">sketchfab_search</h3>
+        </header>
+        <p class="tool-card__desc">Search Sketchfab for downloadable 3D models. Requires a Sketchfab API key configured in the Blender add-on preferences.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">sketchfab_download</h3>
+        </header>
+        <p class="tool-card__desc">Download a Sketchfab model by its UID and import it into the Blender scene. Requires a Sketchfab API key in the add-on preferences.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">hyper3d_generate_model</h3>
+        </header>
+        <p class="tool-card__desc">Generate a 3D model from a text prompt using Hyper3D Rodin and import the result into Blender. Requires a Hyper3D API key in the add-on.</p>
+      </article>
+      <article class="tool-card">
+        <header class="tool-card__head">
+          <h3 class="tool-card__name">hunyuan3d_generate_model</h3>
+        </header>
+        <p class="tool-card__desc">Generate a 3D model from text or an image using Hunyuan3D and import the result into Blender. Requires a Hunyuan3D API key in the add-on.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="diagnostics">
+    <div class="section-head">
+      <h2>Diagnostics</h2>
+      <p class="section-note">Evidence captured during the registration attempt</p>
+    </div>
+    <div class="table-shell">
+      <table>
+        <tbody>
+          <tr><th scope="row">Host used</th><td>https://api.on-demand.io</td></tr>
+          <tr><th scope="row">Fallback host</th><td>https://gateway-dev.on-demand.io → HTTP 401 (key is prod-scoped)</td></tr>
+          <tr><th scope="row">Verification session</th><td class="mono">6a684c26a745cb4842705a44</td></tr>
+          <tr><th scope="row">tool_invoked</th><td class="mono">false</td></tr>
+          <tr><th scope="row">Schema validated</th><td>4 operations / 8,969 bytes / openapi-spec-validator PASS</td></tr>
+          <tr><th scope="row">Side effects</th><td>none — GET /plugin/v1/list confirms 0 plugins created</td></tr>
+          <tr><th scope="row">Executed at (UTC)</th><td class="mono">2026-07-28T06:24:34Z</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span>ondemand-blender-mcp v1.5.6 · MCP protocol 2025-06-18</span>
+    <span class="mono">Report generated 2026-07-28T06:24:34Z</span>
+  </footer>
+
+</main>
+</body>
+</html>
