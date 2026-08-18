@@ -1,0 +1,590 @@
+{
+ "date": "2026-08-18",
+ "createdAt": "2026-08-18T15:51:34.308Z",
+ "lastRunAt": "2026-08-18T16:14:36.343Z",
+ "videos": [
+  {
+   "videoId": "tWwnHdABROs",
+   "outlet": "cnn",
+   "subLabel": null,
+   "title": "Iran issues demands to reopen Hormuz. Trump says it's US territory",
+   "author": "CNN",
+   "durationSec": 685,
+   "publishedAt": "2026-08-18T08:05:03-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 10241,
+    "mediaId": "6a847f88ff97fef4b035109e",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "The transcript covers the expiration of a U.S.-Iran memorandum of understanding with no nuclear deal, Iran's new demands for reopening the Strait of Hormuz, and President Trump's social media post labeling the strait as 'new U.S. territory.' Maritime traffic through the strait remains severely restricted after another ship was struck. Analysts note growing Gulf skepticism about U.S. security guarantees and suggest a regional framework, possibly involving Oman as intermediary, may be needed to resolve the standoff. Trump's approval stands at 33% with gas prices at highs ahead of midterm elections.",
+    "sentiment": {
+     "label": "negative",
+     "confidence": 0.85
+    },
+    "odaImpact": {
+     "flag": "High",
+     "reasoning": "Directly涉及 UAE, Gulf security architecture, Strait of Hormuz oil transit, and regional stability — core ODA concerns."
+    },
+    "entities": [
+     "Strait of Hormuz",
+     "Iran",
+     "United States",
+     "Donald Trump",
+     "Oman",
+     "UAE",
+     "Jared Kushner",
+     "South Korea"
+    ],
+    "topics": [
+     "Strait of Hormuz",
+     "US-Iran conflict",
+     "Gulf security",
+     "oil sanctions",
+     "regional partnerships",
+     "maritime security"
+    ],
+    "odaRelevant": true,
+    "thinking": "The transcript is about Iran-US conflict over the Strait of Hormuz, with mentions of UAE, Oman, Gulf states, and regional stability. This is ODA-relevant.",
+    "model": "predefined-glm-5.1+low",
+    "streamed": true,
+    "analysedAt": "2026-08-18T15:52:03.506Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-08-18T15:51:36.357Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 1006,
+     "note": "6a847f8828b48b9dccfee19d"
+    },
+    {
+     "ts": "2026-08-18T15:51:50.717Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 14360,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-08-18T15:51:51.647Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 930,
+     "note": "10241 chars"
+    },
+    {
+     "ts": "2026-08-18T15:51:52.461Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 812,
+     "note": "6a847f98cd8ca06a36bc691c"
+    },
+    {
+     "ts": "2026-08-18T15:52:03.505Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 11044,
+     "note": "answer=1122ch thinking=154ch"
+    }
+   ]
+  },
+  {
+   "videoId": "eOHQ-P10zhg",
+   "outlet": "cnn",
+   "subLabel": null,
+   "title": "Why Trump is again threatening to bomb US ally Oman",
+   "author": "CNN",
+   "durationSec": 97,
+   "publishedAt": "2026-08-18T02:41:58-07:00",
+   "status": "transcription-failed",
+   "transcript": null,
+   "analysis": null,
+   "failReason": "Media API HTTP 500: errors.transcription.not.found",
+   "log": [
+    {
+     "ts": "2026-08-18T15:51:36.258Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 887,
+     "note": "6a847f88cd8ca06a36bc691a"
+    },
+    {
+     "ts": "2026-08-18T15:53:22.422Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 106163,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-08-18T16:13:02.642Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 1012,
+     "note": "6a84848e28b48b9dccfee1c3"
+    },
+    {
+     "ts": "2026-08-18T16:14:20.108Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 77466,
+     "note": "actionStatus=-"
+    }
+   ]
+  },
+  {
+   "videoId": "ga4CYQ_7lKU",
+   "outlet": "fox",
+   "subLabel": null,
+   "title": "Iranian parliament speaker DEFIANT on Strait of Hormuz",
+   "author": "Fox News",
+   "durationSec": 414,
+   "publishedAt": "2026-08-18T07:15:13-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 5966,
+    "mediaId": "6a847f892dea7ef6ada32945",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "President Trump is increasing pressure on Iran over its nuclear program and the standoff at the Strait of Hormuz, warning Oman not to interfere. Iran's parliament speaker remains defiant, stating the Strait will not be reopened unless the U.S. lifts its blockade and sanctions. Analysts suggest Iran may escalate volatility ahead of U.S. mid-term elections, while separate discussions involving Kushner touched on Hamas and the situation in Gaza.",
+    "sentiment": {
+     "label": "negative",
+     "confidence": 0.9
+    },
+    "odaImpact": {
+     "flag": "Watch",
+     "reasoning": "The standoff at the Strait of Hormuz directly impacts Gulf regional stability, a core ODA theme, though the UAE is not explicitly mentioned."
+    },
+    "entities": [
+     "Donald Trump",
+     "Trey Yingst",
+     "Iran",
+     "Oman",
+     "Strait of Hormuz",
+     "Rebecca Heinrich",
+     "Jack Keane",
+     "Kushner"
+    ],
+    "topics": [
+     "Iran nuclear program",
+     "Strait of Hormuz",
+     "U.S.-Iran standoff",
+     "Gulf regional stability",
+     "Hamas",
+     "Gaza"
+    ],
+    "odaRelevant": true,
+    "thinking": "The user wants a JSON object analyzing a broadcast transcript based on ODA themes.\n\nTranscript analysis:\n- Fox News segment about Iran, Strait of Hormuz, US-Iran standoff, nuclear program.\n- President Trump warning Oman, U.S. naval blockade, Iran's parliament speaker defiant.\n- Trey Yingst reporting from Tel Aviv.\n- Kushner mentioned as U.S. negotiator.\n- Rebecca Heinrich (Hudson Institute) and Jack Keane (retired general) commentary.\n- Mentions Hamas, Gaza, Israel.\n- ODA themes: UAE, Gulf, international development, aid, humanitarian affairs, economic development, Abu Dhabi, regional stability.\n- Relevance to ODA: The transcript discusses the Strait of Hormuz, Oman, Iran, regional stability in the Gulf. This is relevant to \"Gulf\" and \"regional stability\" themes. However, it doesn't mention UAE, Abu Dhabi, or development/aid specifically. But Strait of Hormuz and Gulf stability are highly relevant to UAE interests.\n\nSummary: President Trump is increasing pressure on Iran regarding its nuclear program and the Strait of Hormuz standoff. Iran's parliament speaker remains defiant, stating the Strait will not be reopened unless the U.S. lifts the blockade and sanctions. Analysts suggest Iran may increase volatility ahead of U.S. mid-term elections, while discussions also touched on Hamas and Gaza.\n\nSentiment: Negative (conflict, standoff, threats to regional stability). Confidence: 0.9.\n\nodaImpact: Watch. Reasoning: The standoff in the Strait of Hormuz directly impacts Gulf regional stability, a core ODA theme, though UAE is not explicitly mentioned.\n\nEntities: [\"Donald Trump\", \"Trey Yingst\", \"Tel Aviv\", \"Iran\", \"Oman\", \"Strait of Hormuz\", \"Rebecca Heinrich\", \"Jack Keane\", \"Kushner\", \"Hamas\", \"Gaza\"]\n\nTopics: [\"Iran nuclear program\", \"Strait of Hormuz\", \"U.S.-Iran standoff\", \"Regional stability\", \"Hamas\", \"Gaza\"]\n\nodaRelevant: true\n\nLet's refine entities to up to 8: [\"Donald Trump\", \"Trey Yingst\", \"Iran\", \"Oman\", \"Strait of Hormuz\", \"Rebecca Heinrich\", \"Jack Keane\", \"Kushner\"]\n\nLet's refine topics to up to 6: [\"Iran nuclear program\", \"Strait of Hormuz\", \"U.S.-Iran standoff\", \"Gulf regional stability\", \"Hamas\", \"Gaza\"]\n\nJSON format required.",
+    "model": "predefined-glm-5.1+low",
+    "streamed": true,
+    "analysedAt": "2026-08-18T15:51:56.960Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-08-18T15:51:41.725Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 4736,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-08-18T15:51:42.709Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 984,
+     "note": "5966 chars"
+    },
+    {
+     "ts": "2026-08-18T15:51:43.023Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 312,
+     "note": "6a847f8e28b48b9dccfee19e"
+    },
+    {
+     "ts": "2026-08-18T15:51:56.960Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 13937,
+     "note": "answer=982ch thinking=2173ch"
+    }
+   ]
+  },
+  {
+   "videoId": "vaVbCzAEnEQ",
+   "outlet": "fox",
+   "subLabel": null,
+   "title": "EXCLUSIVE: Hamas could be 'VERY CLOSE' to laying down weapons",
+   "author": "Fox News",
+   "durationSec": 786,
+   "publishedAt": "2026-08-18T08:00:23-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 16131,
+    "mediaId": "6a84848f2dea7ef6ada32971",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Jared Kushner reports that Hamas may be 'very close' to laying down its weapons under President Trump's 20-point peace plan, following meetings in Cairo with Hamas officials and a four-hour meeting with PM Netanyahu in Jerusalem. Kushner credits mediators including Egypt, Qatar, Turkey, Saudi Arabia, and the UAE for applying pressure, and highlights that the UAE has been the biggest donor to Gaza, helping the Palestinian people through the framework of the Abraham Accords. He discusses plans for Gaza reconstruction contingent on demilitarization, notes improved aid delivery and reduced malnutrition, and addresses ongoing back-channel negotiations with Iran despite the expiration of a memorandum of understanding.",
+    "sentiment": {
+     "label": "positive",
+     "confidence": 0.78
+    },
+    "odaImpact": {
+     "flag": "Notable",
+     "reasoning": "UAE is explicitly cited as the largest donor to Gaza and a key Abraham Accords partner, reinforcing UAE's role in regional development and stability."
+    },
+    "entities": [
+     "Jared Kushner",
+     "Benjamin Netanyahu",
+     "Hamas",
+     "Khalil Al-Hayya",
+     "Egypt",
+     "Qatar",
+     "United Arab Emirates",
+     "Abraham Accords"
+    ],
+    "topics": [
+     "Gaza ceasefire and disarmament",
+     "Abraham Accords expansion",
+     "Gaza reconstruction and aid",
+     "Palestinian governance reform",
+     "Iran nuclear negotiations",
+     "Regional mediation"
+    ],
+    "odaRelevant": true,
+    "thinking": "The transcript is an interview with Jared Kushner on Fox News about Gaza ceasefire, Hamas disarmament, Abraham Accords, and Iran negotiations.\n\nODA relevance: The transcript mentions UAE (referred to as \"Amiradis\" in the auto-transcript, likely meaning Emiratis) as donors to Gaza and participants in the Abraham Accords. It also mentions Qatar, Egypt, Saudi Arabia, Turkey as mediators. This touches on regional stability and international development themes relevant to ODA.\n\nKey points:\n- Kushner met with Netanyahu and Hamas officials\n- Hamas close to laying down weapons per 20-point peace plan\n- UAE mentioned as biggest donors to Gaza and helping Palestinians through Abraham Accords\n- Abraham Accords expansion discussed\n- Iran negotiations mentioned\n- Aid to Gaza discussed, malnutrition rates, UN spending\n\nSentiment: The coverage portrays UAE positively (biggest donors to Gaza, helping Palestinians). This is positive for UAE/Gulf narratives.\n\nEntities: Kushner, Benjamin Netanyahu, Hamas, Khalil Al-Hayya (transcript says \"Khalil Ala\"), Egypt, Qatar, Trump, UAE (Amiradis)\n\nTopics: Gaza ceasefire, Hamas disarmament, Abraham Accords, Iran negotiations, Gaza reconstruction, Palestinian governance",
+    "model": "predefined-glm-5.1+low",
+    "streamed": true,
+    "analysedAt": "2026-08-18T16:13:23.278Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-08-18T15:53:27.450Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 89493,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-08-18T16:13:02.578Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 948,
+     "note": "6a84848ec4b0a14daca6d463"
+    },
+    {
+     "ts": "2026-08-18T16:13:09.554Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 6976,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-08-18T16:13:10.611Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 1056,
+     "note": "16131 chars"
+    },
+    {
+     "ts": "2026-08-18T16:13:10.933Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 321,
+     "note": "6a84849628b48b9dccfee1c4"
+    },
+    {
+     "ts": "2026-08-18T16:13:23.278Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 12345,
+     "note": "answer=1353ch thinking=1209ch"
+    }
+   ]
+  },
+  {
+   "videoId": "MG10hrQuDT4",
+   "outlet": "aje",
+   "subLabel": null,
+   "title": "How Israeli settlements in the occupied West Bank generate profits for global companies",
+   "author": "Al Jazeera English",
+   "durationSec": 147,
+   "publishedAt": "2026-08-18T06:00:17-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 2169,
+    "mediaId": "6a84848e2dea7ef6ada32970",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "The video examines how Israeli settlements in the occupied West Bank generate profits for global companies across construction, technology, tourism, and banking sectors. It cites a UN report identifying 158 companies profiting from settlements and highlights resource exploitation, including water access restrictions and stone quarrying, costing Palestinians land and livelihoods. The segment estimates Area C and occupied East Jerusalem contribute $30 billion annually to the Israeli economy. The coverage does not reference UAE, Gulf states, or ODA-related development actors.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.3
+    },
+    "odaImpact": {
+     "flag": "None",
+     "reasoning": "No mention of UAE, Gulf states, or ODA-affiliated entities; content focuses on Israeli-Palestinian conflict and corporate profiteering."
+    },
+    "entities": [
+     "United Nations",
+     "Who Profits Research Center",
+     "Caterpillar",
+     "Volvo",
+     "Hyundai",
+     "Google",
+     "Amazon",
+     "Microsoft"
+    ],
+    "topics": [
+     "Israeli settlements",
+     "corporate profiteering",
+     "Palestinian resources",
+     "West Bank occupation",
+     "economic exploitation"
+    ],
+    "odaRelevant": false,
+    "thinking": "The transcript is about Israeli settlements in the West Bank and global companies profiting from them. Let me assess ODA relevance.\n\nODA themes: UAE, Gulf, international development, aid, humanitarian affairs, economic development, Abu Dhabi, regional stability.\n\nThis video is about Israeli settlements, Palestinian territories, economic exploitation. It touches on humanitarian affairs and regional stability tangentially, but does not mention UAE, Gulf, Abu Dhabi, or UAE-led development/aid. It's about Palestine/Israel.\n\nIs this ODA relevant? It touches on humanitarian affairs (Palestinian communities facing water shortages, land seizures) and regional stability (Middle East). But it doesn't mention UAE or Gulf states specifically. However, ODA themes include \"international development, aid, humanitarian affairs\" and \"regional stability.\" The Palestinian issue is a regional stability and humanitarian affairs topic. But the instruction says \"If the content is unrelated to ODA themes, say so honestly.\" \n\nThe video is about Israeli settlements and corporate profiteering in the West Bank. It touches on humanitarian affairs (water shortages, land seizures affecting Palestinians) and regional stability. But it doesn't mention UAE or Gulf. It's borderline. I'll say odaRelevant: false since it doesn't mention UAE/Gulf/Abu Dhabi and is not about UAE development/aid. But humanitarian affairs and regional stability are ODA themes... \n\nLet me be strict: the content is about Israeli-Palestinian conflict, corporate exploitation. It relates to humanitarian affairs and regional stability broadly. I'll mark it as odaRelevant: false with flag None, sentiment neutral, low confidence, since it has no direct UAE/Gulf/development content.",
+    "model": "predefined-glm-5.1+low",
+    "streamed": true,
+    "analysedAt": "2026-08-18T16:13:25.525Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-08-18T15:53:27.441Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 83007,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-08-18T16:13:02.653Z",
+     "step": "media.session",
+     "http": 201,
+     "ms": 1021,
+     "note": "6a84848ec4b0a14daca6d465"
+    },
+    {
+     "ts": "2026-08-18T16:13:10.080Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 7427,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-08-18T16:13:11.938Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 1858,
+     "note": "2169 chars"
+    },
+    {
+     "ts": "2026-08-18T16:13:12.376Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 437,
+     "note": "6a84849828b48b9dccfee1c5"
+    },
+    {
+     "ts": "2026-08-18T16:13:25.524Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 13148,
+     "note": "answer=1252ch thinking=1745ch"
+    }
+   ]
+  },
+  {
+   "videoId": "-QaKjAm3rZs",
+   "outlet": "reuters",
+   "subLabel": null,
+   "title": "Palestinian-American raises US flag at West Bank home",
+   "author": "Reuters",
+   "durationSec": 132,
+   "publishedAt": "2026-08-18T08:24:21-07:00",
+   "status": "transcription-failed",
+   "transcript": null,
+   "analysis": null,
+   "failReason": "Media API HTTP 500: errors.transcription.not.found",
+   "log": [
+    {
+     "ts": "2026-08-18T15:53:27.448Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 3848,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-08-18T16:14:21.643Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 58364,
+     "note": "actionStatus=-"
+    }
+   ]
+  },
+  {
+   "videoId": "tfwsLmqPtnw",
+   "outlet": "bloomberg",
+   "subLabel": null,
+   "title": "Bank of Israel's Yaron Says Next Policy Meeting Will Be a Live One",
+   "author": "Bloomberg Television",
+   "durationSec": 496,
+   "publishedAt": "2026-08-18T08:22:56-07:00",
+   "status": "transcription-failed",
+   "transcript": null,
+   "analysis": null,
+   "failReason": "Media API HTTP 500: errors.transcription.not.found",
+   "log": [
+    {
+     "ts": "2026-08-18T15:53:36.512Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 8658,
+     "note": "actionStatus=-"
+    },
+    {
+     "ts": "2026-08-18T16:14:21.653Z",
+     "step": "transcribe.post",
+     "http": 500,
+     "ms": 56128,
+     "note": "actionStatus=-"
+    }
+   ]
+  },
+  {
+   "videoId": "y-7jSya96x4",
+   "outlet": "bloomberg",
+   "subLabel": null,
+   "title": "Breaking Down the Global Bond Selloff",
+   "author": "Bloomberg Television",
+   "durationSec": 214,
+   "publishedAt": "2026-08-18T06:14:00-07:00",
+   "status": "done",
+   "transcript": {
+    "chars": 3922,
+    "mediaId": "6a847ff8ff97fef4b03510ae",
+    "cached": false
+   },
+   "analysis": {
+    "summary": "Global bond yields are rising toward multi-decade highs, driven by poor fiscal situations in major economies (US, UK, Japan, Germany) and decent global growth. Ira Jersey of Bloomberg Intelligence notes that Japan's bond market is becoming a viable alternative for investors, reducing the US's historical yield advantage. While these global financial shifts impact macroeconomic conditions, the broadcast contains no direct references to UAE, Gulf, or international development themes.",
+    "sentiment": {
+     "label": "neutral",
+     "confidence": 0.2
+    },
+    "odaImpact": {
+     "flag": "None",
+     "reasoning": "No direct mention of UAE, Gulf, or development themes."
+    },
+    "entities": [
+     "Ira Jersey",
+     "Bloomberg Intelligence",
+     "Japan",
+     "Germany",
+     "UK",
+     "US",
+     "Bank of Japan",
+     "Taiwan"
+    ],
+    "topics": [
+     "Global bond selloff",
+     "Rising yields",
+     "Japan bond market",
+     "Fiscal deficits",
+     "Interest rates",
+     "Investment alternatives"
+    ],
+    "odaRelevant": false,
+    "thinking": "The user wants a JSON object analyzing a Bloomberg Television transcript about the global bond selloff.\n\n1.  **Analyze the transcript:**\n    *   Topic: Global bond market selloff, rising yields (Japan, US, UK, Germany).\n    *   Speaker: Ira Jersey (Bloomberg Intelligence), John (host).\n    *   Key points: Japan's 30-year yields rose 7 bps. Fiscal situations in G3+ (Germany, UK, Japan, US) are poor. Growth is decent, leading to central banks raising rates. US is no longer the sole high-yielder; alternatives exist (e.g., Japanese government bonds for Taiwanese insurance companies). Bank of Japan (BOJ) owns a lot but is selling/not reinvesting. Japanese government issuing long bonds (30, 40-year).\n    *   ODA Themes: UAE, Gulf, international development, aid, humanitarian affairs, economic development, Abu Dhabi, regional stability.\n    *   Relevance: The transcript discusses global macroeconomics (bonds, yields, G3 countries) but does *not* mention the UAE, Gulf, or specific ODA themes. It's general financial market analysis.\n\n2.  **Construct the JSON:**\n    *   `summary`: Global bond yields are rising, driven by poor fiscal situations in major economies (US, UK, Japan, Germany) and decent global growth. Japan's bond market is highlighted as a significant alternative for investors now that negative-yielding debt is gone, potentially reducing demand for US bonds.\n    *   `sentiment`: Since there's no ODA-theme content, it should be neutral with low confidence. `{\"label\": \"neutral\", \"confidence\": 0.2}`\n    *   `odaImpact`: `{\"flag\": \"None\", \"reasoning\": \"No mention of UAE, Gulf, or development themes.\"}`\n    *   `entities`: [\"Ira Jersey\", \"Bloomberg Intelligence\", \"Japan\", \"Germany\", \"UK\", \"US\", \"Bank of Japan\", \"Taiwanese insurance company\"] (Max 8).\n    *   `topics`: [\"Global bond selloff\", \"Rising yields\", \"Japan bond market\", \"G3 fiscal situation\", \"Interest rates\", \"Investment alternatives\"]\n    *   `odaRelevant`: false\n\n3.  **Refine JSON:**\n    *   Ensure strict adherence to the requested keys and format.\n    *   Check entity count: 8.\n    *   Check topic count: 6.\n    *   Check summary length: 3-4 sentences.\n\n    *Drafting Summary:* Global bond yields are approaching multi-decade highs due to poor fiscal situations in major economies and decent global growth. Ira Jersey of Bloomberg Intelligence highlights Japan's significant bond market moves, noting that the Bank of Japan's selling and government issuance are creating higher yields. This shift means the US is no longer the sole high-yielder, offering investors alternatives like Japanese government bonds. The discussion focuses on macroeconomic trends without referencing regional development or aid.\n\n    *Checking constraints:* \"If the content is unrelated to ODA themes, say so honestly.\" -> The summary should probably reflect this or the `odaImpact` reasoning should. The prompt says \"A video with no ODA-theme content is sentiment neutral with low confidence, odaRelevant false, and flag None.\"\n\n    Let's refine the summary to be an executive summary for ODA leadership, acknowledging the macro context but noting the lack of direct regional relevance.\n    \"Global bond yields are rising toward multi-decade highs, driven by poor fiscal situations in major economies (US, UK, Japan, Germany) and decent global growth. Ira Jersey of Bloomberg Intelligence notes that Japan's bond market is becoming a viable alternative for investors, reducing the US's historical yield advantage. While these global financial shifts impact macroeconomic conditions, the broadcast contains no direct references to UAE, Gulf, or international development themes.\"\n\n    Sentiment: neutral, 0.2\n    odaImpact: None, \"No direct mention of UAE, Gulf, or development themes.\"\n    Entities: Ira Jersey, Bloomberg Intelligence, Japan, Germany, UK, US, Bank of Japan, Taiwan\n    Topics: Global bond selloff, Rising yields, Japan bond market, Fiscal deficits, Interest rates, Investment alternatives\n    odaRelevant: false\n\n4.  **Final Polish:** Ensure JSON is valid and matches the requested structure exactly.",
+    "model": "predefined-glm-5.1+low",
+    "streamed": true,
+    "analysedAt": "2026-08-18T15:53:58.376Z",
+    "transcriptTruncatedForAnalysis": false
+   },
+   "failReason": null,
+   "log": [
+    {
+     "ts": "2026-08-18T15:53:32.869Z",
+     "step": "transcribe.post",
+     "http": 200,
+     "ms": 4588,
+     "note": "actionStatus=completed"
+    },
+    {
+     "ts": "2026-08-18T15:53:33.884Z",
+     "step": "transcribe.fetchText",
+     "http": 200,
+     "ms": 1015,
+     "note": "3922 chars"
+    },
+    {
+     "ts": "2026-08-18T15:53:34.212Z",
+     "step": "analyse.session",
+     "http": 201,
+     "ms": 327,
+     "note": "6a847ffec4b0a14daca6d441"
+    },
+    {
+     "ts": "2026-08-18T15:53:58.376Z",
+     "step": "analyse.stream",
+     "http": 200,
+     "ms": 24164,
+     "note": "answer=936ch thinking=4091ch"
+    }
+   ]
+  }
+ ],
+ "digest": {
+  "top3": [
+   {
+    "videoId": "tWwnHdABROs",
+    "headline": "Iran issues demands to reopen Hormuz; Trump says it's US territory",
+    "why": "High-flag escalation: Iran sets new Hormuz reopening demands; Trump claims the strait as US territory."
+   },
+   {
+    "videoId": "vaVbCzAEnEQ",
+    "headline": "EXCLUSIVE: Hamas could be 'VERY CLOSE' to laying down weapons",
+    "why": "Kushner reports Hamas near disarmament under Trump's 20-point peace plan after Cairo and Jerusalem talks."
+   },
+   {
+    "videoId": "ga4CYQ_7lKU",
+    "headline": "Iranian parliament speaker DEFIANT on Strait of Hormuz",
+    "why": "Parliament speaker defiant on Hormuz; Trump warns Oman not to interfere in the standoff."
+   }
+  ],
+  "narrative": "Today's mainstream-media picture is dominated by the Strait of Hormuz standoff: Iran issued new demands for reopening the waterway while Trump declared it US territory, and Tehran's parliament speaker struck a defiant tone. Meanwhile, Kushner signaled Hamas may be close to disarmament under a Trump 20-point peace plan following meetings in Cairo and Jerusalem. Non-ODA items covered West Bank settlement economics and a global bond selloff.",
+  "sentimentBalance": {
+   "positive": 1,
+   "neutral": 2,
+   "negative": 2
+  },
+  "flagCounts": {
+   "None": 2,
+   "Watch": 1,
+   "Notable": 1,
+   "High": 1
+  },
+  "analysedCount": 5,
+  "model": "predefined-glm-5.1+low",
+  "streamed": true,
+  "thinking": "The user wants me to pick the top 3 most ODA-relevant stories from the provided list, based on flag priority (High > Notable > Watch), then odaRelevant=true, then geopolitical/economic weight for the Gulf.\n\nLet me analyze:\n\n1. videoId=tWwnHdABROs | flag=High | odaRelevant=true - Iran/Hormuz/Trump\n2. videoId=ga4CYQ_7lKU | flag=Watch | odaRelevant=true - Iran/Hormuz\n3. videoId=vaVbCzAEnEQ | flag=Notable | odaRelevant=true - Hamas/Kushner peace plan\n4. videoId=MG10hrQuDT4 | flag=None | odaRelevant=false - West Bank settlements\n5. videoId=y-7jSya96x4 | flag=None | odaRelevant=false - Global bond selloff\n\nTop 3 by priority:\n1. High flag: tWwnHdABROs\n2. Notable flag: vaVbCzAEnEQ\n3. Watch flag: ga4CYQ_7lKU\n\nNow I need to construct the JSON object.\n\nFor headlines (<=90 chars):\n1. \"Iran issues demands to reopen Hormuz; Trump says it's US territory\" - that's 66 chars, good.\n2. \"EXCLUSIVE: Hamas could be 'VERY CLOSE' to laying down weapons\" - 60 chars, good.\n3. \"Iranian parliament speaker DEFIANT on Strait of Hormuz\" - 56 chars, good.\n\nFor why (<=120 chars):\n1. \"High-flag escalation: Iran sets new Hormuz reopening demands; Trump claims the strait as US territory.\" - 101 chars\n2. \"Kushner reports Hamas near disarmament under Trump's 20-point peace plan after Cairo and Jerusalem talks.\" - 104 chars\n3. \"Parliament speaker defiant on Hormuz; Trump warns Oman not to interfere in the standoff.\" - 88 chars\n\nNarrative (2-3 sentences):\n\"Today's mainstream coverage centers on the Strait of Hormuz standoff, with Iran issuing new reopening demands and Trump asserting US ownership, while Tehran's parliament speaker remains defiant. Separately, Kushner signals Hamas may be close to disarmament under a Trump peace plan. Non-ODA items include West Bank settlement economics and a global bond selloff.\"\n\nLet me refine to be concise and ODA-focused.",
+  "builtAt": "2026-08-18T16:14:36.342Z",
+  "latencyMs": 14686
+ },
+ "schedule": {
+  "cron": "0 6 * * *",
+  "timezone": "Asia/Dubai",
+  "utcEquivalent": "0 2 * * *",
+  "description": "Daily MSM Analysis run at 06:00 Gulf Standard Time (Asia/Dubai, UTC+4 = 02:00 UTC). Fire POST /api/msm/run {\"date\":\"<gulf-date>\"} — the run is idempotent: already-transcribed videos are served from the store, so repeated fires only fill gaps."
+ }
+}
