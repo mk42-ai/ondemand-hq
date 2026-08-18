@@ -106,6 +106,19 @@ export const SEED = {
     { videoId: '8JiBcDpSN4s', outlet: 'bloomberg' },
     { videoId: 'ySpUV2M2lGo', outlet: 'bloomberg' },
   ],
+  // resolved 2026-08-18 live from official channel RSS feeds
+  // (youtube.com/feeds/videos.xml?channel_id=...) — latest uploads dated 2026-08-18
+  // on the recurring themes: Strait of Hormuz / Iran, Israel-Palestine, and markets.
+  '2026-08-18': [
+    { videoId: 'tWwnHdABROs', outlet: 'cnn' },
+    { videoId: 'eOHQ-P10zhg', outlet: 'cnn' },
+    { videoId: 'ga4CYQ_7lKU', outlet: 'fox' },
+    { videoId: 'vaVbCzAEnEQ', outlet: 'fox' },
+    { videoId: 'MG10hrQuDT4', outlet: 'aje' },
+    { videoId: '-QaKjAm3rZs', outlet: 'reuters' },
+    { videoId: 'tfwsLmqPtnw', outlet: 'bloomberg' },
+    { videoId: 'y-7jSya96x4', outlet: 'bloomberg' },
+  ],
 };
 
 export const SCHEDULE = {
