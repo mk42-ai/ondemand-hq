@@ -50,7 +50,9 @@ export default function IntelDashboard({ onExit }) {
         return (new URLSearchParams(window.location.search).get('iso') || 'KE').toUpperCase();
       }
     } catch { /* noop */ }
-    return null;
+    // 2026-08-19 — ODA Intelligence now opens straight into the country intelligence
+    // view (no globe). A country switcher in the page topbar changes the focus.
+    return 'KE';
   });
   const [q, setQ] = useState('');
   const [searching, setSearching] = useState(false);
@@ -82,7 +84,17 @@ export default function IntelDashboard({ onExit }) {
   };
 
   if (countryIso) {
-    return <ErrorBoundary name="intel-country"><CountryPage iso={countryIso} onBack={() => { setCountryIso(null); load(); }} /></ErrorBoundary>;
+    return (
+      <ErrorBoundary name="intel-country">
+        <CountryPage
+          iso={countryIso}
+          landing
+          countries={ov?.perCountry || []}
+          onSelectCountry={setCountryIso}
+          onBack={onExit}
+        />
+      </ErrorBoundary>
+    );
   }
   if (err) return <div className="ig-error"><AlertTriangle size={15} aria-hidden /> {err} <button onClick={load}>Retry</button> <button onClick={onExit}>Back to chat</button></div>;
   if (!ov) return <div className="ig-loading"><BilingualLoader size="md" label="Loading ODA Intelligence…" /></div>;

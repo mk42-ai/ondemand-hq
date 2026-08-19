@@ -2844,3 +2844,94 @@ a.xpost:focus-visible { outline: 2px solid #1d9bf0; outline-offset: -2px; border
 .odasub__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pg-gray); }
 .odasub__dot--running { background: var(--pg-yellow); animation: pglog-pulse 1.6s ease-in-out infinite; }
 .odasub__dot--done { background: var(--pg-fg-strong); }
+
+
+/* Sidebar nav — plain rows; only the active module is a solid dark block */
+.sidebar__intel {
+  border: none; background: none; color: var(--ink-70); font-weight: 500;
+}
+.sidebar__intel:hover { background: var(--bg-subtle); border-color: transparent; }
+.sidebar__intel.active { background: #101418; color: #fff; border-color: #101418; }
+
+/* Country page — flat, card-free hero (matches reference) */
+.ig-country { max-width: 1120px; }
+.ig-hero {
+  background: transparent; border: none; border-radius: 0;
+  padding: 0; box-shadow: none; backdrop-filter: none;
+}
+.ig-hero__scores { margin-top: 18px; }
+.ig-hero__latest { margin-top: 16px; }
+.ig-hero__latest, .ig-hero__uae { color: var(--ink-70); max-width: 96ch; }
+
+/* Development facts — separate bordered boxes (matches reference design) */
+.ig-facts {
+  gap: 10px; margin: 20px 0 4px;
+  border: none; border-radius: 0; overflow: visible; background: none;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+}
+.ig-fact {
+  border: 1px solid var(--border); border-radius: 12px; box-shadow: none;
+  background: #fff; padding: 12px 14px; gap: 3px;
+}
+.ig-fact__val { font-size: 18px; }
+
+
+.ig-tabs { gap: 8px; margin: 24px 0 18px; }
+.ig-tabs button {
+  border: 1px solid var(--border); background: #fff; border-radius: 999px;
+  padding: 8px 15px; color: var(--ink-70); font-weight: 500;
+  transition: color .12s ease, background .12s ease, border-color .12s ease;
+}
+.ig-tabs button:hover { color: var(--ink); background: var(--bg-subtle); border-color: var(--ink-30, #c9ced4); }
+.ig-tabs button.on,
+.ig-tabs button.on:hover { background: #101418; color: #fff; border-color: #101418; }
+
+
+.ig-x__summary { color: var(--ink); max-width: 96ch; }
+.ig-x__clusters span { background: #eef3f1; color: #33463f; }
+
+
+.ig-x .xpost-feed { background: #f5f6f7; border-color: #e6e8eb; }
+.ig-x .xpost,
+.ig-x a.xpost { background: #f5f6f7; border-bottom-color: #e6e8eb; color: #0f1419; }
+.ig-x .xpost:hover { background: rgba(0,0,0,.04); }
+.ig-x .xpost__name,
+.ig-x .xpost__text,
+.ig-x .xpost__xlogo { color: #0f1419; }
+.ig-x .xpost__handle,
+.ig-x .xpost__time,
+.ig-x .xpost__dot,
+.ig-x .xpost__stat { color: #536471; }
+
+
+.ig-stats {
+  gap: 0; margin-bottom: 22px;
+  border: 1px solid var(--border); border-radius: 14px;
+  overflow: hidden; background: #fff;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.ig-stat {
+  background: transparent; backdrop-filter: none;
+  border: none; border-radius: 0;
+  border-inline-end: 1px solid var(--border);
+  padding: 14px 16px;
+}
+.ig-stat:last-child { border-inline-end: none; }
+.ig-stat__val { font-size: 24px; }
+
+.ig-trendcard { box-shadow: none; }
+.ig-brief { background: #fff; backdrop-filter: none; box-shadow: none; }
+.ig-searchresult { box-shadow: none; }
+.ig-head { margin-bottom: 20px; }
+
+
+.ig-country__switch {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px 6px 8px; border: 1px solid var(--border);
+  border-radius: 10px; background: #fff; cursor: pointer;
+}
+.ig-country__switch:hover { background: var(--bg-subtle); }
+.ig-country__switch select {
+  border: none; background: none; outline: none; cursor: pointer;
+  font: inherit; font-weight: 600; color: var(--ink); padding-right: 2px;
+}

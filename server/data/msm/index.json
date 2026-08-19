@@ -210,6 +210,62 @@
    "transcriptionHours": 0.04083333333333333,
    "firstProcessedAt": "2026-08-18T16:13:11.938Z",
    "sourceUrl": "https://www.youtube.com/watch?v=MG10hrQuDT4"
+  },
+  "JknP0X-ExMY": {
+   "mediaId": "6a859fc5c4e70056ebd3033b",
+   "transcriptChars": 773,
+   "transcriptionHours": 0.011944444444444445,
+   "firstProcessedAt": "2026-08-19T12:21:31.928Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=JknP0X-ExMY"
+  },
+  "3s_RMUVIjuA": {
+   "mediaId": "6a859fc5c4e70056ebd3033a",
+   "transcriptChars": 4099,
+   "transcriptionHours": 0.0725,
+   "firstProcessedAt": "2026-08-19T12:21:32.106Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=3s_RMUVIjuA"
+  },
+  "lBnQGM0XxSU": {
+   "mediaId": "6a859fd5c4e70056ebd3033e",
+   "transcriptChars": 1990,
+   "transcriptionHours": 0.04055555555555555,
+   "firstProcessedAt": "2026-08-19T12:21:46.762Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=lBnQGM0XxSU"
+  },
+  "kFAnyQOERDg": {
+   "mediaId": "6a859fd8c4e70056ebd30342",
+   "transcriptChars": 66946,
+   "transcriptionHours": 1.5758333333333334,
+   "firstProcessedAt": "2026-08-19T12:21:54.323Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=kFAnyQOERDg"
+  },
+  "uBpPpEAbo5g": {
+   "mediaId": "6a859fefff97fef4b035152c",
+   "transcriptChars": 3528,
+   "transcriptionHours": 0.059166666666666666,
+   "firstProcessedAt": "2026-08-19T12:22:12.604Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=uBpPpEAbo5g"
+  },
+  "bD3kTK7atv4": {
+   "mediaId": "6a85a0e7c4e70056ebd3035d",
+   "transcriptChars": 8406,
+   "transcriptionHours": 0.13944444444444445,
+   "firstProcessedAt": "2026-08-19T12:26:20.707Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=bD3kTK7atv4"
+  },
+  "TXYYojbrQHk": {
+   "mediaId": "6a85a0e8ff97fef4b0351553",
+   "transcriptChars": 42144,
+   "transcriptionHours": 0.7663888888888889,
+   "firstProcessedAt": "2026-08-19T12:26:23.784Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=TXYYojbrQHk"
+  },
+  "JNjDveFgJPY": {
+   "mediaId": "6a85a1be2dea7ef6ada32d34",
+   "transcriptChars": 680,
+   "transcriptionHours": 0.020277777777777777,
+   "firstProcessedAt": "2026-08-19T12:31:11.703Z",
+   "sourceUrl": "https://www.youtube.com/watch?v=JNjDveFgJPY"
   }
  }
 }

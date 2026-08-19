@@ -118,7 +118,7 @@ function DevFacts({ facts }) {
   );
 }
 
-export default function CountryPage({ iso, onBack }) {
+export default function CountryPage({ iso, onBack, landing = false, countries = [], onSelectCountry }) {
   const [data, setData] = useState(null);
   const [facts, setFacts] = useState(null);
   const [err, setErr] = useState(null);
@@ -165,7 +165,18 @@ export default function CountryPage({ iso, onBack }) {
   return (
     <motion.div className="ig-country" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={spring}>
       <div className="ig-country__topbar">
-        <button className="ig-back" onClick={onBack}><ArrowLeft size={13} aria-hidden style={{ verticalAlign: '-2px' }} /> Globe</button>
+        {landing ? (
+          <label className="ig-country__switch">
+            <Flag iso={country.iso} size="sm" title={country.name} />
+            <select value={iso} onChange={(e) => onSelectCountry?.(e.target.value)} aria-label="Select country">
+              {(countries.length ? countries : [{ iso: country.iso, name: country.name }]).map(c => (
+                <option key={c.iso} value={c.iso}>{c.name}</option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <button className="ig-back" onClick={onBack}><ArrowLeft size={13} aria-hidden style={{ verticalAlign: '-2px' }} /> Globe</button>
+        )}
         <span style={{ flex: 1 }} />
         <button className="ig-refresh" onClick={onRefresh} disabled={running}>
           {running ? `Collecting… (${job?.stage || data.refresh?.stage || 'starting'})` : 'Refresh intelligence'}
@@ -218,8 +229,7 @@ export default function CountryPage({ iso, onBack }) {
             ))}
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={spring}>
+            <motion.div key={`${iso}-${tab}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
               {tab === 'intel' && (
                 <div className="ig-cards">
                   {(a.items || []).sort((x, y) => (IMPACT_ORDER[x.uaeImpact?.level] ?? 4) - (IMPACT_ORDER[y.uaeImpact?.level] ?? 4)).map(it => <IntelCard key={it.id || it.headline} item={it} images={images} />)}
@@ -321,7 +331,6 @@ export default function CountryPage({ iso, onBack }) {
                 </div>
               )}
             </motion.div>
-          </AnimatePresence>
 
           {a.executiveSummary && <div className="ig-exec"><b>Executive summary</b><p>{a.executiveSummary}</p>{a.confidence != null && <span className="ig-conf">overall confidence {a.confidence}</span>}</div>}
         </>

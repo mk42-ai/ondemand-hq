@@ -119,6 +119,19 @@ export const SEED = {
     { videoId: 'tfwsLmqPtnw', outlet: 'bloomberg' },
     { videoId: 'y-7jSya96x4', outlet: 'bloomberg' },
   ],
+  // resolved 2026-08-19 live from official channel RSS feeds
+  // (youtube.com/feeds/videos.xml?channel_id=...) — latest uploads dated 2026-08-19
+  // on the day's dominant themes: UAE–Iran (missile attacks / trade cut), Gaza, markets.
+  '2026-08-19': [
+    { videoId: 'JNjDveFgJPY', outlet: 'cnn' },
+    { videoId: '3s_RMUVIjuA', outlet: 'fox' },
+    { videoId: 'JknP0X-ExMY', outlet: 'fox' },
+    { videoId: 'lBnQGM0XxSU', outlet: 'aje' },
+    { videoId: 'bD3kTK7atv4', outlet: 'reuters' },
+    { videoId: 'kFAnyQOERDg', outlet: 'bloomberg' },
+    { videoId: 'uBpPpEAbo5g', outlet: 'bloomberg' },
+    { videoId: 'TXYYojbrQHk', outlet: 'bloomberg' },
+  ],
 };
 
 export const SCHEDULE = {
