@@ -14,6 +14,7 @@ import { describeModelConfig, getCallLog, getCallStats } from './models.js';
 import { GATE_TYPES, GATE_DEFS, openGates, gateSummary } from './gates.js';
 import { interpretRequest, heuristicInterpret } from './interpreter.js';
 import { createOdSession } from '../ondemand.js';
+import { ODA_DATA_DIR } from '../paths.js'; // serverless-safe writable data root (/tmp on Vercel)
 
 const router = express.Router();
 
@@ -78,8 +79,12 @@ router.post('/interpret/heuristic', (req, res) => {
 // ---------------------------------------------------------------------------
 
 router.post('/runs', asyncH(async (req, res) => {
-  const { text, attachments = [], externalUserId = 'oda-user', brain = null } = req.body || {};
+  const { text, attachments = [], externalUserId = 'oda-user', brain = null, output = 'auto' } = req.body || {};
   if (!text || typeof text !== 'string') return res.status(400).json({ error: 'text (string) is required' });
+  // Explicit Output selection forces the final format downstream (Document → PDF,
+  // Deck → PPTX, Data/Model → XLSX); an unknown value degrades to 'auto'.
+  const OUTPUT_CHOICES = new Set(['auto', 'deck', 'document', 'data', 'model']);
+  const outputChoice = OUTPUT_CHOICES.has(String(output)) ? String(output) : 'auto';
   // Brain validation (live-render upgrade): unknown brains are a 400, never a
   // silent fallback; forbidden endpoints throw per the central guard.
   let brainId = null;
@@ -91,7 +96,7 @@ router.post('/runs', asyncH(async (req, res) => {
       return res.status(400).json({ error: err.message, code: err.code || 'ODA_UNKNOWN_BRAIN' });
     }
   }
-  const run = runStore.createRun({ text, attachments, externalUserId, brain: brainId });
+  const run = runStore.createRun({ text, attachments, externalUserId, brain: brainId, output: outputChoice });
   // (runStore.createRun already emits run.created — exactly one frame per state change.)
   // Fire the engine asynchronously — the client follows progress on the SSE stream.
   startRun(run).catch((err) => console.error(`[oda-routes] startRun ${run.runId}: ${err.message}`));
@@ -236,7 +241,7 @@ router.post('/runs/:id/artifacts/:artifactId/materialize', asyncH(async (req, re
   const path = await import('node:path');
   const fs = await import('node:fs');
   const { fileURLToPath } = await import('node:url');
-  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+  const dir = path.join(ODA_DATA_DIR, 'files');
   fs.mkdirSync(dir, { recursive: true });
 
   const spec = parseContentSpec(a.content || a.preview || '');
@@ -257,12 +262,55 @@ router.post('/runs/:id/artifacts/:artifactId/materialize', asyncH(async (req, re
 }));
 
 /**
- * GET /runs/:id/download — ROBUST final-document download (2026-07-23 fix).
- * Re-packages the primary verified artifact on demand when the materialised
- * file is missing (fresh sandbox / restarted pod), then streams it with
- * correct Content-Type + Content-Disposition so the browser always gets a
- * real file download. This is what the gold 'Download final document'
- * button calls.
+ * Proxy-stream a HOSTED (OnDemand Agent) final document with our own attachment
+ * headers. The client downloader is same-origin-only and the webview needs an
+ * attachment disposition, so we fetch the cross-origin hosted bytes server-side
+ * and re-serve them here — no ephemeral /tmp file involved. HEAD probes get the
+ * headers only. Returns true when it wrote the response, false when the hosted
+ * URL is unreachable (so the caller can re-package + retry) — false is only ever
+ * returned BEFORE any bytes/headers are committed.
+ */
+async function proxyHostedDownload(rec, run, req, res) {
+  const filename = `oda-final-${run.runId.slice(0, 8)}.${rec.format}`;
+  const mime = FORMAT_MIME[rec.format] || 'application/octet-stream';
+  try {
+    if (req.method === 'HEAD') {
+      const h = await fetch(rec.hostedUrl, { method: 'HEAD', redirect: 'follow', signal: AbortSignal.timeout(15000) });
+      if (!h.ok) return false;
+      res.setHeader('Content-Type', mime);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      const len = h.headers.get('content-length');
+      if (len) res.setHeader('Content-Length', len);
+      res.setHeader('Accept-Ranges', 'none');
+      res.end();
+      return true;
+    }
+    const upstream = await fetch(rec.hostedUrl, { redirect: 'follow', signal: AbortSignal.timeout(60000) });
+    if (!upstream.ok || !upstream.body) return false;
+    res.setHeader('Content-Type', mime);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    const len = upstream.headers.get('content-length');
+    if (len) res.setHeader('Content-Length', len);
+    res.setHeader('Accept-Ranges', 'none');
+    const { Readable } = await import('node:stream');
+    const node = Readable.fromWeb(upstream.body);
+    node.on('error', () => { if (!res.headersSent) res.status(502).json({ error: 'hosted document read failed' }); else res.destroy(); });
+    node.pipe(res);
+    return true;
+  } catch {
+    return false; // unreachable hosted URL — caller re-packages
+  }
+}
+
+/**
+ * GET /runs/:id/download — ROBUST final-document download (2026-07-23 fix,
+ * 2026-07-24 plugin upgrade). A plugin-generated final document (OnDemand Agent,
+ * plugin-1775547203) is HOSTED — proxy-stream it (self-heals via re-package if
+ * the hosted URL is gone). Otherwise re-packages the primary verified artifact
+ * on demand when the local file is missing (fresh sandbox / restarted pod), then
+ * streams it with correct Content-Type + Content-Disposition so the browser
+ * always gets a real file download. This is what the gold 'Download final
+ * document' button calls.
  */
 router.get('/runs/:id/download', asyncH(async (req, res) => {
   const run = runStore.getRun(req.params.id);
@@ -270,14 +318,33 @@ router.get('/runs/:id/download', asyncH(async (req, res) => {
   const path = await import('node:path');
   const fs = await import('node:fs');
   const { fileURLToPath } = await import('node:url');
-  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+  const dir = path.join(ODA_DATA_DIR, 'files');
 
   let rec = run.finalArtifact || null;
+
+  // HOSTED (plugin) final document: proxy-stream the hosted bytes. If the hosted
+  // URL is dead, re-package once (plugin-first — a plugin outage yields a LOCAL
+  // file instead, which the local path below then serves).
+  if (rec?.hosted && rec.hostedUrl) {
+    if (await proxyHostedDownload(rec, run, req, res)) return;
+    const { packageRunArtifact } = await import('./autoArtifact.js');
+    const pkg = await packageRunArtifact(run);
+    if (!pkg.downloadUrl) return res.status(409).json({ error: `no downloadable document: ${pkg.reason || 'no verified artifact'}` });
+    runStore._flushSync(run);
+    rec = run.finalArtifact;
+    if (rec?.hosted && rec.hostedUrl && await proxyHostedDownload(rec, run, req, res)) return;
+    // re-package fell back to a local file — continue to the local path below.
+    // If it's STILL hosted here, the hosted URL is unreachable and re-packaging
+    // couldn't produce a local file either — surface that honestly.
+    if (rec?.hosted) return res.status(502).json({ error: 'hosted final document is currently unreachable — please retry' });
+  }
+
   let file = rec ? path.join(dir, path.basename(rec.downloadUrl)) : null;
-  // 2026-07-23: re-package when the file is missing (ephemeral pod) OR the
-  // recorded format predates the always-docx contract (md/html records from
-  // older runs upgrade to a real .docx on their next download).
-  const stale = rec && ['md', 'html'].includes(rec.format);
+  // 2026-07-24: re-package when the file is missing (ephemeral pod) OR the
+  // recorded format is not in the current deliverable policy (PPTX / PDF / XLSX
+  // only). Legacy md/html/docx finalArtifacts upgrade to a policy format on
+  // their next download.
+  const stale = rec && !['pptx', 'pdf', 'xlsx'].includes(rec.format);
   if (!rec || stale || !fs.existsSync(file)) {
     const { packageRunArtifact } = await import('./autoArtifact.js');
     const pkg = await packageRunArtifact(run);
@@ -304,7 +371,7 @@ router.get('/files/:name', asyncH(async (req, res) => {
   const path = await import('node:path');
   const fs = await import('node:fs');
   const { fileURLToPath } = await import('node:url');
-  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'data', 'files');
+  const dir = path.join(ODA_DATA_DIR, 'files');
   const name = path.basename(req.params.name); // no traversal
   const file = path.join(dir, name);
   if (!fs.existsSync(file)) return notFound(res, 'file');

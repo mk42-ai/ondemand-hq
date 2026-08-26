@@ -7,6 +7,7 @@
 import PDFDocument from 'pdfkit';
 import fs from 'node:fs';
 import { COLORS, GEOMETRY, sourcesLine, isRtl, isBilingual } from './theme.js';
+import { ODA_LOGO_PATH } from './brandAsset.js';
 
 const INK = `#${COLORS.INK}`;
 const GOLD = `#${COLORS.GOLD}`;
@@ -31,6 +32,14 @@ export function build(spec, outPath) {
     // Comment: pdfkit lacks the brand TTFs (Lora/Montserrat) — Helvetica stands in.
     doc.fillColor(INK).font('Helvetica-Bold').fontSize(30).text(spec.title, 56, 170, { width: W });
     if (spec.subtitle) doc.fillColor(INK70).font('Helvetica').fontSize(15).text(spec.subtitle, 56, doc.y + 12, { width: W });
+    // Cover hero image — an editorial band above the date (guarded).
+    if (spec.heroImage?.buffer) {
+      try {
+        const hH = 170; const hY = doc.page.height - 320;
+        doc.image(spec.heroImage.buffer, 56, hY, { fit: [W, hH], align: 'center', valign: 'center' });
+        if (spec.heroImage.source && spec.heroImage.source !== 'authored') flags.push(`hero image via ${spec.heroImage.source}`);
+      } catch { /* skip on any image error */ }
+    }
     doc.fillColor(GOLD).font('Helvetica').fontSize(12).text(spec.date || '', 56, doc.page.height - 120);
 
     // ---- Sections (new page each) ----
@@ -85,6 +94,20 @@ export function build(spec, outPath) {
         if (s.table.rows.length > 14) flags.push(`table in "${s.heading}" truncated at 14 rows for PDF`);
       }
 
+      // Section figure — an editorial image below the text, above the sources
+      // band, when there is vertical room (guarded; never crowds a full page).
+      if (s.image?.buffer) {
+        try {
+          const availBottom = doc.page.height - 110;
+          if (y < availBottom - 100) {
+            const imgH = Math.min(170, availBottom - y - 12);
+            doc.image(s.image.buffer, 56, y + 6, { fit: [W, imgH], align: 'center', valign: 'center' });
+            y += imgH + 12;
+            if (s.image.source && s.image.source !== 'authored') flags.push(`"${s.heading}" image via ${s.image.source}`);
+          }
+        } catch { /* skip on any image error */ }
+      }
+
       // Sources line pinned to the footer band of the section's LAST page.
       doc.fillColor(INK70).font('Helvetica').fontSize(8).text(sourcesLine(s.sources), 56, doc.page.height - 88, { width: W - 60 });
     }
@@ -112,6 +135,10 @@ export function build(spec, outPath) {
     const range = doc.bufferedPageRange();
     for (let i = range.start; i < range.start + range.count; i++) {
       doc.switchToPage(i);
+      // ODA logo, top-right on every page (guarded: skipped if the asset is absent).
+      if (ODA_LOGO_PATH) {
+        try { doc.image(ODA_LOGO_PATH, doc.page.width - 56 - 132, 34, { fit: [132, 40] }); } catch { /* skip on any image error */ }
+      }
       doc.fillColor(GOLD).font('Helvetica').fontSize(9)
         .text(String(i + 1), doc.page.width - 80, doc.page.height - 60, { width: 24, align: 'right' });
     }

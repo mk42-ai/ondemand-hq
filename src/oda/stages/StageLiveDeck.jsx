@@ -58,8 +58,27 @@ export default function StageLiveDeck({ run }) {
   const slides = run.liveDeck?.slides
     || [1, 2, 3, 4].map((no) => ({ no, title: '', bullets: [], status: 'pending', confidence: null }));
 
+  const activeRun = !['completed', 'failed', 'cancelled'].includes(run.status);
+
   return (
     <div>
+      {/* Live reasoning stream — shows the model is actively working during the
+          long authoring/verification stages, so the page never looks frozen. */}
+      {activeRun && run.liveThinking && (
+        <div className="oda-card" data-testid="live-thinking"
+          style={{ marginBottom: 14, borderColor: '#AD833B', background: '#FCFAF5' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span className="oda-spin" style={{ width: 10, height: 10 }} aria-hidden />
+            <span className="oda-kicker" style={{ flex: 1 }}>Thinking — live</span>
+            {run.safeStatus && <span className="oda-muted" style={{ fontSize: 11 }}>{run.safeStatus}</span>}
+          </div>
+          <p style={{ fontSize: 12, lineHeight: 1.55, color: '#5B6770', margin: 0, whiteSpace: 'pre-wrap',
+            maxHeight: 120, overflowY: 'auto', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+            {run.liveThinking.slice(-900)}
+            <span style={{ opacity: 0.5 }}>▋</span>
+          </p>
+        </div>
+      )}
       <div className="oda-cardgrid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
         {slides.map((s, i) => (
           <div

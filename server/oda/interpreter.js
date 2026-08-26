@@ -7,7 +7,7 @@
 // Safe status labels only — the UI shows these while the run is being understood.
 import { interpreterCall } from './models.js';
 import { getManifest, listManifests, COMPAT_ROUTES } from './manifests.js';
-import { validatePipeline } from './sequencing.js';
+import { validatePipeline, isEdgeAllowed } from './sequencing.js';
 
 /** Safe, user-facing status labels (contracts.d.ts ODASafeStatus). */
 export const SAFE_STATUSES = Object.freeze([
@@ -95,7 +95,7 @@ export function heuristicInterpret(text) {
 function defaultDeliverable(skill, route) {
   if (skill === 'storyline') return route === 'TITLES' ? 'action-titles-md' : route === 'SUMMARY' ? 'one-pager-summary' : 'storyline-md';
   return {
-    design: 'deck-html', 'problem-solve': 'workbook-md', benchmark: 'benchmark-report-md',
+    design: 'deck-pptx', 'problem-solve': 'workbook-md', benchmark: 'benchmark-report-md',
     'data-scout': 'xlsx-data', model: 'xlsx-model', translate: 'arabic-docx', media: 'media-bilingual-md',
   }[skill] || 'markdown';
 }
@@ -164,6 +164,9 @@ export function normaliseControl(raw, requestText) {
   c.pipeline = pipeline;
   c.deliverables = (Array.isArray(c.deliverables) ? c.deliverables : []).filter((d) => ARTIFACT_TYPES.includes(d));
   if (!c.deliverables.length) c.deliverables = [defaultDeliverable(c.primary_skill, pipeline[0]?.route)];
+  // A "deck" always renders as PPTX, never HTML. Coerce here so BOTH the GLM
+  // interpreter and the heuristic fallback yield deck-pptx (product rule).
+  c.deliverables = c.deliverables.map((d) => (d === 'deck-html' ? 'deck-pptx' : d));
   c.workspace_renderer = RENDERERS.includes(c.workspace_renderer) ? c.workspace_renderer : defaultRenderer(c.primary_skill);
   c.requires_user_gate = typeof c.requires_user_gate === 'boolean' ? c.requires_user_gate : c.mode === 'full';
   c.safe_status = SAFE_STATUSES.includes(c.safe_status) ? c.safe_status : 'Understanding the request';
@@ -172,26 +175,188 @@ export function normaliseControl(raw, requestText) {
   return c;
 }
 
+// ---------------------------------------------------------------------------
+// Explicit Output selection → HARD deliverable-class constraint (2026-07-24).
+// The sidebar Output dropdown (deck/document/data/model) is a user command, not
+// a hint. It must deterministically decide the deliverable CLASS — a "Document"
+// request may never terminate in a deck (design), and a "Deck" request must end
+// in design. Both the GLM prompt (soft steer) and this post-validation guard
+// (hard enforcement) apply, so the class holds even when GLM disobeys.
+// ---------------------------------------------------------------------------
+
+const DECK_ARTIFACT_TYPES = Object.freeze(['deck-html', 'deck-pptx', 'arabic-pptx']);
+const DATA_ARTIFACT_TYPES = Object.freeze(['xlsx-model', 'xlsx-data']);
+
+/** Resolve the requested output class. Only 'deck' | 'document' | 'auto' — the
+ *  Data/Model standalone outputs were removed (data-scout/model remain as
+ *  in-pipeline stages). 'auto' is resolved to deck-or-document downstream. */
+export function resolveOutputClass(output, text) {
+  const o = String(output || '').toLowerCase();
+  if (['deck', 'document', 'data', 'model'].includes(o)) return o;
+  const m = String(text || '').match(/output:\s*(deck|document|data|model)/i);
+  return m ? m[1].toLowerCase() : 'auto';
+}
+
+/** Lightweight deck-vs-document decision for Output=Auto, read from the GLM
+ *  interpreter's own routing (a deck if it designs/renders a deck, else a doc). */
+function deriveClassFromControl(c) {
+  const deckish = c.workspace_renderer === 'deck'
+    || c.primary_skill === 'design'
+    || (Array.isArray(c.deliverables) && c.deliverables.some((d) => DECK_ARTIFACT_TYPES.includes(d)));
+  return deckish ? 'deck' : 'document';
+}
+
+/** The terminal node of a pipeline (nothing depends on it; last one wins). */
+function terminalOf(pipeline) {
+  const depended = new Set(pipeline.flatMap((n) => n.dependsOn || []));
+  const terminals = pipeline.filter((n) => !depended.has(n.nodeId));
+  return terminals[terminals.length - 1] || pipeline[pipeline.length - 1] || null;
+}
+
+const nextNodeId = (pipeline) => {
+  let i = pipeline.length + 1;
+  const ids = new Set(pipeline.map((n) => n.nodeId));
+  while (ids.has(`n${i}`)) i += 1;
+  return `n${i}`;
+};
+
+/** Coerce the deliverables list to the requested class (display + contract). */
+function coerceDeliverables(deliverables, cls, pipeline) {
+  let d = (Array.isArray(deliverables) ? deliverables : []).filter((x) => ARTIFACT_TYPES.includes(x));
+  if (cls === 'document') {
+    // The final document always ships as a PDF — label it honestly so the live
+    // card matches the download, regardless of the terminal skill's native type.
+    d = ['pdf'];
+  } else if (cls === 'deck') {
+    d = ['deck-pptx'];
+  } else if (cls === 'data') {
+    d = ['xlsx-data'];
+  } else if (cls === 'model') {
+    d = ['xlsx-model'];
+  }
+  return d;
+}
+
+/** GLM prompt preamble that steers routing toward the requested class. */
+function outputConstraintPrompt(cls) {
+  switch (cls) {
+    case 'document':
+      return 'OUTPUT CONSTRAINT (mandatory): the user requires a DOCUMENT — a multi-page written report (delivered as PDF), NOT a slide deck. The pipeline MUST terminate in a document-authoring skill (problem-solve, benchmark, storyline, data-scout or media). Do NOT use "design" as the final step and do NOT emit deck-html/deck-pptx deliverables. Set workspace_renderer to "document".\n\n';
+    case 'deck':
+      return 'OUTPUT CONSTRAINT (mandatory): the user requires a DECK — a slide presentation (delivered as PPTX). The pipeline MUST terminate in the "design" skill and deliverables MUST include deck-pptx. Set workspace_renderer to "deck".\n\n';
+    case 'data':
+      return 'OUTPUT CONSTRAINT (mandatory): the user requires a DATA deliverable — a cited Excel dataset. Keep it LIGHT — a single quick data pass gathering only the key figures/series, NO deep research. Terminate in data-scout with an xlsx-data deliverable.\n\n';
+    case 'model':
+      return 'OUTPUT CONSTRAINT (mandatory): the user requires a quantitative MODEL — an Excel model. Keep it LIGHT — a single quick pass with the essential inputs/scenarios, NO deep research. Terminate in the "model" skill with an xlsx-model deliverable.\n\n';
+    default:
+      return '';
+  }
+}
+
+/**
+ * Deterministically force a control's deliverable class to match the explicit
+ * Output selection. Runs AFTER normalisation (or on the heuristic control), and
+ * re-validates the rewritten pipeline — any illegal rewrite falls back to a safe
+ * single-node plan rather than shipping a broken graph.
+ */
+export function enforceOutputClass(control, outputClass) {
+  if (!control || outputClass === 'auto') return control;
+  const c = control;
+  const mode = c.mode === 'full' ? 'full' : 'fast';
+  const intent = c.intent || '';
+  let p = (Array.isArray(c.pipeline) ? c.pipeline : []).map((n) => ({ ...n, dependsOn: [...(n.dependsOn || [])] }));
+
+  const safeValidate = (candidate, fallback) => {
+    try { validatePipeline(candidate); return candidate; }
+    catch { return fallback; }
+  };
+
+  if (outputClass === 'document') {
+    // A document is never a deck — drop design nodes and any dangling deps.
+    p = p.filter((n) => n.skill !== 'design');
+    const ids = new Set(p.map((n) => n.nodeId));
+    p.forEach((n) => { n.dependsOn = n.dependsOn.filter((d) => ids.has(d)); });
+    if (!p.length) p = [{ nodeId: 'n1', skill: 'problem-solve', mode, dependsOn: [], objective: intent }];
+    // A spreadsheet terminal (model) is not a document: synthesise one from it
+    // (model → problem-solve is a legal edge).
+    const term = terminalOf(p);
+    if (term && term.skill === 'model') {
+      p.push({ nodeId: nextNodeId(p), skill: 'problem-solve', mode, dependsOn: [term.nodeId], objective: intent });
+    }
+    const docPrimary = c.primary_skill === 'design' ? 'problem-solve' : c.primary_skill;
+    c.pipeline = safeValidate(p, [{ nodeId: 'n1', skill: docPrimary, mode, dependsOn: [], objective: intent }]);
+    // DEPTH controls thoroughness: FAST → a single authoring pass; FULL → the
+    // deep multi-step chain above.
+    if (mode === 'fast') {
+      const t = terminalOf(c.pipeline);
+      c.pipeline = [{ nodeId: 'n1', skill: t?.skill || docPrimary || 'problem-solve', mode, dependsOn: [], objective: intent }];
+    }
+    c.primary_skill = c.pipeline[0].skill;
+    c.deliverables = coerceDeliverables(c.deliverables, 'document', c.pipeline);
+    c.workspace_renderer = 'document';
+  } else if (outputClass === 'deck') {
+    // DEPTH controls thoroughness (not Output): FAST → a single design node (one
+    // authoring pass); FULL → an evidence-backed MULTI-STEP deck. In FULL we keep
+    // the interpreter's chain if it already ends in design, else build the
+    // canonical data-scout → model → design pipeline.
+    const CANONICAL_DECK = [
+      { nodeId: 'n1', skill: 'data-scout', mode, dependsOn: [], objective: intent },
+      { nodeId: 'n2', skill: 'model', mode, dependsOn: ['n1'], objective: intent },
+      { nodeId: 'n3', skill: 'design', mode, dependsOn: ['n2'], objective: intent },
+    ];
+    if (mode === 'full') {
+      const endsDesign = p.length >= 2 && terminalOf(p)?.skill === 'design';
+      c.pipeline = safeValidate(endsDesign ? p : CANONICAL_DECK, CANONICAL_DECK);
+    } else {
+      c.pipeline = [{ nodeId: 'n1', skill: 'design', mode, dependsOn: [], objective: intent }];
+    }
+    c.primary_skill = c.pipeline[0].skill;
+    c.deliverables = coerceDeliverables(c.deliverables, 'deck', c.pipeline);
+    c.workspace_renderer = 'deck';
+  } else if (outputClass === 'data' || outputClass === 'model') {
+    // LIGHT by design: a single FAST node gathers the essentials, then the
+    // terminal tool builds the .xlsx. No deep multi-stage research, regardless of
+    // the Depth setting (data/model are meant to be quick).
+    const skill = outputClass === 'model' ? 'model' : 'data-scout';
+    c.pipeline = [{ nodeId: 'n1', skill, mode: 'fast', dependsOn: [], objective: intent }];
+    c.primary_skill = skill;
+    c.mode = 'fast';
+    c.deliverables = coerceDeliverables(c.deliverables, outputClass, c.pipeline);
+    c.workspace_renderer = outputClass === 'model' ? 'model' : 'data';
+  }
+  return c;
+}
+
 /**
  * Interpret a request via GLM 4.7 (low latency, control JSON only), with the
- * deterministic heuristic as the never-fail fallback.
+ * deterministic heuristic as the never-fail fallback. The explicit Output
+ * selection steers the GLM prompt AND is hard-enforced on the result.
  * @returns {{ control: object, source: 'glm-4.7'|'heuristic', rawLength: number }}
  */
-export async function interpretRequest({ sessionId, text, attachmentsSummary = '' }) {
-  const query = attachmentsSummary
+export async function interpretRequest({ sessionId, text, attachmentsSummary = '', output = 'auto' }) {
+  const requested = resolveOutputClass(output, text); // 'deck' | 'document' | 'auto'
+  const constraint = outputConstraintPrompt(requested); // '' for auto — let GLM decide
+  const body = attachmentsSummary
     ? `REQUEST:\n${text}\n\nATTACHMENTS (summaries):\n${attachmentsSummary}`
     : `REQUEST:\n${text}`;
+  const query = `${constraint}${body}`;
+  // Auto → resolve deck-vs-document from the interpreter's own routing, then
+  // shape the pipeline for that class; explicit deck/document is honoured as-is.
+  const finalize = (control, source, rawLength) => {
+    const cls = requested === 'auto' ? deriveClassFromControl(control) : requested;
+    return { control: enforceOutputClass(control, cls), source, rawLength, outputClass: cls };
+  };
   try {
     const raw = await interpreterCall({ sessionId, query, systemPrompt: INTERPRETER_SYSTEM_PROMPT });
     const parsed = extractJson(raw);
     if (!parsed) {
       console.warn('[oda-interpreter] GLM output carried no parseable JSON — heuristic fallback engaged');
-      return { control: heuristicInterpret(text), source: 'heuristic', rawLength: (raw || '').length };
+      return finalize(heuristicInterpret(text), 'heuristic', (raw || '').length);
     }
-    return { control: normaliseControl(parsed, text), source: 'glm-4.7', rawLength: raw.length };
+    return finalize(normaliseControl(parsed, text), 'glm-4.7', raw.length);
   } catch (err) {
     console.warn(`[oda-interpreter] GLM interpretation failed (${err.message}) — heuristic fallback engaged`);
-    return { control: heuristicInterpret(text), source: 'heuristic', rawLength: 0 };
+    return finalize(heuristicInterpret(text), 'heuristic', 0);
   }
 }
 

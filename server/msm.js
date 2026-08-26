@@ -43,11 +43,12 @@ import { fileURLToPath } from 'node:url';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import { ONDEMAND_API_KEY, ONDEMAND_BASE_URL, ENDPOINT_ID, REASONING_EFFORT } from './env.js';
 import { createOdSession, streamQuery } from './ondemand.js';
+import { DATA_DIR as DATA_BASE } from './paths.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const MSM_DIR = path.join(__dirname, 'data', 'msm');
+const MSM_DIR = path.join(DATA_BASE, 'msm');
 const TX_DIR = path.join(MSM_DIR, 'transcripts');
-fs.mkdirSync(TX_DIR, { recursive: true });
+try { fs.mkdirSync(TX_DIR, { recursive: true }); } catch (e) { console.error('[msm] mkdir failed:', e.message); }
 
 const H = { apikey: ONDEMAND_API_KEY, 'Content-Type': 'application/json' };
 // The docs' own YouTube media sample attaches this plugin id; live-verified working 2026-07-18.
@@ -92,6 +93,44 @@ export const SEED = {
     { videoId: 'njPpXh8pjpc', outlet: 'fox' },
     { videoId: 'cBWOtw-ofbw', outlet: 'fox' },
     { videoId: '2gUKBwDTxzA', outlet: 'fox' },
+  ],
+  // resolved 2026-08-18 from official channel searches for coverage dated ~2026-08-17
+  // (Strait of Hormuz / Iran, Israel-Lebanon, and market/geopolitics segments).
+  '2026-08-17': [
+    { videoId: 'Z9-QcrZKyGc', outlet: 'bbc' },
+    { videoId: 'bQNLeBfsX84', outlet: 'bbc' },
+    { videoId: 'xAia9w_LHfA', outlet: 'bbc' },
+    { videoId: 'aM9JKRot6SA', outlet: 'reuters' },
+    { videoId: 'EA80nMtuPCk', outlet: 'bloomberg' },
+    { videoId: 'T9t9BN2nID0', outlet: 'bloomberg' },
+    { videoId: '8JiBcDpSN4s', outlet: 'bloomberg' },
+    { videoId: 'ySpUV2M2lGo', outlet: 'bloomberg' },
+  ],
+  // resolved 2026-08-18 live from official channel RSS feeds
+  // (youtube.com/feeds/videos.xml?channel_id=...) — latest uploads dated 2026-08-18
+  // on the recurring themes: Strait of Hormuz / Iran, Israel-Palestine, and markets.
+  '2026-08-18': [
+    { videoId: 'tWwnHdABROs', outlet: 'cnn' },
+    { videoId: 'eOHQ-P10zhg', outlet: 'cnn' },
+    { videoId: 'ga4CYQ_7lKU', outlet: 'fox' },
+    { videoId: 'vaVbCzAEnEQ', outlet: 'fox' },
+    { videoId: 'MG10hrQuDT4', outlet: 'aje' },
+    { videoId: '-QaKjAm3rZs', outlet: 'reuters' },
+    { videoId: 'tfwsLmqPtnw', outlet: 'bloomberg' },
+    { videoId: 'y-7jSya96x4', outlet: 'bloomberg' },
+  ],
+  // resolved 2026-08-19 live from official channel RSS feeds
+  // (youtube.com/feeds/videos.xml?channel_id=...) — latest uploads dated 2026-08-19
+  // on the day's dominant themes: UAE–Iran (missile attacks / trade cut), Gaza, markets.
+  '2026-08-19': [
+    { videoId: 'JNjDveFgJPY', outlet: 'cnn' },
+    { videoId: '3s_RMUVIjuA', outlet: 'fox' },
+    { videoId: 'JknP0X-ExMY', outlet: 'fox' },
+    { videoId: 'lBnQGM0XxSU', outlet: 'aje' },
+    { videoId: 'bD3kTK7atv4', outlet: 'reuters' },
+    { videoId: 'kFAnyQOERDg', outlet: 'bloomberg' },
+    { videoId: 'uBpPpEAbo5g', outlet: 'bloomberg' },
+    { videoId: 'TXYYojbrQHk', outlet: 'bloomberg' },
   ],
 };
 

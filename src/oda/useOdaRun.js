@@ -24,7 +24,10 @@ const EMPTY = {
   decisions: [],
   verification: [],
   safeStatus: null,
+  brain: null,
+  requestText: null,
   liveDeck: null,
+  liveThinking: '',
   downloadUrl: null,
   events: [],
   error: null,
@@ -35,7 +38,11 @@ function reduceEvent(state, ev) {
   const s = { ...state };
   const d = ev.data || {};
   switch (ev.type) {
-    case 'run.created': s.status = 'interpreting'; break;
+    case 'run.created':
+      s.status = 'interpreting';
+      if (d.text) s.requestText = d.text;
+      if (d.brain) s.brain = d.brain;
+      break;
     case 'request.interpreted':
       s.control = d.control || null;
       s.intent = d.control?.intent || null;
@@ -58,6 +65,10 @@ function reduceEvent(state, ev) {
     case 'skill.progress':
       if (d.safeStatus) s.safeStatus = d.safeStatus;
       s.nodeStates = { ...s.nodeStates, [d.nodeId]: { ...(s.nodeStates[d.nodeId] || {}), note: d.note } };
+      break;
+    case 'skill.thinking':
+      // Live reasoning tokens — rolling buffer (cap so long runs never bloat state).
+      s.liveThinking = (s.liveThinking + (d.delta || '')).slice(-4000);
       break;
     case 'question.required': {
       const gate = { gateId: d.gateId, gateType: d.gateType, nodeId: d.nodeId ?? null, prompt: d.prompt, options: d.options || [], payload: d.payload ?? null, status: 'open', raisedAt: ev.ts };
@@ -122,6 +133,8 @@ function hydrate(run) {
     runId: run.runId,
     status: run.status,
     intent: run.intent,
+    brain: run.brain ?? null,
+    requestText: run.request?.text ?? run.text ?? null,
     mode: run.mode,
     control: run.control,
     pipeline: run.pipeline || [],
@@ -192,10 +205,10 @@ export default function useOdaRun() {
   }, [listen]);
 
   /** Start a new run from the composer. */
-  const start = useCallback(async ({ text, attachments = [], brain = null }) => {
+  const start = useCallback(async ({ text, attachments = [], brain = null, output = null }) => {
     const r = await fetch('/api/oda/runs', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, attachments, externalUserId: 'oda-workspace', ...(brain ? { brain } : {}) }),
+      body: JSON.stringify({ text, attachments, externalUserId: 'oda-workspace', ...(brain ? { brain } : {}), ...(output ? { output } : {}) }),
     });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
     const { runId } = await r.json();
@@ -205,6 +218,16 @@ export default function useOdaRun() {
     listen(runId, 0);
     return runId;
   }, [listen]);
+
+  /** Retry a failed run by re-submitting the SAME request as a fresh run.
+   *  A node-level retry can't resume an engine lost to a server restart (the
+   *  dominant failure — see runStore orphan sweep), so a clean re-run is the
+   *  reliable recovery. */
+  const retry = useCallback(async () => {
+    const text = run.requestText || run.intent;
+    if (!text) throw new Error('Nothing to retry — enter a request and Start run.');
+    return start({ text, brain: run.brain || undefined });
+  }, [run.requestText, run.intent, run.brain, start]);
 
   /** Resolve a gate (approve / choice / edits) — the backend resumes the engine. */
   const resolveGate = useCallback(async (gateId, { approved, choice = null, edits = null }) => {
@@ -248,7 +271,7 @@ export default function useOdaRun() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { run, connected, start, attach, resolveGate, lifecycle, reset, fetchArtifact };
+  return { run, connected, start, retry, attach, resolveGate, lifecycle, reset, fetchArtifact };
 }
 
 export { reduceEvent, hydrate };

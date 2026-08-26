@@ -8,6 +8,7 @@ import { build as buildXlsx } from './xlsxBuilder.js';
 import { build as buildPdf } from './pdfBuilder.js';
 import { build as buildHtml } from './htmlDashboard.js';
 import { build as buildMd } from './mdWorkbook.js';
+import { looksLikeHtml, htmlToMarkdown } from './htmlToMd.js';
 
 const BUILDERS = Object.freeze({
   pptx: buildPptx,
@@ -27,6 +28,9 @@ export function listBuilders() {
 }
 
 const LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+// Markdown image: ![alt](url). Captured per-section for embedding; MUST be
+// stripped before citation scanning so an image never registers as a source.
+const IMG_MD_RE = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
 
 /** Strip markdown emphasis for plain rendering surfaces. */
 const strip = (s) => String(s || '').replace(/\*\*?/g, '').replace(/`/g, '').trim();
@@ -37,9 +41,12 @@ const strip = (s) => String(s || '').replace(/\*\*?/g, '').replace(/`/g, '').tri
  * @returns {{ title, subtitle, date, lang, sections, assumptions, citations, gaps }}
  */
 export function parseContentSpec(markdown) {
-  const md = String(markdown || '');
+  // The design skill sometimes ships a full HTML deck; flatten it to markdown
+  // first so raw tags (<!DOCTYPE html>, <html>…) never render as slide text.
+  let md = String(markdown || '');
+  if (looksLikeHtml(md)) md = htmlToMarkdown(md);
   const lines = md.split('\n');
-  const spec = { title: null, subtitle: null, date: null, lang: 'en', sections: [], assumptions: [], citations: [], gaps: [] };
+  const spec = { title: null, subtitle: null, date: null, lang: 'en', sections: [], assumptions: [], citations: [], gaps: [], imageRefs: [], heroImage: null };
 
   // Language sniff: ≥15% Arabic characters → 'ar'; some Arabic → 'bilingual'.
   const arChars = (md.match(/[\u0600-\u06FF]/g) || []).length;
@@ -52,7 +59,7 @@ export function parseContentSpec(markdown) {
   const flushTable = () => { if (table && cur && table.rows.length > 1) { cur.table = { header: table.rows[0], rows: table.rows.slice(1) }; } table = null; };
   const newSection = (heading) => {
     flushTable();
-    cur = { heading: strip(heading), kicker: null, paragraphs: [], bullets: [], table: null, bigNumbers: [], sources: [] };
+    cur = { heading: strip(heading), kicker: null, paragraphs: [], bullets: [], table: null, bigNumbers: [], sources: [], imageRef: null, image: null };
     spec.sections.push(cur);
   };
 
@@ -80,6 +87,17 @@ export function parseContentSpec(markdown) {
     }
     const t = line.trim();
     if (!t) continue;
+    // Markdown image ![alt](url): captured for embedding, never rendered as text.
+    if (/!\[[^\]]*\]\(https?:\/\//.test(t)) {
+      if (!cur) newSection('Overview');
+      let im; const imre = new RegExp(IMG_MD_RE.source, 'g');
+      while ((im = imre.exec(t))) {
+        const ref = { url: im[2], alt: strip(im[1]) };
+        if (!cur.imageRef) cur.imageRef = ref;
+        spec.imageRefs.push(ref);
+      }
+      continue;
+    }
     if (/^>\s*/.test(t)) { if (!cur) newSection('Bottom line'); cur.paragraphs.push(strip(t.replace(/^>\s*/, ''))); continue; }
     // 'Sources: [A](u); [B](u)' lines → section sources.
     if (/^sources?\s*:/i.test(t)) {
@@ -111,10 +129,12 @@ export function parseContentSpec(markdown) {
     }
   }
 
-  // Citations: every distinct [Name](url) in the document.
+  // Citations: every distinct [Name](url) in the document. Image markdown is
+  // stripped first so an embedded image URL never counts as a source.
+  const mdNoImages = md.replace(new RegExp(IMG_MD_RE.source, 'g'), '');
   const seen = new Set();
   let m2; const re2 = new RegExp(LINK_RE.source, 'g');
-  while ((m2 = re2.exec(md))) {
+  while ((m2 = re2.exec(mdNoImages))) {
     if (!seen.has(m2[2])) { seen.add(m2[2]); spec.citations.push({ name: m2[1], url: m2[2] }); }
   }
 
