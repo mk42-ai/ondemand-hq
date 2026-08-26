@@ -94,7 +94,10 @@ export async function runArtifactTask({ conv, format, sourceText, emit, reqId })
       // For plugin-routed document formats we ALSO try the plugin first below —
       // but pptx/xlsx/docx/pdf/csv all have a guaranteed local pipeline.
       let pluginTried = false;
-      if (route.via === 'plugin' && ['docx', 'pdf'].includes(format)) {
+      // Suite HOME PAGE policy (2026-07-24): documents are built the LOCAL way
+      // only here — the OnDemand Agent ("terminal tool") route is reserved for the
+      // /oda workspace. Opt back in with HOME_PLUGIN_DOCS=1.
+      if (route.via === 'plugin' && ['docx', 'pdf'].includes(format) && process.env.HOME_PLUGIN_DOCS === '1') {
         // Try the converter plugin for its hosted-URL output; fall back to local bytes.
         pluginTried = true;
         phase('Generating', { detail: `via ${route.label} (${ADOPTED[route.pluginKey].id})` });

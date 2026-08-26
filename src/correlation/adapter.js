@@ -2,18 +2,29 @@
 // graphology pre-render metrics (PageRank → node size, Louvain → community tints).
 // No React, no side effects — fully unit-testable in isolation.
 import Graph from 'graphology';
-import { pagerank } from 'graphology-metrics';
+// CJS subpath import: graphology-metrics' index exposes only namespaces
+// (centrality/edge/graph/…), so the old `import { pagerank } from 'graphology-metrics'`
+// resolved to undefined under BOTH Vite interop and bare Node ESM (silently caught by
+// the try/catch → empty ranks). The direct subpath is the real function under both.
+import pagerank from 'graphology-metrics/centrality/pagerank.js';
 import louvain from 'graphology-communities-louvain';
 
-// Obsidian-futuristic on white ODA design language — one hue per relationship type.
+// STRICT MONOCHROME ODA brand pass (2026-07-21): black/white/grayscale ONLY.
+// One gray step per relationship type — differentiation purely by luminance.
 export const REL_TYPE_COLORS = {
-  Investment: '#6d4aff', Trade: '#0e9f6e', 'Aid-Humanitarian': '#f59e0b',
-  Diplomatic: '#2563eb', Infrastructure: '#b45309', Energy: '#dc2626',
-  Technology: '#0891b2', Security: '#475569', 'Media-narrative': '#db2777',
+  Investment: '#ffffff', Trade: '#e0e0e0', 'Aid-Humanitarian': '#c8c8c8',
+  Diplomatic: '#b0b0b0', Infrastructure: '#989898', Energy: '#808080',
+  Technology: '#686868', Security: '#505050', 'Media-narrative': '#404040',
+  // 2026-07-22 canvas fix: deep-v2's correlation layer emits 'Influence-network'
+  // edges (correlationLayer.js). This type was MISSING here, so the default
+  // chip filter (new Set(REL_TYPES)) silently dropped EVERY such edge — on
+  // prefill runs whose edges are all Influence-network the canvas collapsed
+  // to 2 bare country bubbles with zero links/dots (the reported bug).
+  'Influence-network': '#303030',
 };
 export const REL_TYPES = Object.keys(REL_TYPE_COLORS);
 export const PLATFORM_GLYPHS = { perplexity: 'P', x: '𝕏', reddit: 'R', instagram: '◎' };
-export const PLATFORM_COLORS = { perplexity: '#6d4aff', x: '#111827', reddit: '#ff4500', instagram: '#d62976' };
+export const PLATFORM_COLORS = { perplexity: '#f0f0f0', x: '#b8b8b8', reddit: '#888888', instagram: '#585858' };
 
 const DAY = 86400000;
 
@@ -56,7 +67,10 @@ export function runToGraph(run, filters = {}) {
   const evById = new Map(run.evidence.map(e => [e.id, e]));
 
   const keepEdge = (e) => {
-    if (!types.has(e.relationship_type)) return false;
+    // UNKNOWN-TYPE SAFETY (2026-07-22): only apply the chip filter to KNOWN
+    // types. An edge whose relationship_type is outside REL_TYPES (future
+    // pipeline additions) must never be silently dropped by default filters.
+    if (REL_TYPES.includes(e.relationship_type) && !types.has(e.relationship_type)) return false;
     if ((e.weight ?? 0) < minWeight) return false;
     // time-range: edge survives if ≥1 backing evidence is inside the window
     const ages = e.evidence_record_ids.map(id => evById.get(id)).filter(Boolean).map(ev => evidenceAgeDays(ev, run));
@@ -76,7 +90,7 @@ export function runToGraph(run, filters = {}) {
   const links = run.edges.filter(keepEdge).map(e => ({
     id: e.id, source: e.entity_a, target: e.entity_b,
     type: e.relationship_type, direction: e.direction,
-    color: REL_TYPE_COLORS[e.relationship_type] || '#64748b',
+    color: REL_TYPE_COLORS[e.relationship_type] || '#6e6e6e',
     width: 0.6 + (e.weight ?? 0) * 5.2,                    // weight → width
     opacity: 0.25 + (e.recency ?? 0.5) * 0.75,             // recency → opacity
     weight: e.weight ?? 0, recency: e.recency ?? 0.5,
@@ -84,10 +98,24 @@ export function runToGraph(run, filters = {}) {
     particleSpeed: 0.002 + (e.recency ?? 0.5) * 0.012,     // recency → particle speed
     claim: e.claim, stance: e.stance, contradiction: e.contradiction,
     evidenceIds: e.evidence_record_ids, confidence: e.confidence,
-    platforms: e.evidencePlatforms || [],
+    verification: e.verification || null, inference: !!e.inference,
+    sourceTypes: e.sourceTypes || [], dimension: e.dimension || null,
+    rawA: e.entity_a, rawB: e.entity_b,
+    platforms: e.evidencePlatforms || e.sourceTypes || [],
     isNew: (run.diffFromPrevious?.newEdgeIds || []).includes(e.id),
     curvature: 0,
   }));
+
+  // UX overhaul 2026-07-19: evidence-backed badge counts — the badge on a node is
+  // the number of DISTINCT evidence records backing its incident edges (strictly
+  // from the run; no corpus/aggregate numbers). Zero-evidence nodes get no badge.
+  const edgeEvidenceByNode = {};
+  for (const l of links) {
+    for (const end of [l.source, l.target]) {
+      (edgeEvidenceByNode[end] = edgeEvidenceByNode[end] || new Set());
+      for (const id of l.evidenceIds || []) edgeEvidenceByNode[end].add(id);
+    }
+  }
 
   // self-pair curvature so multi-type links between the same pair don't overlap
   const pairCount = {};
@@ -107,18 +135,50 @@ export function runToGraph(run, filters = {}) {
       const degree = metrics.degrees[n.id] ?? 0;
       const size = n.kind === 'country' ? 15 : 5 + Math.sqrt(Math.max(0, pr)) * 42 + degree * 0.55;
       // community hue tint (subtle, on white): even-spread golden-angle hues, low saturation
-      const hue = (comm * 137.508) % 360;
+      // de-purple: constrain community hues to 0-240 (warm→green→blue), never violet/pink
+      const hue = (comm * 137.508) % 240;
       const evidence = run.evidence.filter(ev => ev.claim?.toLowerCase().includes(n.label.toLowerCase()) ||
         links.some(l => (l.source === n.id || l.target === n.id) && l.evidenceIds.includes(ev.id)));
       const media = evidence.flatMap(ev => ev.media || []);
+      // evidence-backed badge: distinct evidence records on incident edges ONLY
+      const edgeEvidence = [...(edgeEvidenceByNode[n.id] || [])];
       return {
         ...n, size, pagerank: pr, community: comm, degree,
-        tint: `hsl(${hue} 55% 88%)`, tintStroke: `hsl(${hue} 45% 62%)`,
+        tint: `hsl(0 0% ${78 + (comm % 4) * 5}%)`, tintStroke: `hsl(0 0% ${48 + (comm % 4) * 8}%)`, // monochrome: community = gray step
         dim: q && !(`${n.label} ${n.fullName}`.toLowerCase().includes(q)),
         evidenceCount: evidence.length, media,
+        edgeEvidenceIds: edgeEvidence,
+        badgeCount: edgeEvidence.length,           // ← the ONLY number a badge shows
       };
     });
   return { nodes, links, metrics };
+}
+
+/**
+ * UX overhaul 2026-07-19: evidence breakdown for a node badge — exactly which
+ * edges + evidence records produce the badge count. Pure; groups by
+ * relationship_type/dimension for the clustered fan-out hierarchy.
+ */
+export function nodeEvidenceBreakdown(run, nodeId) {
+  const evById = new Map(run.evidence.map(e => [e.id, e]));
+  const incident = run.edges.filter(e => e.entity_a === nodeId || e.entity_b === nodeId);
+  const groups = {};
+  const distinct = new Set();
+  for (const e of incident) {
+    const g = e.dimension || e.relationship_type || 'Other';
+    (groups[g] = groups[g] || []).push({
+      edgeId: e.id, a: e.entity_a, b: e.entity_b, type: e.relationship_type,
+      dimension: e.dimension || null, claim: e.claim, confidence: e.confidence,
+      verification: e.verification || null, inference: !!e.inference,
+      sourceTypes: e.sourceTypes || [],
+      evidence: (e.evidence_record_ids || []).map(id => {
+        distinct.add(id);
+        const ev = evById.get(id);
+        return ev ? { id: ev.id, claim: ev.claim, source: ev.source, source_type: ev.source_type || ev.platform, date: ev.publish_date, confidence: ev.confidence, url: ev.url } : { id, missing: true };
+      }),
+    });
+  }
+  return { nodeId, total: distinct.size, groups, edgeCount: incident.length };
 }
 
 /** Map corpus density stats (/v2/evidence/stats → density{}) onto graph nodes so
@@ -166,3 +226,15 @@ export function nodeToMiniArtifact(run, node) {
       .slice(0, 6).map(e => ({ id: e.id, platform: e.platform, source: e.source, date: e.publish_date, claim: e.claim, url: e.url })),
   };
 }
+
+// ---- V2 inspector support (restored 2026-07-19, expand-mode fix) ----
+/** platform-or-source_type accessor (round-1 runs use platform; deep-v2 uses source_type). */
+export const evPlatform = (ev) => ev.platform || ev.source_type || 'other';
+
+/** Verification-tier styling contract — MONOCHROME grayscale tiers. */
+export const VERIFICATION_STYLES = {
+  Verified:  { color: '#ffffff', dash: [],     label: 'Verified — solid' },
+  Likely:    { color: '#c0c0c0', dash: [],     label: 'Likely — solid (lighter)' },
+  Possible:  { color: '#a0a0a0', dash: [7, 5], label: 'Possible — dashed' },
+  Predicted: { color: '#707070', dash: [2, 5], label: 'Predicted — dotted' },
+};

@@ -9,28 +9,43 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { PORT, ENDPOINT_ID, REASONING_EFFORT, ONDEMAND_API_KEY, STREAM_DEBUG } from './env.js';
 import * as store from './store.js';
+import { createTurn, getTurn, emit as turnEmit, addSubscriber, removeSubscriber, finishTurn, cancelTurn } from './chatTurns.js';
 import { classify } from './router.js';
 import { buildSystemPrompt, WIZARD_STEPS } from './prompts.js';
 import { pluginIdsFor, pluginLabelsFor, FEATURE_PLUGINS, ADOPTED } from './plugins.js';
-import { createOdSession, streamQuery, syncQuery } from './ondemand.js';
+import {
+  createOdSession, streamQuery, syncQuery, listClientPlugins,
+  initPluginOAuth, unsubscribePluginConfiguration, completePluginOAuth, describeError,
+} from './ondemand.js';
+import { getOdaPreset, presetQueryOptions } from './odaPreset.js';
 import { fetchCountryPack, renderDataBlock, resolveCountry } from './countryData.js';
 import { buildExport } from './exports.js';
 import { extractText } from './extract.js';
 import { registerSpeechRoutes } from './speech.js';
+import { registerVoiceRoutes } from './voice.js';
+import { registerRealtimeVoiceRoutes } from './realtimeVoice.js';
 import { registerIntelRoutes, COUNTRIES } from './intel.js';
 import { registerCorrelationRoutes } from './correlation.js';
 import { registerFactsRoutes } from './facts.js';
 import { registerMsmRoutes, getTranscriptText as getMsmTranscript } from './msm.js';
 import { registerEvidenceRoutes } from './evidenceCorpus.js';
+import odaRouter from './oda/routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json({ limit: '4mb' }));
 
+// Max chars of an MSM broadcast transcript to inject into the analysis prompt.
+// Verified live: ~200k chars fit GLM 4.7's context, ~300k exceeds it; 150k keeps
+// headroom for the system prompt, reasoning, and the generated answer. Override via env.
+const MSM_TRANSCRIPT_CAP = parseInt(process.env.MSM_TRANSCRIPT_CAP || '150000', 10);
+
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 // Voice routes — OnDemand Cloud Services (speech_to_text / text_to_speech) ONLY.
 registerSpeechRoutes(app, upload);
+registerVoiceRoutes(app, upload); // ODA World Intelligence voice routes (additive 2026-07-20)
+registerRealtimeVoiceRoutes(app); // OpenAI Realtime API voice (WebRTC ephemeral token) — low-latency speech-to-speech (2026-07-21)
 
 // ODA Intelligence Dashboard routes (Perplexity + X Search + AI analysis pipeline).
 registerIntelRoutes(app);
@@ -47,6 +62,13 @@ registerMsmRoutes(app);
 // versioned runs + Connected Dots streaming + GLM Quick Query).
 registerCorrelationRoutes(app, { countries: COUNTRIES });
 registerEvidenceRoutes(app);
+
+// ODA application engine (Phase 2 backend port — MIGRATION_MAP.md): skill
+// registry, GLM 4.7 interpretation, Sonnet 5 workers, durable runs, SSE run
+// events, resumable gates, Thinker–Worker–Verifier. Mounted ADDITIVELY under
+// /api/oda — no existing route above or below is touched.
+app.use('/api/oda', odaRouter);
+console.log('[oda] application engine mounted at /api/oda');
 
 // ---------- health ----------
 app.get('/api/health', (req, res) => res.json({
@@ -81,6 +103,73 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   }
 });
 
+// ---------- connectors (OnDemand plugin list proxy) ----------
+// GET /api/connectors?v2=1&limit=50&page=1&scope=&authType=OAUTH
+app.get('/api/connectors', async (req, res) => {
+  try {
+    const { v2, limit, page, scope, authType } = req.query;
+    const data = await listClientPlugins({
+      v2: v2 != null ? Number(v2) : 1,
+      limit: limit != null ? Number(limit) : 50,
+      page: page != null ? Number(page) : 1,
+      scope: scope != null ? String(scope) : '',
+      authType: authType != null ? String(authType) : 'OAUTH',
+    });
+    res.json(data);
+  } catch (e) {
+    console.error('[FAIL] [connectors] list failed:', e.message);
+    res.status(e.status || 500).json({ error: e.message, errorCode: e.errorCode });
+  }
+});
+
+// POST /api/connectors/oauth/init  { pluginId, redirectUri?, metadata? }
+app.post('/api/connectors/oauth/init', async (req, res) => {
+  try {
+    const { pluginId, redirectUri, metadata } = req.body || {};
+    if (!pluginId || typeof pluginId !== 'string') {
+      return res.status(400).json({ error: 'pluginId is required' });
+    }
+    const redirect = typeof redirectUri === 'string' && redirectUri.trim()
+      ? redirectUri.trim()
+      : undefined;
+    const data = await initPluginOAuth({
+      pluginId,
+      redirectUri: redirect,
+      metadata: metadata || {},
+    });
+    res.json(data);
+  } catch (e) {
+    console.error('[FAIL] [connectors] oauth init failed:', e.message);
+    res.status(e.status || 500).json({ error: e.message, errorCode: e.errorCode });
+  }
+});
+
+// DELETE /api/connectors/:id/unsubscribe  (id = plugin.id from list response)
+app.delete('/api/connectors/:id/unsubscribe', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'Plugin id is required' });
+    const data = await unsubscribePluginConfiguration(id);
+    res.json(data);
+  } catch (e) {
+    console.error('[FAIL] [connectors] unsubscribe failed:', e.message);
+    res.status(e.status || 500).json({ error: e.message, errorCode: e.errorCode });
+  }
+});
+
+// POST /api/connectors/oauth/complete  { state, code }
+app.post('/api/connectors/oauth/complete', async (req, res) => {
+  try {
+    const { state, code } = req.body || {};
+    if (!state || !code) return res.status(400).json({ error: 'state and code are required' });
+    const data = await completePluginOAuth({ state, code });
+    res.json(data);
+  } catch (e) {
+    console.error('[FAIL] [connectors] oauth complete failed:', e.message);
+    res.status(e.status || 500).json({ error: e.message, errorCode: e.errorCode });
+  }
+});
+
 // ---------- country-data direct probe (used by UI suggestions) ----------
 app.get('/api/country-data/:query', async (req, res) => {
   try {
@@ -90,13 +179,31 @@ app.get('/api/country-data/:query', async (req, res) => {
 });
 
 // ---------- the main chat SSE endpoint ----------
-// POST /api/chat  {conversationId, text, feature?, fileId?, wizard?:{active,step}, editTarget?}
+// GET /api/presets/oda — ODA playground preset + resolved skill names
+app.get('/api/presets/oda', async (req, res) => {
+  try {
+    const data = await getOdaPreset({ refresh: req.query.refresh === '1' });
+    if (!data.preset) return res.status(404).json({ error: 'ODA preset not found' });
+    res.json(data);
+  } catch (e) {
+    console.error('[FAIL] [presets/oda]', e.message);
+    res.status(e.status || 502).json({ error: e.message, errorCode: e.errorCode });
+  }
+});
+
+// POST /api/chat  {conversationId, text, feature?, fileId?, pluginIds?, useOdaPreset?, wizard?:{active,step}, editTarget?}
 // Streams SSE frames: routing, plugin_status, thinking, answer, artifact_hint, error, done
 app.post('/api/chat', async (req, res) => {
-  const { conversationId, text = '', feature: forcedFeature, fileId, wizard, editTarget, msmVideoId } = req.body || {};
-  const conv = store.getConversation(conversationId);
-  if (!conv) return res.status(404).json({ error: 'Conversation not found' });
+  const { conversationId, text = '', feature: forcedFeature, mode: forcedMode, fileId, wizard, editTarget, msmVideoId, pluginIds: clientPluginIds, useOdaPreset: useOdaPresetRaw } = req.body || {};
+  const useOdaPreset = Boolean(useOdaPresetRaw);
   if (!text.trim() && !fileId) return res.status(400).json({ error: 'Empty message' });
+  // The conversation store is in-memory, so a server restart (locally) or a fresh serverless
+  // instance (every Vercel cold start) drops all conversations. A client still holding a valid
+  // id would previously get "Conversation not found" and the SSE reconnect would loop on the
+  // dead id and give up. Instead, recreate the conversation from the client's id and continue —
+  // history is lost (it already was), but the current turn succeeds transparently.
+  let conv = store.getConversation(conversationId);
+  if (!conv) conv = store.createConversation({ id: conversationId || undefined, feature: forcedFeature || 'chat' });
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
@@ -105,41 +212,40 @@ app.post('/api/chat', async (req, res) => {
     'X-Accel-Buffering': 'no',
   });
   res.flushHeaders?.();
-  // WS1 audit fix (2026-07-17): abort the UPSTREAM OnDemand fetch the moment the browser
-  // disconnects, and never write to the response after close. Previously the upstream stream
-  // kept running to completion and frames were written to a dead socket.
-  let clientClosed = false;
+  // RESUMABLE TURN (2026-07-26): the upstream OnDemand query is owned by a Turn, not by this
+  // browser socket. Frames are buffered + SSE-`id:`-tagged so a dropped connection can resume
+  // from the exact break point via /api/chat/resume (no restart, no duplication). The upstream
+  // is aborted only when the turn is abandoned (grace elapsed) or explicitly cancelled (Stop).
   const upstreamAbort = new AbortController();
+  const turn = createTurn(conv.id);
+  turn.onAbandon = () => upstreamAbort.abort();
+  const sub = addSubscriber(turn, res, -1, () => { if (!res.writableEnded) res.end(); });
+  // Tell the client its turn id up front so it can resume this exact turn on a drop.
+  turnEmit(turn, 'message', JSON.stringify({ type: 'turn', turnId: turn.id, ts: new Date().toISOString() }));
   const send = (type, payload) => {
-    if (clientClosed) return; // guard: no frames after client disconnect
-    // Every browser-bound frame carries a server UTC timestamp (frontend debug drawer displays it).
     const ts = new Date().toISOString();
-    res.write(`data:${JSON.stringify({ type, ts, ...payload })}\n\n`);
-    res.flush?.(); // no-op unless compression middleware is present; keeps Vercel serverless streaming flushed
+    turnEmit(turn, 'message', JSON.stringify({ type, ts, ...payload }));
     // Debug line: metadata only — never frame text content, never the API key.
     if (STREAM_DEBUG) console.log(`[stream-debug] ts=${ts} dir=browser type=${type} chars=${typeof payload?.delta === 'string' ? payload.delta.length : 0} conv=${conversationId}`);
   };
-  // Standard SSE comment frame every 10s — keeps intermediary proxies/serverless runtimes from idling the connection out.
-  const hb = setInterval(() => {
-    if (clientClosed) return;
-    res.write(': keepalive\n\n');
-    res.flush?.();
-  }, 10000);
   const onClientClose = () => {
-    if (clientClosed) return;
-    // res 'close' also fires after a NORMAL res.end() — only treat it as a client
-    // disconnect when the response was NOT finished by us (writableEnded false).
+    // res 'close' also fires after a NORMAL res.end() — only detach on a real disconnect.
     if (res.writableEnded) return;
-    clientClosed = true;
-    clearInterval(hb);
-    upstreamAbort.abort(); // stop the OnDemand stream — no orphaned upstream reads
+    removeSubscriber(turn, sub); // keep upstream alive during the grace window for resume
     if (STREAM_DEBUG) console.log(`[stream-debug] ts=${new Date().toISOString()} dir=browser type=client-disconnect conv=${conversationId}`);
   };
   // NOTE (WS1 bug found live): in Node 18+ `req.on('close')` fires as soon as the request
-  // BODY stream is fully consumed — i.e. milliseconds into every POST — NOT on client
-  // disconnect. Wiring the abort to req 'close' killed every upstream stream ~30ms in.
-  // The reliable disconnect signal is the RESPONSE 'close' with writableEnded === false.
+  // BODY stream is fully consumed — NOT on client disconnect. The reliable disconnect signal
+  // is the RESPONSE 'close' with writableEnded === false.
   res.on('close', onClientClose);
+
+  // Reasoning channels are reconstructed read-only from the streamed frames so a reloaded
+  // conversation renders the thinking/status panels instead of the bare answer. Declared
+  // out here because the catch block persists them alongside a partial answer.
+  const reasoning = {
+    thinking: '', planningAnswer: '', pluginThinking: '', pluginAnswer: '', fulfillmentThinking: '',
+    statusLogs: [], metrics: null,
+  };
 
   try {
     const file = fileId ? store.getFile(fileId) : null;
@@ -150,13 +256,44 @@ app.post('/api/chat', async (req, res) => {
     const route = await classify(text, { hasFile: Boolean(file), forcedFeature: forcedFeature || (conv.feature !== 'chat' ? conv.feature : null) });
     let { feature, mode } = route;
     if (wizard?.active) mode = 'FULL'; // guided document creation is a FULL-mode flow
+    // Explicit client override (e.g. MSM 'Analyse deeper' forces a one-shot FAST analysis
+    // instead of the interactive stepwise FULL flow). Wizard flows keep FULL above.
+    if (!wizard?.active && (forcedMode === 'FAST' || forcedMode === 'FULL')) mode = forcedMode;
 
-    const pluginIds = pluginIdsFor(feature);
+    const defaultPluginIds = pluginIdsFor(feature);
+    const extraPluginIds = Array.isArray(clientPluginIds)
+      ? clientPluginIds.filter((id) => typeof id === 'string' && id.startsWith('plugin-'))
+      : [];
+
+    let odaPreset = null;
+    let presetOpts = {};
+    if (useOdaPreset) {
+      const { preset } = await getOdaPreset();
+      odaPreset = preset;
+      presetOpts = presetQueryOptions(preset);
+      if (!preset) {
+        send('error', { message: 'ODA preset is enabled but could not be loaded from the platform.' });
+        send('done', { messageId: null, fullAnswerPresent: false, sawAnswer: false });
+        finishTurn(turn, 'error');
+        if (!res.writableEnded) res.end();
+        return;
+      }
+    }
+
+    const pluginIds = [...new Set([
+      ...defaultPluginIds,
+      ...extraPluginIds,
+      ...(presetOpts.pluginIds || []),
+    ])];
     const pluginLabels = pluginLabelsFor(feature);
+    const modelLabel = odaPreset
+      ? `${odaPreset.endpoint}+${odaPreset.reasoningEffort}${odaPreset.skillIds?.length ? ` · ${odaPreset.skillIds.length} skills` : ''}`
+      : `${ENDPOINT_ID}+${REASONING_EFFORT}`;
     send('routing', {
       feature, mode, reason: route.reason, source: route.source,
       analysisFirst: Boolean(route.analysisFirst), outOfScope: Boolean(route.outOfScope),
-      plugins: pluginLabels, model: 'gpt-5.6-sol-medium',
+      plugins: pluginLabels, model: modelLabel,
+      odaPreset: odaPreset ? { id: odaPreset.id, name: odaPreset.name, enabled: true } : undefined,
     });
 
     // 2) Per-conversation OnDemand session (create once, reuse)
@@ -185,8 +322,20 @@ app.post('/api/chat', async (req, res) => {
       const tx = getMsmTranscript(String(msmVideoId));
       if (tx) {
         send('plugin_status', { plugin: 'MSM Analysis', message: `Attaching broadcast transcript ${msmVideoId} (${tx.length} chars)…` });
-        const cap = 24000;
-        const body = tx.length > cap ? `${tx.slice(0, cap)}\n[transcript truncated at ${cap} of ${tx.length} chars]` : tx;
+        // Pass the WHOLE transcript when it fits the model context. The old 24k cap dropped
+        // most of it; the real ceiling is ~200k chars (verified live: 300k → context_length_exceeded).
+        // MSM_TRANSCRIPT_CAP (default 150k) leaves headroom for the system prompt + reasoning + output.
+        // When a transcript is larger than the cap (rare, only livestream-length dumps), keep the
+        // START and the END (news segments carry conclusions at the end) rather than only the head.
+        let body;
+        if (tx.length <= MSM_TRANSCRIPT_CAP) {
+          body = tx;
+        } else {
+          const head = Math.floor(MSM_TRANSCRIPT_CAP * 0.7);
+          const tail = MSM_TRANSCRIPT_CAP - head;
+          body = `${tx.slice(0, head)}\n\n[…${tx.length - MSM_TRANSCRIPT_CAP} of ${tx.length} chars omitted from the middle to fit the model context; the opening and closing of the broadcast are both included…]\n\n${tx.slice(tx.length - tail)}`;
+          send('plugin_status', { plugin: 'MSM Analysis', message: `Transcript is ${tx.length} chars — sent the first ${head} + last ${tail} (middle trimmed to fit context).` });
+        }
         queryParts.push(`ATTACHED BROADCAST TRANSCRIPT (MSM Analysis, YouTube ${msmVideoId}) — ground every claim in it.\n<<<TRANSCRIPT\n${body}\nTRANSCRIPT>>>`);
       } else {
         send('plugin_status', { plugin: 'MSM Analysis', message: `No stored transcript for ${msmVideoId} — continuing without it.` });
@@ -213,7 +362,9 @@ app.post('/api/chat', async (req, res) => {
     queryParts.push(`USER REQUEST: ${text}`);
 
     const wizardStep = wizard?.active ? (WIZARD_STEPS[wizard.step] || 'Scope') : null;
-    const systemPrompt = buildSystemPrompt(feature, mode, wizardStep);
+    const systemPrompt = useOdaPreset && odaPreset?.fulfillmentPrompt
+      ? odaPreset.fulfillmentPrompt
+      : buildSystemPrompt(feature, mode, wizardStep);
 
     // 4) STREAM from OnDemand — thinking tokens separated from answer tokens
     if (pluginLabels.length) send('plugin_status', { plugin: pluginLabels[0], message: `Working with ${pluginLabels.join(', ')}…` });
@@ -223,18 +374,37 @@ app.post('/api/chat', async (req, res) => {
     // filtering, no re-synthesis. The browser parses eventType itself (planning_thinking,
     // planning_output, step_thinking, step_output, fulfillment, statusLog, metricsLog,
     // heartbeat frames, and the [DONE] sentinel all pass through).
+    const accumulate = (rawData) => {
+      if (rawData === '[DONE]') return;
+      let evt;
+      try { evt = JSON.parse(rawData); } catch { return; }
+      switch (evt.eventType) {
+        case 'planning_thinking': reasoning.thinking += evt.thinking?.delta || ''; break;
+        case 'planning_output': reasoning.planningAnswer += evt.output?.delta || ''; break;
+        case 'step_thinking': reasoning.pluginThinking += evt.thinking?.delta || ''; break;
+        case 'step_output': reasoning.pluginAnswer += evt.output?.delta || ''; break;
+        case 'fulfillment_thinking': reasoning.fulfillmentThinking += evt.thinking?.delta || ''; break;
+        case 'metricsLog': if (evt.publicMetrics) reasoning.metrics = evt.publicMetrics; break;
+        case 'statusLog':
+          if (evt.currentStatusLog) reasoning.statusLogs.push(evt.currentStatusLog);
+          break;
+        default: break;
+      }
+    };
     const sendRaw = (evName, rawData) => {
-      if (clientClosed) return;
-      if (evName && evName !== 'message') res.write(`event:${evName}\n`);
-      res.write(`data:${rawData}\n\n`);
-      res.flush?.();
+      accumulate(rawData); // read-only; never mutates what is forwarded below
+      turnEmit(turn, evName, rawData); // buffered + SSE-id-tagged for resume; passthrough stays byte-identical
       if (STREAM_DEBUG) console.log(`[stream-debug] ts=${new Date().toISOString()} dir=browser passthrough event=${evName} bytes=${rawData.length} conv=${conversationId}`);
     };
     const fullAnswer = await streamQuery({
       odSessionId: conv.odSessionId,
       query: queryParts.join('\n\n'),
       pluginIds,
+      skillIds: useOdaPreset ? (presetOpts.skillIds || []) : [],
       systemPrompt,
+      endpointId: useOdaPreset ? presetOpts.endpointId : undefined,
+      reasoningEffort: useOdaPreset ? presetOpts.reasoningEffort : undefined,
+      modelConfigs: useOdaPreset ? presetOpts.modelConfigs : undefined,
       signal: upstreamAbort.signal, // WS1: cancel upstream when the browser disconnects
       onRaw: sendRaw,
       onEvent: (type) => { if (type === 'answer') sawAnswer = true; },
@@ -242,8 +412,8 @@ app.post('/api/chat', async (req, res) => {
 
     // 5) Persist + finish
     const asstMsg = store.addMessage(conv, {
-      role: 'assistant', text: fullAnswer,
-      routing: { feature, mode, plugins: pluginLabels, model: 'gpt-5.6-sol-medium', reason: route.reason },
+      role: 'assistant', text: fullAnswer, ...reasoning,
+      routing: { feature, mode, plugins: pluginLabels, model: modelLabel, reason: route.reason, odaPreset: odaPreset ? { id: odaPreset.id, name: odaPreset.name } : undefined },
     });
     if (conv.title === 'New chat' && text.trim()) {
       conv.title = text.trim().slice(0, 48) + (text.trim().length > 48 ? '…' : '');
@@ -251,11 +421,17 @@ app.post('/api/chat', async (req, res) => {
     store.touch(conv, { feature: conv.feature === 'chat' ? feature : conv.feature });
 
     send('done', { messageId: asstMsg.id, fullAnswerPresent: Boolean(fullAnswer), sawAnswer });
+    finishTurn(turn, 'done');
   } catch (e) {
-    console.error('[FAIL] [chat] stream failed:', e.message);
+    // Turn was explicitly cancelled (user Stop) or abandoned (no resume within grace): the
+    // upstream abort surfaces here — don't persist a partial or emit noise to a dead turn.
+    if (turn.cancelled) { finishTurn(turn, 'error'); return; }
+    // e.message alone is often just "terminated" — undici's generic body-stream-failure
+    // wrapper. describeError walks e.cause to surface the actual network/socket reason.
+    console.error('[FAIL] [chat] stream failed:', describeError(e));
     if (e.partialAnswer) {
       store.addMessage(conv, {
-        role: 'assistant', text: e.partialAnswer,
+        role: 'assistant', text: e.partialAnswer, ...reasoning,
         routing: { incomplete: true, note: 'Stream was interrupted before completion; partial answer persisted.' },
       });
     }
@@ -265,10 +441,50 @@ app.post('/api/chat', async (req, res) => {
       userMessage: 'The response stream was interrupted. Please try again — any partial output has been saved to this conversation.',
     });
     send('done', { aborted: true });
+    finishTurn(turn, 'error');
   } finally {
-    clearInterval(hb);
-    if (!clientClosed) res.end();
+    if (!res.writableEnded) res.end();
   }
+});
+
+// GET /api/chat/resume?turnId=…&lastEventIndex=N — resume a dropped turn from the break point.
+// Replays buffered frames with id > N, then streams live frames until the turn finishes.
+app.get('/api/chat/resume', (req, res) => {
+  const turnId = String(req.query.turnId || '');
+  const lastEventIndex = Number.parseInt(req.query.lastEventIndex, 10);
+  const from = Number.isFinite(lastEventIndex) ? lastEventIndex : -1;
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders?.();
+  const turn = getTurn(turnId);
+  if (!turn) {
+    // Turn is gone (expired, cancelled, or a different serverless instance) — tell the client
+    // so it can fall back (preserve partial / restart pre-answer).
+    res.write(`data:${JSON.stringify({ type: 'resume_failed', reason: 'expired', ts: new Date().toISOString() })}\n\n`);
+    res.flush?.();
+    res.end();
+    return;
+  }
+  const sub = addSubscriber(turn, res, from, () => { if (!res.writableEnded) res.end(); });
+  // A turn that already finished before the reconnect: the tail + `done` frame were just
+  // replayed, so close the socket now.
+  if (turn.status !== 'running') {
+    removeSubscriber(turn, sub);
+    if (!res.writableEnded) res.end();
+    return;
+  }
+  res.on('close', () => { if (!res.writableEnded) removeSubscriber(turn, sub); });
+});
+
+// POST /api/chat/cancel {turnId} — user pressed Stop: abort upstream + drop the turn now.
+app.post('/api/chat/cancel', (req, res) => {
+  const turnId = String(req.body?.turnId || '');
+  const ok = cancelTurn(turnId);
+  res.json({ ok });
 });
 
 function extractCountryGuess(text) {
@@ -313,8 +529,10 @@ app.post('/api/export', async (req, res) => {
 app.get('/api/export/:id/download', (req, res) => {
   const exp = store.getExport(req.params.id);
   if (!exp) return res.status(404).json({ error: 'Artifact expired (in-memory store resets on restart)' });
+  // disposition=inline → render in the browser (PDF preview) instead of forcing a download.
+  const inline = req.query.disposition === 'inline';
   res.setHeader('Content-Type', exp.mime);
-  res.setHeader('Content-Disposition', `attachment; filename="${exp.name}"`);
+  res.setHeader('Content-Disposition', `${inline ? 'inline' : 'attachment'}; filename="${exp.name}"`);
   res.send(exp.buffer);
 });
 
@@ -325,6 +543,21 @@ if (fs.existsSync(DIST)) {
   app.get(/^(?!\/api\/).*/, (req, res) => res.sendFile(path.join(DIST, 'index.html')));
 }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[oda-suite] listening on 0.0.0.0:${PORT} · model ${ENDPOINT_ID}+${REASONING_EFFORT} · plugins: ${Object.keys(ADOPTED).length} adopted`);
-});
+// Serverless platforms (Vercel/Lambda) invoke the exported handler per request and
+// forbid binding a port — only bind when running as a standalone long-lived server.
+const ON_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+if (!ON_SERVERLESS) {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[oda-suite] listening on 0.0.0.0:${PORT} · model ${ENDPOINT_ID}+${REASONING_EFFORT} · plugins: ${Object.keys(ADOPTED).length} adopted`);
+  });
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[oda-suite] port ${PORT} is already in use — stop the other instance (lsof -nP -iTCP:${PORT} -sTCP:LISTEN) or run with PORT=<other> yarn dev`);
+      process.exit(1);
+    }
+    throw err;
+  });
+}
+
+// Vercel's @vercel/node runtime uses the default export as the request handler.
+export default app;

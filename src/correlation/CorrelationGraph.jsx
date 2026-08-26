@@ -13,7 +13,7 @@ import { attachGestures } from './gestures.js';
  *   is unreliable under changing data); drag physics; 60fps (particle counts bounded)
  */
 export default function CorrelationGraph({ graph, width, height, showLabels, physics,
-  onHoverLink, onHoverNode, onClickLink, onClickNode, searchNodeId, pulseKeys }) {
+  onHoverLink, onHoverNode, onClickLink, onClickNode, onBadgeClick, searchNodeId, pulseKeys }) {
   const fgRef = useRef();
   const wrapRef = useRef();
   const [hover, setHover] = useState(null); // {kind:'node'|'link', id}
@@ -21,6 +21,13 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
   const pulseT = useRef(0);
   const widthRef = useRef(width); widthRef.current = width;
   const heightRef = useRef(height); heightRef.current = height;
+
+  // QA hook: expose fg instance + live graph + wrap el for test drivers.
+  // Unconditional (the SPA's history.pushState can strip the ?debug=1 query
+  // before this mounts); read-only handle, no behavioural effect.
+  useEffect(() => {
+    try { window.__ceFg = { fg: fgRef.current, graph, wrap: wrapRef.current }; } catch { /* noop */ }
+  }, [graph]);
 
   // Gesture UX package (2026-07-19): pinch-zoom / swipe-pan / double-tap-center
   useEffect(() => {
@@ -86,7 +93,9 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
       if (++tries > 40) clearInterval(timer);
     }, 250);
     return () => clearInterval(timer);
-  }, [graph]);
+    // width/height in deps (2026-07-20): re-fit after expand→fullscreen AND on
+    // restore to normal size — same bbox-polling pattern (onEngineStop unreliable).
+  }, [graph, width, height]);
 
   // search → zoom to node
   useEffect(() => {
@@ -143,7 +152,7 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
       ctx.globalAlpha = alpha * 0.85;
       ctx.beginPath();
       ctx.arc(n.x, n.y, Math.max(r, 2 / globalScale), 0, 2 * Math.PI);
-      ctx.fillStyle = n.tintStroke || '#c7d2fe';
+      ctx.fillStyle = n.tintStroke || '#9a9a9a';
       ctx.fill();
       ctx.restore();
       return;
@@ -155,7 +164,7 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
     // community tint halo (legend-mapped: halo hue = Louvain community)
     ctx.beginPath();
     ctx.arc(n.x, n.y, r + 3.5, 0, 2 * Math.PI);
-    ctx.fillStyle = n.tint || '#eef2ff';
+    ctx.fillStyle = n.tint || '#d0d0d0';
     ctx.fill();
 
     // IG proof thumbnail (first media) clipped in a circle above the node body
@@ -166,13 +175,13 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
     // body
     ctx.beginPath();
     ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = n.kind === 'country' ? '#111827' : '#ffffff';
+    ctx.fillStyle = n.kind === 'country' ? '#ededed' : '#1b1b1b';
     ctx.fill();
     ctx.lineWidth = n.kind === 'country' ? 0 : 1.4;
-    ctx.strokeStyle = n.tintStroke || '#c7d2fe';
+    ctx.strokeStyle = n.tintStroke || '#9a9a9a';
     if (n.kind !== 'country') ctx.stroke();
     if (hover?.kind === 'node' && hover.id === n.id) {
-      ctx.lineWidth = 2; ctx.strokeStyle = '#6d4aff'; ctx.stroke();
+      ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff'; ctx.stroke();
     }
 
     if (imgReady) {
@@ -184,23 +193,26 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
       ctx.restore();
       ctx.beginPath();
       ctx.arc(n.x, n.y - r - 7, 7, 0, 2 * Math.PI);
-      ctx.strokeStyle = '#d62976'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.strokeStyle = '#c0c0c0'; ctx.lineWidth = 1; ctx.stroke();
     }
 
     // initials
     const label = n.kind === 'country' ? n.label.slice(0, 2).toUpperCase()
       : n.label.split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase();
-    ctx.fillStyle = n.kind === 'country' ? '#ffffff' : '#1f2937';
-    ctx.font = `600 ${Math.max(4, r * 0.72)}px Montserrat, sans-serif`;
+    ctx.fillStyle = n.kind === 'country' ? '#0d0d0d' : '#e5e7eb';
+    ctx.font = `600 ${Math.max(4, r * 0.72)}px Inter, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(label, n.x, n.y);
 
     // text label — VIEWPORT-FIT (2026-07-19 Gemini UX fix): labels near the frame
     // edge are re-anchored inward so they never clip (e.g. 'Relief Beneficiaries').
     if (showLabels && (globalScale > 1.05 || n.kind === 'country' || (hover?.kind === 'node' && hover.id === n.id))) {
-      const fpx = 11 / globalScale;
-      ctx.font = `500 ${fpx}px Montserrat, sans-serif`;
-      ctx.fillStyle = dim ? 'rgba(55,65,81,0.35)' : '#374151';
+      // Type hierarchy (TYPOGRAPHY.md): countries PRIMARY (600 · #ffffff · 12.5px),
+      // entities SECONDARY (500 · #e5e7eb · 11px). Differentiation by weight+luminance, not hue.
+      const isCountry = n.kind === 'country';
+      const fpx = (isCountry ? 12.5 : 11) / globalScale;
+      ctx.font = `${isCountry ? 600 : 500} ${fpx}px Inter, sans-serif`;
+      ctx.fillStyle = dim ? 'rgba(180,180,180,0.4)' : (isCountry ? '#ffffff' : '#e5e7eb');
       ctx.textBaseline = 'top';
       const tw = ctx.measureText(n.label).width;
       // canvas viewport bounds in graph coords
@@ -219,27 +231,48 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
       ctx.fillText(n.label, lx, n.y + r + 3);
       ctx.textAlign = 'center';
     }
-    // evidence-density badge (2026-07-19 rebuild): TRUE corpus density (hundreds-scale)
-    // via densityCount from /v2/evidence/stats; per-run count as fallback. Pill-shaped
-    // so 3-digit counts render uncropped.
-    const badgeN = n.densityCount ?? n.evidenceCount;
-    if (badgeN > 0 && !dim) {
-      const txt = badgeN > 999 ? '999+' : String(badgeN);
-      ctx.font = '700 7.5px Montserrat, sans-serif';
+    // UX overhaul 2026-07-19: EVIDENCE-BACKED badge — badgeCount = distinct evidence
+    // records on this node's incident edges (adapter computes it strictly from the
+    // run; NEVER a corpus/aggregate number). ODA-neutral styling (white pill, dark
+    // text, brand ring) replaces the purple blob. Collision-aware: candidate anchor
+    // angles are tried until the pill overlaps no other node disc; the chosen rect
+    // is registered on n.__badgeRect for click hit-testing (badge → evidence
+    // breakdown panel). Zero-evidence nodes get NO badge — no invented numbers.
+    const badgeN = n.badgeCount ?? 0;
+    n.__badgeRect = null;
+    // LOD (2026-07-20, 200-point density): badges render only when legible —
+    // zoomed in (globalScale ≥ 1.15), or node hovered, or a high-signal node
+    // (country / top-weight via alwaysLabel / pagerank). Prevents pill soup.
+    const badgeVisible = badgeN > 0 && !dim &&
+      (globalScale >= 1.15 || (hover?.kind === 'node' && hover.id === n.id) ||
+       n.kind === 'country' || n.alwaysLabel || (n.pagerank ?? 0) > 0.06);
+    if (badgeVisible) {
+      const txt = String(badgeN);
+      ctx.font = '700 7.5px Inter, sans-serif';
       const tw2 = ctx.measureText(txt).width;
-      const bw = Math.max(11, tw2 + 8), bh = 11;
-      const bx = n.x + r * 0.72, by = n.y - r * 0.72 - bh / 2;
+      const bw = Math.max(13, tw2 + 9), bh = 12;
+      // candidate anchors: NE, NW, SE, SW, E — pick first that avoids other nodes
+      const cand = [[0.85, -0.85], [-0.85 - bw / r, -0.85], [0.85, 0.55], [-0.85 - bw / r, 0.55], [1.15, -0.2]];
+      let bx = n.x + r * 0.85, by = n.y - r * 0.85 - bh / 2;
+      for (const [fx, fy] of cand) {
+        const tx = n.x + r * fx, ty = n.y + r * fy - bh / 2;
+        const cx2 = tx + bw / 2, cy2 = ty + bh / 2;
+        const hit = (graph.nodes || []).some(o => o !== n && Number.isFinite(o.x) &&
+          Math.hypot(o.x - cx2, o.y - cy2) < o.size / 2 + bh / 2 + 1);
+        if (!hit) { bx = tx; by = ty; break; }
+      }
       ctx.beginPath();
       if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, bh / 2);
       else ctx.rect(bx, by, bw, bh);
-      ctx.fillStyle = '#6d4aff'; ctx.fill();
-      ctx.lineWidth = 1; ctx.strokeStyle = '#ffffff'; ctx.stroke();
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = '#1f1f1f'; ctx.fill();
+      ctx.lineWidth = 1.2; ctx.strokeStyle = '#9ca3af'; ctx.stroke();
+      ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(txt, bx + bw / 2, by + bh / 2 + 0.5);
+      n.__badgeRect = { x: bx, y: by, w: bw, h: bh };
     }
     ctx.restore();
-  }, [hover, isDimNode, showLabels]);
+  }, [hover, isDimNode, showLabels, graph.nodes]);
 
   const linkCanvasObject = useCallback((l, ctx) => {
     const s = typeof l.source === 'object' ? l.source : null;
@@ -281,14 +314,20 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
     (l.platforms || []).slice(0, 4).forEach((p, i) => {
       ctx.beginPath();
       ctx.arc(mx + (i - ((l.platforms.length - 1) / 2)) * 9, my - 6, 4, 0, 2 * Math.PI);
-      ctx.fillStyle = PLATFORM_COLORS[p] || '#9ca3af';
+      ctx.fillStyle = PLATFORM_COLORS[p] || '#a3a3a3';
       ctx.fill();
     });
-    // ⚠ contradiction marker
+    // contradiction marker: drawn triangle-alert (icon audit — no emoji glyphs on canvas)
     if (l.contradiction) {
-      ctx.font = '11px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('⚠', mx, my + 10);
+      const ty = my + 10;
+      ctx.beginPath();
+      ctx.moveTo(mx, ty - 4); ctx.lineTo(mx + 4.5, ty + 3.5); ctx.lineTo(mx - 4.5, ty + 3.5);
+      ctx.closePath();
+      ctx.fillStyle = '#1f1f1f'; ctx.fill();
+      ctx.strokeStyle = '#0d0d0d'; ctx.lineWidth = 0.8; ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.font = '700 5px Inter, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('!', mx, ty + 1.2);
     }
     ctx.restore();
   }, [hover, pulseKeys]);
@@ -305,6 +344,11 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
           ctx.beginPath();
           ctx.arc(n.x, n.y, n.size / 2 + 4, 0, 2 * Math.PI);
           ctx.fill();
+          // badge is part of the node's pointer area (click routed via onNodeClick)
+          if (n.__badgeRect) {
+            const b = n.__badgeRect;
+            ctx.fillRect(b.x - 2, b.y - 2, b.w + 4, b.h + 4);
+          }
         }}
         linkCanvasObject={linkCanvasObject}
         linkCanvasObjectMode={() => 'replace'}
@@ -314,14 +358,34 @@ export default function CorrelationGraph({ graph, width, height, showLabels, phy
         linkDirectionalParticleColor={(l) => l.color}
         onNodeHover={(n) => { setHover(n ? { kind: 'node', id: n.id } : null); onHoverNode?.(n); }}
         onLinkHover={(l) => { setHover(l ? { kind: 'link', id: l.id, link: l } : null); onHoverLink?.(l); }}
-        onNodeClick={(n) => onClickNode?.(n)}
+        onNodeClick={(n, evt) => {
+          // badge hit-test: if click landed inside the badge pill → evidence breakdown
+          try {
+            const fg = fgRef.current;
+            if (n?.__badgeRect && fg && evt) {
+              const rct = wrapRef.current.getBoundingClientRect();
+              const g = fg.screen2GraphCoords(evt.clientX - rct.left, evt.clientY - rct.top);
+              const b = n.__badgeRect;
+              if (g.x >= b.x - 2 && g.x <= b.x + b.w + 2 && g.y >= b.y - 2 && g.y <= b.y + b.h + 2) {
+                onBadgeClick?.(n);
+                return;
+              }
+            }
+          } catch { /* fall through to normal node click */ }
+          onClickNode?.(n);
+        }}
         onLinkClick={(l) => onClickLink?.(l)}
         onBackgroundClick={() => { onClickNode?.(null); onClickLink?.(null); }}
         enableNodeDrag
+        // DRAG-TO-PIN (2026-07-21 v3): when the user drags a node (data point) and
+        // releases it, it STICKS exactly at the release position — fx/fy freeze the
+        // node against the force simulation. Right-click a pinned node to release it.
+        onNodeDragEnd={(n) => { if (n) { n.fx = n.x; n.fy = n.y; n.__pinned = true; } }}
+        onNodeRightClick={(n) => { if (n?.__pinned) { n.fx = undefined; n.fy = undefined; n.__pinned = false; } }}
         cooldownTime={physics ? 4000 : 0}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.32}
-        backgroundColor="#ffffff"
+        backgroundColor="#0d0d0d"
       />
     </div>
   );

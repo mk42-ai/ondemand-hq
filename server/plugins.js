@@ -18,23 +18,35 @@ export const ADOPTED = {
 // Feature → plugin set map (from PLUGIN_TESTS.md §4).
 // translate + action-titles are deliberately empty: LLM-direct per the blueprint
 // (no translation plugin exists on the platform; action-titles is pure LLM).
+// 2026-07-25: onDemandAgent (plugin-1775547203) is now attached wherever perplexity is —
+// verified live that its agent-twin (agent-1775547203) is a VALID agentId (session-create +
+// query 200, alone and combined with perplexity). This gives every research/chat turn the
+// OnDemand Agent alongside Perplexity, so agentic file/XLSX/PDF work is available on start.
 export const FEATURE_PLUGINS = {
-  design:          ['gptImage2', 'internet', 'perplexity'],
+  design:          ['gptImage2', 'internet', 'perplexity', 'onDemandAgent'],
   summary:         ['fileDirectory', 'webExtractor'],
-  'problem-solve': ['internet', 'perplexity', 'gptSearch'],
-  benchmark:       ['perplexity', 'internet', 'tavily'],
+  'problem-solve': ['internet', 'perplexity', 'gptSearch', 'onDemandAgent'],
+  benchmark:       ['perplexity', 'internet', 'tavily', 'onDemandAgent'],
   translate:       [],
-  media:           ['perplexity', 'internet', 'gptImage2'],
+  media:           ['perplexity', 'internet', 'gptImage2', 'onDemandAgent'],
   'action-titles': [],
   'country-data':  ['internet'],   // web fallback only; primary route = direct WDI/GHO/SDG APIs
-  chat:            ['internet'],
+  chat:            ['internet', 'perplexity', 'onDemandAgent'],
 };
+
+// File Directory Search — attached to EVERY query (default) so file retrieval is always
+// available regardless of the routed feature.
+export const FILE_RETRIEVAL_PLUGIN_ID = 'plugin-1743257072';
+
+// Plugin ids attached to every query on top of the feature-specific set.
+const ALWAYS_ON_PLUGIN_IDS = [FILE_RETRIEVAL_PLUGIN_ID];
+const ALWAYS_ON_LABELS = [ADOPTED.fileDirectory.label];
 
 export function pluginIdsFor(feature) {
   const keys = FEATURE_PLUGINS[feature] || FEATURE_PLUGINS.chat;
-  return keys.map(k => ADOPTED[k].id);
+  return [...new Set([...keys.map(k => ADOPTED[k].id), ...ALWAYS_ON_PLUGIN_IDS])];
 }
 export function pluginLabelsFor(feature) {
   const keys = FEATURE_PLUGINS[feature] || FEATURE_PLUGINS.chat;
-  return keys.map(k => ADOPTED[k].label);
+  return [...new Set([...keys.map(k => ADOPTED[k].label), ...ALWAYS_ON_LABELS])];
 }

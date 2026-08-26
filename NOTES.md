@@ -1,5 +1,58 @@
 # NOTES.md — ODA Productivity Suite engineering log
 
+## 2026-07-20 Model switch — ALL non-workflow calls → GLM 4.7 Cerebras BYOI (default reasoningEffort 'low')
+
+**Registry verification (live, `GET /config/v1/public/endpoints`, fetched 2026-07-20T20:57:56Z UTC):**
+- `byoi-6e314690-4eaf-4def-a33c-380809acf1f5` — endpoint_name `glm-4.7`, model_id **`zai-glm-4.7`**, status **active**, ctx 65,000, streaming_supported true, reasoning_efforts null (top-level `reasoningEffort` still live-accepted). THE only active GLM 4.7.
+- `predefined-glm-4.7` (z-ai/glm-4.7) and `predefined-glm-4.7-flash` — both **inactive** registry entries; NOT shipped against (grep audit: zero `predefined-glm` values anywhere in server/ or src/).
+- GLM + agent attachment probe (sync, agentIds attached): HTTP **200 "OK"** at 2026-07-20T20:58:24Z — clears the old "plugins must run on gpt-5.6-sol" constraint, so GATHER/CE_PLUGIN call sites switch too.
+
+**Changes (all edits in place):**
+- `server/env.js` — NEW shared `GLM_BYOI_ENDPOINT_ID = 'byoi-6e314690-4eaf-4def-a33c-380809acf1f5'`; `ENDPOINT_ID` (main chat) → GLM BYOI with `REASONING_EFFORT = validEffort(env, 'low')` (**default 'low' unchanged**, `REASONING_EFFORTS ['low','medium','max']` validator unchanged); `GATHER_ENDPOINT_ID` → GLM BYOI (env-overridable); `CE_PLUGIN_ENDPOINT_ID` → GLM BYOI; `CE_ANALYSIS_ENDPOINT_ID` → GLM BYOI (was claude-fable-5); `GLM_ENDPOINT_ID` (Quick Query) → aliases the shared constant.
+- `server/intelligence/deepPipeline.js` — `DEEP_ENDPOINT_ID` → `GLM_BYOI_ENDPOINT_ID` (imported from env.js; env.js imports merged into one line); effort stays `validEffort(env,'medium')`.
+- Comment/label sweeps (`server/router.js`, `server/msm.js`, `server/intel.js`, `server/correlation.js`, `server/exports.js`, `server/intelligence/correlationLayer.js`): stale "gpt-5.6-sol-medium" wording → GLM 4.7 BYOI / shared-policy wording. `server/index.js` + `server/msm.js` labels were already dynamic `${ENDPOINT_ID}+${REASONING_EFFORT}` (previous commit) so they now report the GLM id automatically.
+- **Workflows untouched:** platform workflow definitions (evidence-refresh 6a5e5d90…, World Intel 6a5d9022…) keep their own gpt-5.6-sol node config; no workflow create/update calls were made. `server/voice.js` untouched (already GLM BYOI via VOICE_ENDPOINT_ID; its `VOICE_FALLBACK_ENDPOINT` comment example is not a live value).
+
+**E2E proof (local `/api/chat` = browser wire path; raw capture `debug/sse-samples/apichat-glm47byoi-low-20260720T2100Z.sse.log`):**
+- `/api/health` at 2026-07-20T21:00:35Z → `"model":"byoi-6e314690-4eaf-4def-a33c-380809acf1f5+low"`.
+- Capture window 2026-07-20T21:00:51.714Z → 21:01:04.569Z. Frame counts: **fulfillment_thinking 197** (`.thinking.delta` streaming live — GLM emits real fulfillment-phase reasoning deltas), planning_thinking 38, step_thinking 71 (thinking total 306), **fulfillment 18** `.answer` token frames assembling a 573-char answer, statusLog 2, metricsLog 1, heartbeats, and exactly **1 `[DONE]` terminal sentinel**. BOTH channels stream token-by-token through the hardened SSE passthrough to the client.
+- Mode validation re-checked live at 2026-07-20T21:01:17Z: `CHAT_REASONING_EFFORT=high` → warn + fall back to **'low'**; `=max` → accepted. Default remains 'low'.
+
+
+## 2026-07-20 Chat streaming fix — decomposed gpt-5.6-sol + reasoningEffort, DEFAULT 'low' (main chat)
+
+**Docs verification (all live, fetched this pass):**
+- `GET /config/v1/public/docs/categories` — 2026-07-20T20:35:45Z UTC: 8 services, 26 slugs, `submitquery` present.
+- `GET /config/v1/public/docs/reference/api/submitquery` — same pass: path `POST /chat/v1/sessions/{sessionId}/query`, server `https://api.on-demand.io`, required `["query","endpointId","responseMode"]`, `responseMode` enum exactly `["sync","stream","webhook"]`. `reasoningEffort` is NOT in the documented body properties (still a live-accepted extension); `modelConfigs` IS documented.
+- `https://docs.on-demand.io/docs/chat-api.md` (28,341 chars, 20:35:58Z) — contains the canonical stream sample: `eventType: "fulfillment"` frames carrying incremental `.answer` deltas ("The", " city", " based", …) with monotonic `eventIndex`. `https://docs.on-demand.io/reference/submitquery.md` (10,772 chars) fetched too; neither page documents `reasoningEffort`.
+- Endpoint registry (live, same pass): `predefined-gpt-5.6-sol` → `reasoning_efforts ["low","medium","max"]`, `streaming_supported: true`, `status: active`.
+
+**Symptom reproduction (raw captures under `debug/sse-samples/`, UTC):**
+| Capture | Config | Result |
+|---|---|---|
+| `diag-glm47-max-20260720T2036Z.sse.log` (20:37:16–20:37:20Z) | direct API, GLM 4.7 BYOI + max | 43 `fulfillment_thinking` vs 10 `fulfillment` frames |
+| `diag-gpt56sol-low-20260720T2037Z.sse.log` (20:37:30–20:37:38Z) | direct API, gpt-5.6-sol + low | 46 `fulfillment` `.answer` frames, 0 thinking — clean token stream |
+| `apichat-prefix-glm47-max-20260720T2039Z.sse.log` (20:39:00–20:39:13Z) | local `/api/chat`, PRE-FIX (GLM+max) | **321 thinking frames vs only 9 `fulfillment` `.answer` frames** — the browser wire was dominated by thinking; the final answer arrived as a burst of 9 coarse frames at the very end. This is the reported "thinking streams, answer doesn't" symptom: not a dropped-frame bug in the SSE plumbing, but a model/effort configuration that produces almost no incremental `.answer` deltas. |
+
+**Root cause:** the main chat path ran the GLM 4.7 BYOI endpoint at `reasoningEffort: "max"`, which emits hundreds of thinking deltas and only a handful of late, coarse `fulfillment` frames — so the UI showed live "thinking" but no token-by-token answer. The previously documented (PRIOR_KNOWLEDGE.md) but unimplemented fix — decomposed `endpointId: "predefined-gpt-5.6-sol"` + TOP-LEVEL `reasoningEffort`, default **low** — was never applied to `server/env.js`. The SSE passthrough itself (`server/ondemand.js` → `/api/chat` `sendRaw`) was verified byte-identical and needed no change: pre-fix capture shows all frame families passing through.
+
+**Fix applied (files/lines):**
+- `server/env.js` — `ENDPOINT_ID` default → `'predefined-gpt-5.6-sol'`; `REASONING_EFFORT` → `validEffort(process.env.CHAT_REASONING_EFFORT, 'low')` (**default 'low'**, explicitly not medium/max); NEW `REASONING_EFFORTS = ['low','medium','max']` + `validEffort()` validator (warns + falls back on invalid values, e.g. "high"→low, verified live); `GATHER_/ANALYSIS_/CE_ANALYSIS_REASONING_EFFORT` now validated; NEW `CE_STREAM_REASONING_EFFORT` (validated, default max, env-overridable).
+- `server/correlation.js` — three hardcoded `reasoningEffort: 'max'` literals (quick-query L537, summarize L702, story L739) → `CE_STREAM_REASONING_EFFORT`.
+- `server/intelligence/deepPipeline.js` — `DEEP_REASONING_EFFORT` now `validEffort(env,'medium')` (decomposed form retained).
+- `server/index.js` — stale hardcoded `model: 'glm-4.7-cerebras-max'` labels (L161/L248) → dynamic `${ENDPOINT_ID}+${REASONING_EFFORT}`.
+- `server/msm.js` — stale `'gpt-5.6-sol-medium'` label strings → dynamic `${ENDPOINT_ID}+${REASONING_EFFORT}`.
+- `server/ondemand/adapters.js` — removed empty `modelConfigs` emission when only `reasoningEffort` set; `reasoningEffort` confirmed TOP-LEVEL body key.
+- `server/ondemand.js` — comment corrected; **streamQuery passthrough logic untouched** (headers, no-transform, X-Accel-Buffering, flushHeaders/flush, TextDecoder(stream:true)+tail flush, AbortController, closed guard, 90s watchdog all preserved).
+- Codebase audit: zero suffixed model IDs used as request values anywhere (`grep` for `sol-medium|sol-low|sol-max|fable-5-|sonnet-5-` in endpointId positions → no hits); every `reasoningEffort:` call site now sources a validated constant or explicit low/medium literal within the valid enum.
+
+**Post-fix E2E proof (`apichat-postfix-gpt56sol-low-20260720T2043Z.sse.log`, 20:42:57–20:43:18Z, local `/api/chat` = browser wire path):**
+- `/api/health` → `"model":"predefined-gpt-5.6-sol+low"`.
+- Frame counts: **82 `fulfillment` `.answer` token frames** ("Ocean" → " tides" → " are" …, eventIndex 2,3,4,… assembling a 400-char answer) **plus 15 thinking frames** (14 planning_thinking + 1 step_thinking) + statusLog/metricsLog/heartbeat + `[DONE]` — BOTH channels stream token-by-token to the client.
+- Mode validation live-tested: `CHAT_REASONING_EFFORT=high` → warn + fall back to `low`; `=medium` → accepted.
+- Note (model-dependent, unchanged from prior passes): gpt-5.6-sol emits thinking in the planning/step phase, not as `fulfillment_thinking`; GLM 4.7 emits `fulfillment_thinking`. The client parser handles both families.
+
+
 ## 2026-07-17 — Streaming reference (Workstream 1)
 
 **Read at 2026-07-17 ~16:29–16:33 UTC. Sources actually read (live, not memory):**
@@ -1120,3 +1173,126 @@ ingest (3y window, 30d boost, dedupe vs 509 baseline), NOTES-format run log
 line — emailed per run. Note: platform workflows run server-side and cannot
 write this workspace's files directly; the checkpoint commits land on the
 GitHub branch (checkpoints/auto-checkpoint.md) as the durable audit trail.
+
+## 2026-07-19 — Rule 0: OnDemand session-create + streamed query (LIVE docs, fetched 2026-07-19)
+
+Fetched from the live public docs API (`GET /config/v1/public/docs/categories` →
+`GET /config/v1/public/docs/reference/api/<slug>`; slugs `createchatsession`, `submitquery`):
+
+- **(a) Session create**: `POST https://api.on-demand.io/chat/v1/sessions`
+  (OpenAPI `servers[].url` = https://api.on-demand.io).
+- **(b) Auth**: header `apikey: <YOUR_API_KEY>` (securityScheme `apiKey` in `header`,
+  name `apikey`) — required on both operations.
+- **(c) Request bodies**:
+  - Create session: `{ "externalUserId": string (REQUIRED), "pluginIds": string[] (optional, ≤20) }`.
+  - Submit query (streamed): `POST /chat/v1/sessions/{sessionId}/query` with
+    `{ "query": string (REQUIRED), "endpointId": string (REQUIRED — e.g.
+    predefined-gpt-5.6-sol), "responseMode": "stream" (REQUIRED for SSE),
+    "pluginIds": string[] (optional), "fulfillmentOnly": boolean (optional),
+    "modelConfigs": object (optional; reasoning effort medium set via the app's
+    reasoningEffort extension) }` → SSE stream of fulfillment tokens.
+- Matches `server/ondemand.js` (`H = { apikey: ONDEMAND_API_KEY }`, createOdSession →
+  POST /chat/v1/sessions, streamQuery → POST .../query with responseMode stream).
+
+### HTTP 500 root cause (session-create) — env wiring
+`server/env.js` correctly reads `ONDEMAND_API_KEY` from `.env`/process.env (as declared
+in `.env.example`); the variable name and read order are right, and the read happens at
+module load with a dotenv fallback. The failing deployment simply NEVER RECEIVED the
+key: the staging sandbox was deployed without a `.env` file and without env injection,
+so the server started with an empty key (`[FATAL-CONFIG] ONDEMAND_API_KEY is not set`)
+and every OnDemand call surfaced as HTTP 500 "An unexpected error occurred".
+FIX: inject `ONDEMAND_API_KEY=****redacted****` into the sandbox process environment at
+deploy time (runtime env injection at server start). No code change; no hardcoded keys;
+key never written to files/git/logs.
+
+## 2026-07-20 — PRE-IMPLEMENTATION digest: OnDemand API study for the voice/globe feature
+(All facts below fetched LIVE this run from GET /config/v1/public/docs/categories +
+/docs/reference/api/<slug> and GET /config/v1/public/endpoints — never from memory.)
+
+### Documented public API surface (26 operations, 8 services)
+Media API · Chat & Agent Tools API · Services API (STT/TTS/translate) · MQTT User Mgmt ·
+REST API Key Mgmt · Agents Flow Builder (workflows) · Reasoning Modes · Endpoints.
+
+### Workflows (Agents Flow Builder)
+- Activate:   POST https://api.on-demand.io/automation/api/workflow/{id}/activate   (200/500)
+- Deactivate: POST .../workflow/{id}/deactivate
+- Execute:    POST .../workflow/{id}/execute   (200/400/404/500) → returns executionID
+- Stream logs: POST .../workflow/stream_logs  body {"executionID": string (REQUIRED)} → streamed logs
+- Auth: `apikey` header on every call. Creation/retrieval/config of workflows is NOT in the
+  public docs surface (only activate/deactivate/execute/stream_logs are documented) — the
+  richer CRUD used by this platform's MCP tools is undocumented/deployment-dependent.
+
+### Sessions & streamed queries (Chat & Agent Tools)
+- Create session: POST /chat/v1/sessions — body {externalUserId: string REQUIRED, pluginIds?: string[]≤20}
+  (responses 200/4XX/5XX; live API returns 201 on success — both are 2xx).
+- Submit query:   POST /chat/v1/sessions/{sessionId}/query — body {query REQUIRED,
+  endpointId REQUIRED, responseMode REQUIRED ∈ [sync, stream, webhook], pluginIds?≤20,
+  fulfillmentOnly?: bool (skip RAG), modelConfigs?: {fulfillmentPrompt, temperature, …}}.
+  responseMode=stream → SSE with eventType frames (fulfillment tokens; thinking/planning
+  frames observed live 2026-07-19). RAG/knowledge = pluginIds; structured output via
+  modelConfigs.fulfillmentPrompt contract; session memory = server-side per sessionId.
+
+### Speech / audio (Services API) — the ONLY documented audio pathway
+- STT: POST /services/v1/public/service/execute/speech_to_text — body {audioUrl: string REQUIRED}
+  → 200 {message, data:{text}}. NOTE: takes a URL, not raw bytes — audio must first be
+  hosted (e.g. Media API createmediaurl: POST /media/v1/public/file {url, sessionId,
+  externalUserId, …}). FINAL transcript only — no partial/streaming transcript API.
+- TTS: POST /services/v1/public/service/execute/text_to_speech — body {model REQUIRED
+  ∈ [tts-1, tts-1-hd], input REQUIRED, voice REQUIRED ∈ [alloy, echo, fable, onyx, nova,
+  shimmer]} → 200 {message, data}. Model/voice enums imply an OpenAI-compatible TTS backend.
+- Live probe (2026-07-17, re-confirmed by server/speech.js contract): this workspace key
+  returns 400 "Please subscribe to the service to use it" for both services.
+
+### Realtime / speech-to-speech / VAD / barge-in — NOT DOCUMENTED
+Full-text keyword scan across ALL 26 fetched OpenAPI specs: ZERO occurrences of realtime,
+websocket/wss, VAD/voice-activity, barge/interrupt, speech-to-speech, partial transcript,
+audio chunking. CONCLUSION: the public API supports TURN-BASED voice only —
+record → host audio → STT (final transcript) → streamed LLM (SSE) → TTS → play.
+True realtime duplex audio, VAD and barge-in must be implemented CLIENT-SIDE
+(Web Audio AnalyserNode energy gating, cancel/abort of in-flight SSE + audio playback) —
+consistent with the existing Recorder.jsx/AudioPlayer.jsx architecture.
+
+### GLM 4.7 — exact identifiers (from GET /config/v1/public/endpoints, live)
+| endpoint_id | name | status | backend | context |
+|---|---|---|---|---|
+| **byoi-6e314690-4eaf-4def-a33c-380809acf1f5** | glm-4.7 | **ACTIVE** | api.cerebras.ai (OpenAI-compatible) | 65,000 |
+| predefined-glm-4.7 | glm-4.7 | inactive | openrouter.ai | 200,000 |
+| predefined-glm-4.7-flash | glm-4.7-flash | inactive | openrouter.ai | (openrouter) |
+The ONLY usable GLM 4.7 slug on this deployment is the BYOI Cerebras endpoint —
+already proven live for Quick Query (~1.28s TTFT, streamed, 2026-07-19 PLUGIN_TESTS).
+Capabilities (documented/observed): OpenAI-compatible streaming; low latency (Cerebras);
+tool/plugin attachment NOT proven on this endpoint (fulfillmentOnly used in Quick Query);
+structured output via prompt contract; EN/AR multilingual observed in Quick Query chips.
+Undocumented in public docs: explicit tool-use/HTML-generation capability matrices.
+
+### Auth, rate limits, errors, retention
+- Auth: `apikey` header everywhere (securityScheme apiKey-in-header). Server-side only in
+  this app (env.js, deploy-time injection, keyLoaded flag) — model PRESERVED, unchanged.
+- Rate limits: NOT documented in any fetched spec (no 429 schema) → undocumented/
+  deployment-dependent; app keeps its existing retry/backoff in ondemand.js.
+- Errors: generic 4XX/5XX response objects; STT/TTS return 400 subscription errors with
+  {message} — server/speech.js maps these to SERVICE_NOT_SUBSCRIBED.
+- Data retention / logging / training use: ZERO statements in the public docs → treat as
+  undocumented/deployment-dependent (see BASELINE_AUDIT.md privacy section).
+
+## 2026-07-20 — FINAL VERIFICATION & DELIVERY (digest)
+
+- Test suite extended: 18 → **51 tests** (`tests/voice.test.mjs` 18 + NEW
+  `tests/regression.test.mjs` 15 + NEW `tests/interaction.test.mjs` 18) — **51/51 PASS**.
+  Run: `node --test tests/*.test.mjs` (note: bare `node --test tests/` does NOT glob on
+  node22 — pass explicit files).
+- The new tests exposed 2 real library-level bugs fixed this turn:
+  (a) `SET_LANGUAGE` reducer action unreachable (checked after transition-table miss);
+  (b) `import { pagerank } from 'graphology-metrics'` = undefined (namespace-only index;
+  fixed via `graphology-metrics/centrality/pagerank.js` subpath — PageRank sizing was
+  silently disabled everywhere).
+- Headless QA (25/25) exposed 3 UI bugs fixed this turn: NaN Signal-Loom paths for
+  off-scale relationship types (Influence-network), privacy note visible only in the
+  sub-second ACTIVATING window, missing verification-tier legend. Plus final purple hex
+  (#e9d5ff legend halo) removed.
+- Seed hydration: KE deep-v2 run + deterministic BD dense fixture now TRACKED under
+  server/data/correlation-seed/ so deploys don't depend on external blob URLs.
+- QA proof artifacts: qa/qa25-<timestamp>-{01..11}.png + qa/qa25-results.json (committed).
+- Env sanity for tests/QA on recycled workspaces: `npm install` first (esbuild postinstall
+  is blocked by allowScripts but vite build still works); run QA via detached setsid
+  script writing to /tmp logs (shell recycling kills long foreground runs).
